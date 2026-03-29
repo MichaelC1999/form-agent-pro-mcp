@@ -1,0 +1,1047 @@
+{
+  "formId": "i-765",
+  "formMetadata": {
+      "title": "Application for Employment Authorization",
+      "agency": "U.S. Citizenship and Immigration Services",
+      "ombNumber": "1615-0040",
+      "purpose": "Used to request an Employment Authorization Document (EAD) to work legally in the United States"
+    },
+    "fields": [
+      {
+        "field": "form1[0].#pageSet[0].Page1[0].PDF417BarCode1[0]",
+        "description": "PDF417 barcode for page 1",
+        "party": "USCIS/System",
+        "notes": "System-generated barcode. Do not fill manually."
+      },
+      {
+        "field": "form1[0].#pageSet[0].Page1[1].PDF417BarCode1[0]",
+        "description": "PDF417 barcode for page 2",
+        "party": "USCIS/System",
+        "notes": "System-generated barcode. Do not fill manually."
+      },
+      {
+        "field": "form1[0].#pageSet[0].Page1[2].PDF417BarCode1[0]",
+        "description": "PDF417 barcode for page 3",
+        "party": "USCIS/System",
+        "notes": "System-generated barcode. Do not fill manually."
+      },
+      {
+        "field": "form1[0].#pageSet[0].Page1[3].PDF417BarCode1[0]",
+        "description": "PDF417 barcode for page 4",
+        "party": "USCIS/System",
+        "notes": "System-generated barcode. Do not fill manually."
+      },
+      {
+        "field": "form1[0].#pageSet[0].Page1[4].PDF417BarCode1[0]",
+        "description": "PDF417 barcode for page 5",
+        "party": "USCIS/System",
+        "notes": "System-generated barcode. Do not fill manually."
+      },
+      {
+        "field": "form1[0].#pageSet[0].Page1[5].PDF417BarCode1[0]",
+        "description": "PDF417 barcode for page 6",
+        "party": "USCIS/System",
+        "notes": "System-generated barcode. Do not fill manually."
+      },
+      {
+        "field": "form1[0].#pageSet[0].Page1[6].PDF417BarCode1[0]",
+        "description": "PDF417 barcode for page 7",
+        "party": "USCIS/System",
+        "notes": "System-generated barcode. Do not fill manually."
+      }
+    ],
+    "Part 1 – Reason for Applying": [
+      {
+        "field": "form1[0].Page1[0].Part1_Checkbox[0]",
+        "description": "Checkbox: I am applying for permission to accept employment.",
+        "party": "Applicant",
+        "notes": "Select if this is an initial application for employment authorization."
+      },
+      {
+        "field": "form1[0].Page1[0].Part1_Checkbox[1]",
+        "description": "Checkbox: I am applying for replacement of my lost, stolen, or damaged Employment Authorization Document.",
+        "party": "Applicant",
+        "notes": "Select if replacing an EAD that was lost, stolen, or damaged. Original EAD must have been unexpired."
+      },
+      {
+        "field": "form1[0].Page1[0].Part1_Checkbox[2]",
+        "description": "Checkbox: I am applying to renew my Employment Authorization Document.",
+        "party": "Applicant",
+        "notes": "Select if renewing an existing EAD before or after it expires."
+      },
+      {
+        "field": "form1[0].Page1[0].CheckBox1[0]",
+        "description": "Checkbox: My Employment Authorization Document was issued with incorrect information.",
+        "party": "Applicant",
+        "notes": "Select if requesting correction of an EAD issued with errors by USCIS."
+      }
+    ],
+    "Part 2 – Information About You": [
+      {
+        "field": "form1[0].Page1[0].Line1a_FamilyName[0]",
+        "description": "Line 1.a: Applicant's Family Name (Last Name).",
+        "party": "Applicant",
+        "notes": "Enter your legal family/last name as shown on your passport or other official documents."
+      },
+      {
+        "field": "form1[0].Page1[0].Line1b_GivenName[0]",
+        "description": "Line 1.b: Applicant's Given Name (First Name).",
+        "party": "Applicant",
+        "notes": "Enter your legal given/first name as shown on your passport or other official documents."
+      },
+      {
+        "field": "form1[0].Page1[0].Line1c_MiddleName[0]",
+        "description": "Line 1.c: Applicant's Middle Name.",
+        "party": "Applicant",
+        "notes": "Enter your middle name if applicable. Leave blank if none."
+      },
+      {
+        "field": "form1[0].Page1[0].Line2a_FamilyName[0]",
+        "description": "Line 2.a: Other Names Used - Family Name (Last Name).",
+        "party": "Applicant",
+        "notes": "Enter any other family name you have used (maiden name, previous married name, alias)."
+      },
+      {
+        "field": "form1[0].Page1[0].Line2b_GivenName[0]",
+        "description": "Line 2.b: Other Names Used - Given Name (First Name).",
+        "party": "Applicant",
+        "notes": "Enter any other given name you have used."
+      },
+      {
+        "field": "form1[0].Page1[0].Line2c_MiddleName[0]",
+        "description": "Line 2.c: Other Names Used - Middle Name.",
+        "party": "Applicant",
+        "notes": "Enter any other middle name you have used."
+      },
+      {
+        "field": "form1[0].Page1[0].Line3a_FamilyName[0]",
+        "description": "Line 3.a: Additional Other Name Used 1 - Family Name.",
+        "party": "Applicant",
+        "notes": "Enter additional family name if you have used more than one other name."
+      },
+      {
+        "field": "form1[0].Page1[0].Line3b_GivenName[0]",
+        "description": "Line 3.b: Additional Other Name Used 1 - Given Name.",
+        "party": "Applicant",
+        "notes": "Enter additional given name if you have used more than one other name."
+      },
+      {
+        "field": "form1[0].Page1[0].Line3c_MiddleName[0]",
+        "description": "Line 3.c: Additional Other Name Used 1 - Middle Name.",
+        "party": "Applicant",
+        "notes": "Enter additional middle name if you have used more than one other name."
+      },
+      {
+        "field": "form1[0].Page1[0].Line3a_FamilyName[1]",
+        "description": "Line 3.d: Additional Other Name Used 2 - Family Name.",
+        "party": "Applicant",
+        "notes": "Enter additional family name if you have used more than two other names."
+      },
+      {
+        "field": "form1[0].Page1[0].Line3b_GivenName[1]",
+        "description": "Line 3.e: Additional Other Name Used 2 - Given Name.",
+        "party": "Applicant",
+        "notes": "Enter additional given name if you have used more than two other names."
+      },
+      {
+        "field": "form1[0].Page1[0].Line3c_MiddleName[1]",
+        "description": "Line 3.f: Additional Other Name Used 2 - Middle Name.",
+        "party": "Applicant",
+        "notes": "Enter additional middle name if you have used more than two other names."
+      },
+      {
+        "field": "form1[0].Page1[0].USCISELISAcctNumber[0]",
+        "description": "USCIS ELIS Account Number (if any).",
+        "party": "Applicant",
+        "notes": "Enter your USCIS online account number if you have one (12 characters)."
+      },
+      {
+        "field": "form1[0].Page2[0].Line4a_InCareofName[0]",
+        "description": "Line 4.a: U.S. Mailing Address - In Care Of Name.",
+        "party": "Applicant",
+        "notes": "Enter 'In Care Of' name if mail should be directed to another person at your address."
+      },
+      {
+        "field": "form1[0].Page2[0].Line4b_StreetNumberName[0]",
+        "description": "Line 4.b: U.S. Mailing Address - Street Number and Name.",
+        "party": "Applicant",
+        "notes": "Enter your U.S. street address. USCIS will mail your EAD to this address."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line5_Unit[0]",
+        "description": "Line 4.c: U.S. Mailing Address - Unit Type: Apt.",
+        "party": "Applicant",
+        "notes": "Select if unit type is Apartment."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line5_Unit[1]",
+        "description": "Line 4.c: U.S. Mailing Address - Unit Type: Ste.",
+        "party": "Applicant",
+        "notes": "Select if unit type is Suite."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line5_Unit[2]",
+        "description": "Line 4.c: U.S. Mailing Address - Unit Type: Flr.",
+        "party": "Applicant",
+        "notes": "Select if unit type is Floor."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line5_AptSteFlrNumber[0]",
+        "description": "Line 4.c: U.S. Mailing Address - Unit Number.",
+        "party": "Applicant",
+        "notes": "Enter your apartment, suite, or floor number."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line5_CityOrTown[0]",
+        "description": "Line 4.d: U.S. Mailing Address - City or Town.",
+        "party": "Applicant",
+        "notes": "Enter the city or town of your U.S. mailing address."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line5_State[0]",
+        "description": "Line 4.e: U.S. Mailing Address - State.",
+        "party": "Applicant",
+        "notes": "Enter the two-letter state abbreviation."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line5_ZipCode[0]",
+        "description": "Line 4.f: U.S. Mailing Address - ZIP Code.",
+        "party": "Applicant",
+        "notes": "Enter the 5-digit ZIP code (or 9-digit if known)."
+      },
+      {
+        "field": "form1[0].Page2[0].Part2Line5_Checkbox[0]",
+        "description": "Line 5: Is your current U.S. physical address the same as your U.S. mailing address? - Yes.",
+        "party": "Applicant",
+        "notes": "Select Yes if you live at the same address where you receive mail."
+      },
+      {
+        "field": "form1[0].Page2[0].Part2Line5_Checkbox[1]",
+        "description": "Line 5: Is your current U.S. physical address the same as your U.S. mailing address? - No.",
+        "party": "Applicant",
+        "notes": "Select No if your physical residence is different from your mailing address. You must provide physical address below."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line7_StreetNumberName[0]",
+        "description": "Line 6.a: U.S. Physical Address - Street Number and Name.",
+        "party": "Applicant",
+        "notes": "Enter your physical residence street address. Cannot be a P.O. Box. Required if Line 5 is 'No'."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line7_Unit[0]",
+        "description": "Line 6.b: U.S. Physical Address - Unit Type: Apt.",
+        "party": "Applicant",
+        "notes": "Select if unit type is Apartment."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line7_Unit[1]",
+        "description": "Line 6.b: U.S. Physical Address - Unit Type: Ste.",
+        "party": "Applicant",
+        "notes": "Select if unit type is Suite."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line7_Unit[2]",
+        "description": "Line 6.b: U.S. Physical Address - Unit Type: Flr.",
+        "party": "Applicant",
+        "notes": "Select if unit type is Floor."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line7_AptSteFlrNumber[0]",
+        "description": "Line 6.b: U.S. Physical Address - Unit Number.",
+        "party": "Applicant",
+        "notes": "Enter apartment, suite, or floor number."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line7_CityOrTown[0]",
+        "description": "Line 6.c: U.S. Physical Address - City or Town.",
+        "party": "Applicant",
+        "notes": "Enter the city or town of your physical address."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line7_State[0]",
+        "description": "Line 6.d: U.S. Physical Address - State.",
+        "party": "Applicant",
+        "notes": "Enter the two-letter state abbreviation."
+      },
+      {
+        "field": "form1[0].Page2[0].Pt2Line7_ZipCode[0]",
+        "description": "Line 6.e: U.S. Physical Address - ZIP Code.",
+        "party": "Applicant",
+        "notes": "Enter the 5-digit ZIP code."
+      },
+      {
+        "field": "form1[0].Page2[0].Line7_AlienNumber[0]",
+        "description": "Line 7: Alien Registration Number (A-Number), if any.",
+        "party": "Applicant",
+        "notes": "Enter your 9-digit A-Number if you have one. Format: A-XXXXXXXXX."
+      },
+      {
+        "field": "form1[0].Page2[0].Line8_ElisAccountNumber[0]",
+        "description": "Line 8: USCIS Online Account Number, if any.",
+        "party": "Applicant",
+        "notes": "Enter your USCIS online account number (12 characters) if you have one."
+      },
+      {
+        "field": "form1[0].Page2[0].Line9_Checkbox[0]",
+        "description": "Line 9: Sex - Male.",
+        "party": "Applicant",
+        "notes": "Select if applicant is male."
+      },
+      {
+        "field": "form1[0].Page2[0].Line9_Checkbox[1]",
+        "description": "Line 9: Sex - Female.",
+        "party": "Applicant",
+        "notes": "Select if applicant is female."
+      },
+      {
+        "field": "form1[0].Page2[0].Line10_Checkbox[0]",
+        "description": "Line 10: Marital Status - Single, Never Married.",
+        "party": "Applicant",
+        "notes": "Select if you have never been legally married."
+      },
+      {
+        "field": "form1[0].Page2[0].Line10_Checkbox[1]",
+        "description": "Line 10: Marital Status - Married.",
+        "party": "Applicant",
+        "notes": "Select if you are currently legally married."
+      },
+      {
+        "field": "form1[0].Page2[0].Line10_Checkbox[2]",
+        "description": "Line 10: Marital Status - Divorced.",
+        "party": "Applicant",
+        "notes": "Select if your marriage has been legally dissolved."
+      },
+      {
+        "field": "form1[0].Page2[0].Line10_Checkbox[3]",
+        "description": "Line 10: Marital Status - Widowed.",
+        "party": "Applicant",
+        "notes": "Select if your spouse has passed away."
+      },
+      {
+        "field": "form1[0].Page2[0].Line12a_Checkbox[0]",
+        "description": "Line 12.a: Have you EVER applied for an Employment Authorization Document (EAD)? - Yes.",
+        "party": "Applicant",
+        "notes": "Select Yes if you have previously applied for an EAD."
+      },
+      {
+        "field": "form1[0].Page2[0].Line12a_Checkbox[1]",
+        "description": "Line 12.a: Have you EVER applied for an Employment Authorization Document (EAD)? - No.",
+        "party": "Applicant",
+        "notes": "Select No if this is your first EAD application."
+      },
+      {
+        "field": "form1[0].Page2[0].Line12b_SSN[0]",
+        "description": "Line 12.b: Social Security Number on the Employment Authorization Document.",
+        "party": "Applicant",
+        "notes": "If you answered Yes to 12.a, enter the SSN that was printed on your previous EAD."
+      },
+      {
+        "field": "form1[0].Page2[0].Line13_Checkbox[0]",
+        "description": "Line 13: Do you want the Social Security Administration to issue you a Social Security card? - Yes.",
+        "party": "Applicant",
+        "notes": "Select Yes if you want SSA to automatically issue you an SSN card with your EAD approval."
+      },
+      {
+        "field": "form1[0].Page2[0].Line13_Checkbox[1]",
+        "description": "Line 13: Do you want the Social Security Administration to issue you a Social Security card? - No.",
+        "party": "Applicant",
+        "notes": "Select No if you already have an SSN or do not want one issued automatically."
+      },
+      {
+        "field": "form1[0].Page2[0].Line14_Checkbox_Yes[0]",
+        "description": "Line 14: Consent to disclose information to SSA? - Yes.",
+        "party": "Applicant",
+        "notes": "Select Yes to authorize USCIS to share your information with SSA for issuing an SSN."
+      },
+      {
+        "field": "form1[0].Page2[0].Line14_Checkbox_No[0]",
+        "description": "Line 14: Consent to disclose information to SSA? - No.",
+        "party": "Applicant",
+        "notes": "Select No if you do not consent. Note: If No, SSA cannot issue you an SSN card through this process."
+      },
+      {
+        "field": "form1[0].Page2[0].Line15a_FamilyName[0]",
+        "description": "Line 15.a: Father's Family Name (Last Name).",
+        "party": "Applicant",
+        "notes": "Enter your father's legal family name."
+      },
+      {
+        "field": "form1[0].Page2[0].Line15b_GivenName[0]",
+        "description": "Line 15.b: Father's Given Name (First Name).",
+        "party": "Applicant",
+        "notes": "Enter your father's legal given name."
+      },
+      {
+        "field": "form1[0].Page2[0].Line16a_FamilyName[0]",
+        "description": "Line 16.a: Mother's Family Name (Last Name).",
+        "party": "Applicant",
+        "notes": "Enter your mother's legal family name (maiden name or current name)."
+      },
+      {
+        "field": "form1[0].Page2[0].Line16b_GivenName[0]",
+        "description": "Line 16.b: Mother's Given Name (First Name).",
+        "party": "Applicant",
+        "notes": "Enter your mother's legal given name."
+      },
+      {
+        "field": "form1[0].Page2[0].Line17a_CountryOfBirth[0]",
+        "description": "Line 17.a: Father's Country of Birth.",
+        "party": "Applicant",
+        "notes": "Enter the country where your father was born."
+      },
+      {
+        "field": "form1[0].Page2[0].Line17b_CountryOfBirth[0]",
+        "description": "Line 17.b: Mother's Country of Birth.",
+        "party": "Applicant",
+        "notes": "Enter the country where your mother was born."
+      },
+      {
+        "field": "form1[0].Page2[0].Line19_Checkbox[0]",
+        "description": "Line 19: Eligibility Category checkbox option 1.",
+        "party": "Applicant",
+        "notes": "Select the applicable eligibility category for your EAD application. See form instructions for category codes."
+      },
+      {
+        "field": "form1[0].Page2[0].Line19_Checkbox[1]",
+        "description": "Line 19: Eligibility Category checkbox option 2.",
+        "party": "Applicant",
+        "notes": "Select the applicable eligibility category for your EAD application."
+      }
+    ],
+    "Part 2 – Information About You (Continued)": [
+      {
+        "field": "form1[0].Page3[0].Line18a_CityTownOfBirth[0]",
+        "description": "Line 18.a: City/Town/Village of Birth.",
+        "party": "Applicant",
+        "notes": "Enter the city, town, or village where you were born."
+      },
+      {
+        "field": "form1[0].Page3[0].Line18b_CityTownOfBirth[0]",
+        "description": "Line 18.b: State/Province of Birth.",
+        "party": "Applicant",
+        "notes": "Enter the state or province where you were born."
+      },
+      {
+        "field": "form1[0].Page3[0].Line18c_CountryOfBirth[0]",
+        "description": "Line 18.c: Country of Birth.",
+        "party": "Applicant",
+        "notes": "Enter the country where you were born."
+      },
+      {
+        "field": "form1[0].Page3[0].Line19_DOB[0]",
+        "description": "Line 19: Date of Birth.",
+        "party": "Applicant",
+        "notes": "Enter your date of birth in mm/dd/yyyy format."
+      },
+      {
+        "field": "form1[0].Page3[0].Line20a_I94Number[0]",
+        "description": "Line 20.a: I-94 Arrival-Departure Record Number.",
+        "party": "Applicant",
+        "notes": "Enter your 11-digit I-94 number from your most recent arrival record."
+      },
+      {
+        "field": "form1[0].Page3[0].Line20b_Passport[0]",
+        "description": "Line 20.b: Passport Number.",
+        "party": "Applicant",
+        "notes": "Enter your current passport number."
+      },
+      {
+        "field": "form1[0].Page3[0].Line20c_TravelDoc[0]",
+        "description": "Line 20.c: Travel Document Number (if not using passport).",
+        "party": "Applicant",
+        "notes": "Enter travel document number if you do not have a passport."
+      },
+      {
+        "field": "form1[0].Page3[0].Line20d_CountryOfIssuance[0]",
+        "description": "Line 20.d: Country of Issuance (Passport/Travel Document).",
+        "party": "Applicant",
+        "notes": "Enter the country that issued your passport or travel document."
+      },
+      {
+        "field": "form1[0].Page3[0].Line20e_ExpDate[0]",
+        "description": "Line 20.e: Expiration Date of Passport/Travel Document.",
+        "party": "Applicant",
+        "notes": "Enter the expiration date of your passport or travel document. Format: mm/dd/yyyy."
+      },
+      {
+        "field": "form1[0].Page3[0].Line21_DateOfLastEntry[0]",
+        "description": "Line 21: Date of Last Arrival Into the United States.",
+        "party": "Applicant",
+        "notes": "Enter the date of your most recent entry into the U.S. Format: mm/dd/yyyy."
+      },
+      {
+        "field": "form1[0].Page3[0].place_entry[0]",
+        "description": "Line 22: Place of Last Entry Into the United States.",
+        "party": "Applicant",
+        "notes": "Enter the port of entry (city, state) where you last entered the U.S."
+      },
+      {
+        "field": "form1[0].Page3[0].Line23_StatusLastEntry[0]",
+        "description": "Line 23: Immigration Status at Last Entry.",
+        "party": "Applicant",
+        "notes": "Enter your immigration status when you last entered the U.S. (e.g., B-1, F-1, K-1, parolee)."
+      },
+      {
+        "field": "form1[0].Page3[0].Line24_CurrentStatus[0]",
+        "description": "Line 24: Current Immigration Status.",
+        "party": "Applicant",
+        "notes": "Enter your current immigration status (e.g., F-1, H-4, pending I-485, parolee)."
+      },
+      {
+        "field": "form1[0].Page3[0].#area[1].section_1[0]",
+        "description": "Line 25: Eligibility Category - Section 1 code.",
+        "party": "Applicant",
+        "notes": "Enter the eligibility category code from the I-765 instructions (e.g., (c)(9), (a)(10))."
+      },
+      {
+        "field": "form1[0].Page3[0].#area[1].section_2[0]",
+        "description": "Line 25: Eligibility Category - Section 2 code.",
+        "party": "Applicant",
+        "notes": "Enter additional eligibility category information if applicable."
+      },
+      {
+        "field": "form1[0].Page3[0].#area[1].section_3[0]",
+        "description": "Line 25: Eligibility Category - Section 3 code.",
+        "party": "Applicant",
+        "notes": "Enter additional eligibility category information if applicable."
+      },
+      {
+        "field": "form1[0].Page3[0].Line26_SEVISnumber[0]",
+        "description": "Line 26: Student and Exchange Visitor Information System (SEVIS) Number (if any).",
+        "party": "Applicant",
+        "notes": "Enter your SEVIS number if you are an F-1, M-1, or J-1 student/exchange visitor. Format: NXXXXXXXXXX."
+      },
+      {
+        "field": "form1[0].Page3[0].Line27a_Degree[0]",
+        "description": "Line 27.a: Applicant's STEM OPT - Field of Study/Degree.",
+        "party": "Applicant",
+        "notes": "For STEM OPT extension applicants: Enter your STEM degree major."
+      },
+      {
+        "field": "form1[0].Page3[0].Line27b_Everify[0]",
+        "description": "Line 27.b: Employer's Name (for STEM OPT).",
+        "party": "Applicant",
+        "notes": "For STEM OPT extension: Enter the name of your E-Verify employer."
+      },
+      {
+        "field": "form1[0].Page3[0].Line27c_EverifyIDNumber[0]",
+        "description": "Line 27.c: Employer's E-Verify Company Identification Number.",
+        "party": "Applicant",
+        "notes": "For STEM OPT extension: Enter the employer's E-Verify ID number."
+      },
+      {
+        "field": "form1[0].Page3[0].Line28_ReceiptNumber[0]",
+        "description": "Line 28: Receipt Number from a related pending application.",
+        "party": "Applicant",
+        "notes": "Enter the USCIS receipt number of your pending application that is the basis for this EAD (e.g., I-485 receipt)."
+      },
+      {
+        "field": "form1[0].Page3[0].PtLine29_YesNo[0]",
+        "description": "Line 29: Have you EVER been arrested, cited, charged, or detained by any law enforcement officer? - Yes.",
+        "party": "Applicant",
+        "notes": "Select Yes if you have ever had any encounter with law enforcement resulting in arrest, citation, charge, or detention."
+      },
+      {
+        "field": "form1[0].Page3[0].PtLine29_YesNo[1]",
+        "description": "Line 29: Have you EVER been arrested, cited, charged, or detained by any law enforcement officer? - No.",
+        "party": "Applicant",
+        "notes": "Select No if you have never been arrested, cited, charged, or detained."
+      },
+      {
+        "field": "form1[0].Page3[0].Line18a_Receipt[0].Line30a_ReceiptNumber[0]",
+        "description": "Line 30.a: Receipt Number of prior EAD application (if applicable).",
+        "party": "Applicant",
+        "notes": "Enter the receipt number of your previous EAD application if renewing or replacing."
+      },
+      {
+        "field": "form1[0].Page3[0].PtLine30b_YesNo[0]",
+        "description": "Line 30.b: Were you issued an EAD based on that application? - Yes.",
+        "party": "Applicant",
+        "notes": "Select Yes if you received an EAD from the prior application."
+      },
+      {
+        "field": "form1[0].Page3[0].PtLine30b_YesNo[1]",
+        "description": "Line 30.b: Were you issued an EAD based on that application? - No.",
+        "party": "Applicant",
+        "notes": "Select No if you did not receive an EAD from the prior application."
+      }
+    ],
+    "Part 3 – Applicant's Statement, Contact Information, Certification, and Signature": [
+      {
+        "field": "form1[0].Page4[0].Pt3Line1Checkbox[0]",
+        "description": "Line 1.a: I can read and understand English, and I have read and understand every question and instruction on this application.",
+        "party": "Applicant",
+        "notes": "Select if you can read English and completed the form yourself without an interpreter."
+      },
+      {
+        "field": "form1[0].Page4[0].Pt3Line1Checkbox[1]",
+        "description": "Line 1.b: The interpreter named in Part 4 read to me every question and instruction on this application in a language in which I am fluent.",
+        "party": "Applicant",
+        "notes": "Select if an interpreter assisted you in understanding the form."
+      },
+      {
+        "field": "form1[0].Page4[0].Pt3Line1b_Language[0]",
+        "description": "Line 1.b: Language interpreted.",
+        "party": "Applicant",
+        "notes": "Enter the language the interpreter used to explain the form to you."
+      },
+      {
+        "field": "form1[0].Page4[0].Part3_Checkbox[0]",
+        "description": "Line 2: I request that a copy of this application be provided to the person named in Part 5.",
+        "party": "Applicant",
+        "notes": "Check if you want a copy of the application sent to your preparer."
+      },
+      {
+        "field": "form1[0].Page4[0].Pt3Line2_RepresentativeName[0]",
+        "description": "Line 2: Attorney or accredited representative USCIS Online Account Number (if any).",
+        "party": "Applicant",
+        "notes": "Enter your attorney or representative's USCIS online account number if applicable."
+      },
+      {
+        "field": "form1[0].Page4[0].Pt3Line3_DaytimePhoneNumber1[0]",
+        "description": "Line 3: Applicant's Daytime Telephone Number.",
+        "party": "Applicant",
+        "notes": "Enter your daytime phone number including area code."
+      },
+      {
+        "field": "form1[0].Page4[0].Pt3Line4_MobileNumber1[0]",
+        "description": "Line 4: Applicant's Mobile Telephone Number (if any).",
+        "party": "Applicant",
+        "notes": "Enter your mobile phone number if you have one."
+      },
+      {
+        "field": "form1[0].Page4[0].Pt3Line5_Email[0]",
+        "description": "Line 5: Applicant's Email Address (if any).",
+        "party": "Applicant",
+        "notes": "Enter your email address for correspondence from USCIS."
+      },
+      {
+        "field": "form1[0].Page4[0].Pt4Line6_Checkbox[0]",
+        "description": "Checkbox: Applicant acknowledges and accepts terms and conditions.",
+        "party": "Applicant",
+        "notes": "Acknowledgment of penalties for false statements and consent to release information."
+      },
+      {
+        "field": "form1[0].Page4[0].Pt3Line7a_Signature[0]",
+        "description": "Line 7.a: Applicant's Signature.",
+        "party": "Applicant",
+        "notes": "Sign in black ink. Must be your own signature - do not stamp or have someone else sign."
+      },
+      {
+        "field": "form1[0].Page4[0].Pt3Line7b_DateofSignature[0]",
+        "description": "Line 7.b: Date of Signature.",
+        "party": "Applicant",
+        "notes": "Enter the date you signed the application. Format: mm/dd/yyyy."
+      }
+    ],
+    "Part 4 – Interpreter's Contact Information, Certification, and Signature": [
+      {
+        "field": "form1[0].Page4[0].Pt4Line1a_InterpreterFamilyName[0]",
+        "description": "Line 1.a: Interpreter's Family Name (Last Name).",
+        "party": "Interpreter",
+        "notes": "Enter the interpreter's legal last name."
+      },
+      {
+        "field": "form1[0].Page4[0].Pt4Line1b_InterpreterGivenName[0]",
+        "description": "Line 1.b: Interpreter's Given Name (First Name).",
+        "party": "Interpreter",
+        "notes": "Enter the interpreter's legal first name."
+      },
+      {
+        "field": "form1[0].Page4[0].Pt4Line2_InterpreterBusinessorOrg[0]",
+        "description": "Line 2: Interpreter's Business or Organization Name (if any).",
+        "party": "Interpreter",
+        "notes": "Enter the name of the interpreter's business or organization if applicable."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt4Line4_InterpreterDaytimeTelephone[0]",
+        "description": "Line 4: Interpreter's Daytime Telephone Number.",
+        "party": "Interpreter",
+        "notes": "Enter the interpreter's daytime phone number."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt4Line5_MobileNumber[0]",
+        "description": "Line 5: Interpreter's Mobile Telephone Number (if any).",
+        "party": "Interpreter",
+        "notes": "Enter the interpreter's mobile phone number."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt4Line6_Email[0]",
+        "description": "Line 6: Interpreter's Email Address (if any).",
+        "party": "Interpreter",
+        "notes": "Enter the interpreter's email address."
+      },
+      {
+        "field": "form1[0].Page5[0].Part4_NameofLanguage[0]",
+        "description": "Language: Language interpreted from English.",
+        "party": "Interpreter",
+        "notes": "Enter the language into which the form was interpreted."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt4Line6a_Signature[0]",
+        "description": "Line 6.a: Interpreter's Signature.",
+        "party": "Interpreter",
+        "notes": "Interpreter must sign certifying accurate interpretation."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt4Line6b_DateofSignature[0]",
+        "description": "Line 6.b: Date of Interpreter's Signature.",
+        "party": "Interpreter",
+        "notes": "Enter the date the interpreter signed. Format: mm/dd/yyyy."
+      }
+    ],
+    "Part 5 – Contact Information, Declaration, and Signature of the Person Preparing this Application, if Other Than the Applicant": [
+      {
+        "field": "form1[0].Page5[0].Pt5Line1a_PreparerFamilyName[0]",
+        "description": "Line 1.a: Preparer's Family Name (Last Name).",
+        "party": "Preparer",
+        "notes": "Enter the preparer's legal last name."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line1b_PreparerGivenName[0]",
+        "description": "Line 1.b: Preparer's Given Name (First Name).",
+        "party": "Preparer",
+        "notes": "Enter the preparer's legal first name."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line2_BusinessName[0]",
+        "description": "Line 2: Preparer's Business or Organization Name.",
+        "party": "Preparer",
+        "notes": "Enter the name of the preparer's business or organization."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line3a_StreetNumberName[0]",
+        "description": "Line 3.a: Preparer's Mailing Address - Street Number and Name.",
+        "party": "Preparer",
+        "notes": "Enter the preparer's street address."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line3b_Unit[0]",
+        "description": "Line 3.b: Preparer's Address - Unit Type: Apt.",
+        "party": "Preparer",
+        "notes": "Select if unit type is Apartment."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line3b_Unit[1]",
+        "description": "Line 3.b: Preparer's Address - Unit Type: Ste.",
+        "party": "Preparer",
+        "notes": "Select if unit type is Suite."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line3b_Unit[2]",
+        "description": "Line 3.b: Preparer's Address - Unit Type: Flr.",
+        "party": "Preparer",
+        "notes": "Select if unit type is Floor."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line3b_AptSteFlrNumber[0]",
+        "description": "Line 3.b: Preparer's Address - Unit Number.",
+        "party": "Preparer",
+        "notes": "Enter the unit number."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line3c_CityOrTown[0]",
+        "description": "Line 3.c: Preparer's Mailing Address - City or Town.",
+        "party": "Preparer",
+        "notes": "Enter the city or town."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line3d_State[0]",
+        "description": "Line 3.d: Preparer's Mailing Address - State.",
+        "party": "Preparer",
+        "notes": "Enter the two-letter state abbreviation."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line3e_ZipCode[0]",
+        "description": "Line 3.e: Preparer's Mailing Address - ZIP Code.",
+        "party": "Preparer",
+        "notes": "Enter the 5-digit ZIP code."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line3f_Province[0]",
+        "description": "Line 3.f: Preparer's Address - Province (if outside U.S.).",
+        "party": "Preparer",
+        "notes": "Enter province if preparer's address is outside the U.S."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line3g_PostalCode[0]",
+        "description": "Line 3.g: Preparer's Address - Postal Code (if outside U.S.).",
+        "party": "Preparer",
+        "notes": "Enter postal code if preparer's address is outside the U.S."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line3h_Country[0]",
+        "description": "Line 3.h: Preparer's Address - Country.",
+        "party": "Preparer",
+        "notes": "Enter the country of the preparer's address."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line4_DaytimePhoneNumber1[0]",
+        "description": "Line 4: Preparer's Daytime Telephone Number.",
+        "party": "Preparer",
+        "notes": "Enter the preparer's daytime phone number."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line5_PreparerFaxNumber[0]",
+        "description": "Line 5: Preparer's Fax Number (if any).",
+        "party": "Preparer",
+        "notes": "Enter the preparer's fax number if available."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt5Line6_Email[0]",
+        "description": "Line 6: Preparer's Email Address (if any).",
+        "party": "Preparer",
+        "notes": "Enter the preparer's email address."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt6Line3a_StreetNumberName[0]",
+        "description": "Line 3.a (Alternate): Preparer's Business Address - Street Number and Name.",
+        "party": "Preparer",
+        "notes": "Enter the preparer's business street address if different from mailing."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt6Line3b_Unit[0]",
+        "description": "Line 3.b (Alternate): Preparer's Business Address - Unit Type: Apt.",
+        "party": "Preparer",
+        "notes": "Select if unit type is Apartment."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt6Line3b_Unit[1]",
+        "description": "Line 3.b (Alternate): Preparer's Business Address - Unit Type: Ste.",
+        "party": "Preparer",
+        "notes": "Select if unit type is Suite."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt6Line3b_Unit[2]",
+        "description": "Line 3.b (Alternate): Preparer's Business Address - Unit Type: Flr.",
+        "party": "Preparer",
+        "notes": "Select if unit type is Floor."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt6Line3b_AptSteFlrNumber[0]",
+        "description": "Line 3.b (Alternate): Preparer's Business Address - Unit Number.",
+        "party": "Preparer",
+        "notes": "Enter the unit number."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt6Line3c_CityOrTown[0]",
+        "description": "Line 3.c (Alternate): Preparer's Business Address - City or Town.",
+        "party": "Preparer",
+        "notes": "Enter the city or town."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt6Line3d_State[0]",
+        "description": "Line 3.d (Alternate): Preparer's Business Address - State.",
+        "party": "Preparer",
+        "notes": "Enter the two-letter state abbreviation."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt6Line3e_ZipCode[0]",
+        "description": "Line 3.e (Alternate): Preparer's Business Address - ZIP Code.",
+        "party": "Preparer",
+        "notes": "Enter the 5-digit ZIP code."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt6Line3f_Province[0]",
+        "description": "Line 3.f (Alternate): Preparer's Business Address - Province.",
+        "party": "Preparer",
+        "notes": "Enter province if applicable."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt6Line3g_PostalCode[0]",
+        "description": "Line 3.g (Alternate): Preparer's Business Address - Postal Code.",
+        "party": "Preparer",
+        "notes": "Enter postal code if applicable."
+      },
+      {
+        "field": "form1[0].Page5[0].Pt6Line3h_Country[0]",
+        "description": "Line 3.h (Alternate): Preparer's Business Address - Country.",
+        "party": "Preparer",
+        "notes": "Enter the country."
+      },
+      {
+        "field": "form1[0].Page6[0].Part5Line7_Checkbox[0]",
+        "description": "Line 7.a: Preparer is an attorney or accredited representative.",
+        "party": "Preparer",
+        "notes": "Select if preparer is a licensed attorney or BIA-accredited representative."
+      },
+      {
+        "field": "form1[0].Page6[0].Part5Line7_Checkbox[1]",
+        "description": "Line 7.a: Preparer is NOT an attorney or accredited representative.",
+        "party": "Preparer",
+        "notes": "Select if preparer is not a licensed attorney or accredited representative."
+      },
+      {
+        "field": "form1[0].Page6[0].Part5Line7b_Checkbox[0]",
+        "description": "Line 7.b: Form G-28 is attached.",
+        "party": "Preparer",
+        "notes": "Select if Form G-28 (Notice of Entry of Appearance as Attorney or Accredited Representative) is attached."
+      },
+      {
+        "field": "form1[0].Page6[0].Part5Line7b_Checkbox[1]",
+        "description": "Line 7.b: Form G-28 is NOT attached.",
+        "party": "Preparer",
+        "notes": "Select if Form G-28 is not attached."
+      },
+      {
+        "field": "form1[0].Page6[0].Pt5Line8a_Signature[0]",
+        "description": "Line 8.a: Preparer's Signature.",
+        "party": "Preparer",
+        "notes": "Preparer must sign certifying accuracy of information provided by applicant."
+      },
+      {
+        "field": "form1[0].Page6[0].Pt5Line8b_DateofSignature[0]",
+        "description": "Line 8.b: Date of Preparer's Signature.",
+        "party": "Preparer",
+        "notes": "Enter the date the preparer signed. Format: mm/dd/yyyy."
+      }
+    ],
+    "Part 6 – Additional Information": [
+      {
+        "field": "form1[0].Page7[0].Line1a_FamilyName[0]",
+        "description": "Header: Applicant's Family Name (Last Name) for additional information page.",
+        "party": "Applicant",
+        "notes": "Enter your last name at the top of the additional information page."
+      },
+      {
+        "field": "form1[0].Page7[0].Line1b_GivenName[0]",
+        "description": "Header: Applicant's Given Name (First Name) for additional information page.",
+        "party": "Applicant",
+        "notes": "Enter your first name at the top of the additional information page."
+      },
+      {
+        "field": "form1[0].Page7[0].Line1c_MiddleName[0]",
+        "description": "Header: Applicant's Middle Name for additional information page.",
+        "party": "Applicant",
+        "notes": "Enter your middle name at the top of the additional information page."
+      },
+      {
+        "field": "form1[0].Page7[0].Line7_AlienNumber[0]",
+        "description": "Header: Applicant's A-Number for additional information page.",
+        "party": "Applicant",
+        "notes": "Enter your A-Number at the top of the additional information page."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line3a_PageNumber[0]",
+        "description": "Line 3.a: Page Number for additional information entry 1.",
+        "party": "Applicant",
+        "notes": "Enter the page number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line3b_PartNumber[0]",
+        "description": "Line 3.b: Part Number for additional information entry 1.",
+        "party": "Applicant",
+        "notes": "Enter the part number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line3c_ItemNumber[0]",
+        "description": "Line 3.c: Item Number for additional information entry 1.",
+        "party": "Applicant",
+        "notes": "Enter the item/line number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line4a_PageNumber[0]",
+        "description": "Line 4.a: Page Number for additional information entry 2.",
+        "party": "Applicant",
+        "notes": "Enter the page number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line4b_PartNumber[0]",
+        "description": "Line 4.b: Part Number for additional information entry 2.",
+        "party": "Applicant",
+        "notes": "Enter the part number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line4c_ItemNumber[0]",
+        "description": "Line 4.c: Item Number for additional information entry 2.",
+        "party": "Applicant",
+        "notes": "Enter the item/line number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line4d_AdditionalInfo[0]",
+        "description": "Line 4.d: Additional Information entry 2.",
+        "party": "Applicant",
+        "notes": "Enter additional information that did not fit in the designated field."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line4d_AdditionalInfo[1]",
+        "description": "Line 4.d: Additional Information entry 2 (continued).",
+        "party": "Applicant",
+        "notes": "Continue additional information if needed."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line5a_PageNumber[0]",
+        "description": "Line 5.a: Page Number for additional information entry 3.",
+        "party": "Applicant",
+        "notes": "Enter the page number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line5b_PartNumber[0]",
+        "description": "Line 5.b: Part Number for additional information entry 3.",
+        "party": "Applicant",
+        "notes": "Enter the part number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line5c_ItemNumber[0]",
+        "description": "Line 5.c: Item Number for additional information entry 3.",
+        "party": "Applicant",
+        "notes": "Enter the item/line number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line5d_AdditionalInfo[0]",
+        "description": "Line 5.d: Additional Information entry 3.",
+        "party": "Applicant",
+        "notes": "Enter additional information that did not fit in the designated field."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line6a_PageNumber[0]",
+        "description": "Line 6.a: Page Number for additional information entry 4.",
+        "party": "Applicant",
+        "notes": "Enter the page number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line6b_PartNumber[0]",
+        "description": "Line 6.b: Part Number for additional information entry 4.",
+        "party": "Applicant",
+        "notes": "Enter the part number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line6c_ItemNumber[0]",
+        "description": "Line 6.c: Item Number for additional information entry 4.",
+        "party": "Applicant",
+        "notes": "Enter the item/line number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line6d_AdditionalInfo[0]",
+        "description": "Line 6.d: Additional Information entry 4.",
+        "party": "Applicant",
+        "notes": "Enter additional information that did not fit in the designated field."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line7a_PageNumber[0]",
+        "description": "Line 7.a: Page Number for additional information entry 5.",
+        "party": "Applicant",
+        "notes": "Enter the page number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line7b_PartNumber[0]",
+        "description": "Line 7.b: Part Number for additional information entry 5.",
+        "party": "Applicant",
+        "notes": "Enter the part number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line7c_ItemNumber[0]",
+        "description": "Line 7.c: Item Number for additional information entry 5.",
+        "party": "Applicant",
+        "notes": "Enter the item/line number this additional information refers to."
+      },
+      {
+        "field": "form1[0].Page7[0].Pt6Line7d_AdditionalInfo[0]",
+        "description": "Line 7.d: Additional Information entry 5.",
+        "party": "Applicant",
+        "notes": "Enter additional information that did not fit in the designated field."
+      }
+    ]
+  
+}
+

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Form Agent Pro — Logo Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #060a12;
+    color: #e6edf3;
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    min-height: 100vh;
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+  }
+  .section { display: flex; flex-direction: column; gap: 16px; }
+  .label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    color: #484f58;
+    text-transform: uppercase;
+  }
+
+  /* ── Header logo ── */
+  .header-demo {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 10px;
+    padding: 0 28px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    width: fit-content;
+  }
+  .header-demo-wide {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 10px;
+    padding: 0 28px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 800px;
+    gap: 20px;
+  }
+  .nav-items {
+    display: flex;
+    gap: 28px;
+    font-size: 13px;
+    color: #8b949e;
+  }
+
+  /* ── Profile logos ── */
+  .profile-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .profile-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .profile-wrap .size-label {
+    font-size: 9px;
+    color: #484f58;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .profile-circle {
+    border-radius: 50%;
+    overflow: hidden;
+    display: block;
+    line-height: 0;
+  }
+
+  /* ── On-white test ── -->*/
+  .white-demo {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 18px 28px;
+    width: fit-content;
+  }
+</style>
+</head>
+<body>
+
+  <!-- ── Section: Header Lockup ── -->
+  <div class="section">
+    <div class="label">Website Header — Dark Background</div>
+    <div class="header-demo">
+      <img src="logo-header.svg" height="60" alt="Form Agent Pro"/>
+    </div>
+  </div>
+
+  <!-- ── Section: Header in full nav bar ── -->
+  <div class="section">
+    <div class="label">Website Header — Full Nav Bar Context</div>
+    <div class="header-demo-wide">
+      <img src="logo-header.svg" height="56" alt="Form Agent Pro"/>
+      <div class="nav-items">
+        <span>Features</span>
+        <span>Pricing</span>
+        <span>Docs</span>
+        <span>Sign In</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Section: Twitter / Profile Sizes ── -->
+  <div class="section">
+    <div class="label">Twitter / Profile Picture — Multiple Sizes</div>
+    <div class="profile-row">
+      <div class="profile-wrap">
+        <div class="profile-circle" style="width:200px;height:200px;">
+          <img src="logo-profile.svg" width="200" height="200" alt="Profile 200"/>
+        </div>
+        <span class="size-label">200 × 200</span>
+      </div>
+      <div class="profile-wrap">
+        <div class="profile-circle" style="width:128px;height:128px;">
+          <img src="logo-profile.svg" width="128" height="128" alt="Profile 128"/>
+        </div>
+        <span class="size-label">128 × 128</span>
+      </div>
+      <div class="profile-wrap">
+        <div class="profile-circle" style="width:80px;height:80px;">
+          <img src="logo-profile.svg" width="80" height="80" alt="Profile 80"/>
+        </div>
+        <span class="size-label">80 × 80</span>
+      </div>
+      <div class="profile-wrap">
+        <div class="profile-circle" style="width:48px;height:48px;">
+          <img src="logo-profile.svg" width="48" height="48" alt="Profile 48"/>
+        </div>
+        <span class="size-label">48 × 48</span>
+      </div>
+      <div class="profile-wrap">
+        <div class="profile-circle" style="width:32px;height:32px;">
+          <img src="logo-profile.svg" width="32" height="32" alt="Profile 32"/>
+        </div>
+        <span class="size-label">32 × 32</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Section: Profile square (un-cropped) ── -->
+  <div class="section">
+    <div class="label">Profile — Full Square (Pre-Crop)</div>
+    <img src="logo-profile.svg" width="240" height="240"
+      style="display:block;border-radius:12px;border:1px solid #21262d;" alt="Profile Square"/>
+  </div>
+
+</body>
+</html>

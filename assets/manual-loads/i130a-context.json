@@ -1,0 +1,1176 @@
+{
+    "formId": "i-130a",
+    "formMetadata": {
+      "purpose": "Form I-130A collects supplemental biographical, address, employment, and parental information from a spouse beneficiary on whose behalf a U.S. citizen, lawful permanent resident, or non-citizen U.S. national is filing Form I-130, Petition for Alien Relative.",
+      "situations": "Required whenever Form I-130 is filed to classify a spouse as an immediate relative (IR-1/CR-1) of a U.S. citizen under INA §201(b)(2)(A)(i) or as a family second-preference (F2A) beneficiary of a lawful permanent resident under INA §203(a)(2). Applies to both adjustment-of-status (I-485) and consular-processing tracks. Must be filed regardless of whether the beneficiary resides in the U.S. or overseas, though overseas beneficiaries are not required to sign the form.",
+      "use-cases": "1) U.S. citizen files I-130 for foreign-national spouse residing in the U.S.; beneficiary completes and signs I-130A. 2) LPR files I-130 for spouse abroad; beneficiary completes I-130A but does not sign. 3) U.S. citizen files I-130 concurrently with I-485 and I-130A is included in the adjustment package. 4) Beneficiary has complex address or employment history spanning multiple countries over five years, requiring Part 7 continuation sheets. 5) Beneficiary needs an interpreter to complete the form, triggering Part 5. 6) An attorney or accredited representative prepares the form, triggering Parts 5/6 and requiring a G-28.",
+      "filing-context": "I-130A is always filed as an attachment to Form I-130. It is never filed independently. When filed domestically for adjustment, the package typically includes I-130, I-130A, I-485, I-864, I-693, I-765, I-131, and supporting evidence (marriage certificate, photos, birth certificates, passport copies). When filed for consular processing, the package is sent to the USCIS lockbox or filed online; the I-130A travels with the I-130. If an attorney or accredited representative prepares the form, Form G-28 must be attached. The form edition is 04/01/24 with OMB expiration 02/28/2027.",
+      "parties-involved": "Spouse Beneficiary (Applicant): The foreign-national spouse for whom the I-130 is being filed; provides all biographical, address, employment, and parental data in Parts 1–4. Petitioner: The U.S. citizen or LPR spouse who files Form I-130; not directly referenced on I-130A but is the filer of the parent petition. Interpreter: An individual who translates the form's questions and the beneficiary's answers; completes Part 5. Preparer: A person (attorney, accredited representative, or other) who physically prepares the form on behalf of the beneficiary; completes Part 6. Attorney/Accredited Representative: A legal representative who may complete the header block and attach Form G-28."
+    },
+    "fields": [
+      {
+        "field": "form1[0].#pageSet[0].Page1[0].PDF417BarCode1[0]",
+        "description": "System-generated PDF417 barcode on page 1 used by USCIS for automated scanning and data capture. No applicant input required.",
+        "party": "N/A",
+        "notes": "Administrative field auto-populated by the PDF form software upon completion. Do not attempt to fill or modify."
+      },
+      {
+        "field": "form1[0].#pageSet[0].Page1[1].PDF417BarCode1[0]",
+        "description": "System-generated PDF417 barcode on page 2 used by USCIS for automated scanning and data capture. No applicant input required.",
+        "party": "N/A",
+        "notes": "Administrative field auto-populated by the PDF form software upon completion. Do not attempt to fill or modify."
+      },
+      {
+        "field": "form1[0].#pageSet[0].Page1[2].PDF417BarCode1[0]",
+        "description": "System-generated PDF417 barcode on page 3 used by USCIS for automated scanning and data capture. No applicant input required.",
+        "party": "N/A",
+        "notes": "Administrative field auto-populated by the PDF form software upon completion. Do not attempt to fill or modify."
+      },
+      {
+        "field": "form1[0].#pageSet[0].Page1[3].PDF417BarCode1[0]",
+        "description": "System-generated PDF417 barcode on page 4 used by USCIS for automated scanning and data capture. No applicant input required.",
+        "party": "N/A",
+        "notes": "Administrative field auto-populated by the PDF form software upon completion. Do not attempt to fill or modify."
+      },
+      {
+        "field": "form1[0].#pageSet[0].Page1[4].PDF417BarCode1[0]",
+        "description": "System-generated PDF417 barcode on page 5 used by USCIS for automated scanning and data capture. No applicant input required.",
+        "party": "N/A",
+        "notes": "Administrative field auto-populated by the PDF form software upon completion. Do not attempt to fill or modify."
+      },
+      {
+        "field": "form1[0].#pageSet[0].Page1[5].PDF417BarCode1[0]",
+        "description": "System-generated PDF417 barcode on page 6 used by USCIS for automated scanning and data capture. No applicant input required.",
+        "party": "N/A",
+        "notes": "Administrative field auto-populated by the PDF form software upon completion. Do not attempt to fill or modify."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line1_AlienNumber[0]",
+        "description": "Part 1, Item 1. Alien Registration Number (A-Number) (if any). The spouse beneficiary's 7-to-9-digit USCIS-assigned alien registration number, prefixed with 'A-'.",
+        "party": "Applicant",
+        "notes": "Found on prior EADs, green cards, or USCIS notices. Format: up to 9 digits (no dashes beyond the 'A-' prefix printed on the form). Leave blank if the beneficiary has never been assigned an A-Number. Do not enter 'None' or 'N/A'; simply leave empty. Common mistake: confusing with USCIS Online Account Number."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line4a_StreetNumberName[0]",
+        "description": "Part 1, Physical Address 1, Item 4.a. Street Number and Name of the spouse beneficiary's current physical address.",
+        "party": "Applicant",
+        "notes": "This is the beneficiary's current residential address, listed first per the instructions. Must be a physical address, not a P.O. Box. Include house/building number and street name. For overseas addresses, use the local street format. Should match the address on file with USCIS for consistency with I-130 and I-485."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line4b_Unit[0]",
+        "description": "Part 1, Physical Address 1, Item 4.b. Unit type radio button: 'Apt.' (Apartment) for the beneficiary's current physical address.",
+        "party": "Applicant",
+        "notes": "Select only one of Apt., Ste., or Flr. Leave all unselected if no unit designation applies. This is a radio-button group with Pt1Line4b_Unit[1] and Pt1Line4b_Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line4b_Unit[1]",
+        "description": "Part 1, Physical Address 1, Item 4.b. Unit type radio button: 'Ste.' (Suite) for the beneficiary's current physical address.",
+        "party": "Applicant",
+        "notes": "Select only one of Apt., Ste., or Flr. Mutually exclusive with Unit[0] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line4b_Unit[2]",
+        "description": "Part 1, Physical Address 1, Item 4.b. Unit type radio button: 'Flr.' (Floor) for the beneficiary's current physical address.",
+        "party": "Applicant",
+        "notes": "Select only one of Apt., Ste., or Flr. Mutually exclusive with Unit[0] and Unit[1]."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line4b_AptSteFlrNumber[0]",
+        "description": "Part 1, Physical Address 1, Item 4.b. The apartment, suite, or floor number itself for the beneficiary's current physical address.",
+        "party": "Applicant",
+        "notes": "Enter the unit number/letter only (e.g., '4B', '200'). Only fill if one of the unit-type radio buttons (Apt/Ste/Flr) is selected. Leave blank if no unit."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line4c_CityOrTown[0]",
+        "description": "Part 1, Physical Address 1, Item 4.c. City or Town of the beneficiary's current physical address.",
+        "party": "Applicant",
+        "notes": "Use the full city name, no abbreviations. For overseas addresses, use the local city name."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line4d_State[0]",
+        "description": "Part 1, Physical Address 1, Item 4.d. State (U.S. addresses) of the beneficiary's current physical address.",
+        "party": "Applicant",
+        "notes": "Dropdown list of U.S. states and territories. Only applicable for U.S. addresses. Leave blank for foreign addresses and use Province (4.f.) and Country (4.h.) instead."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line4e_ZipCode[0]",
+        "description": "Part 1, Physical Address 1, Item 4.e. ZIP Code (U.S. addresses) of the beneficiary's current physical address.",
+        "party": "Applicant",
+        "notes": "5-digit or 9-digit (ZIP+4) U.S. ZIP code. Only for U.S. addresses. Leave blank for foreign addresses."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line4f_Province[0]",
+        "description": "Part 1, Physical Address 1, Item 4.f. Province of the beneficiary's current physical address (for foreign addresses).",
+        "party": "Applicant",
+        "notes": "Only for addresses outside the U.S. Use the local province, state, region, or equivalent administrative division name. Leave blank for U.S. addresses."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line4h_Country[0]",
+        "description": "Part 1, Physical Address 1, Item 4.h. Country of the beneficiary's current physical address.",
+        "party": "Applicant",
+        "notes": "For U.S. addresses, enter 'United States'. For foreign addresses, use the full country name as recognized by the U.S. Department of State. Do not use abbreviations or country codes."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line4g_PostalCode[0]",
+        "description": "Part 1, Physical Address 1, Item 4.g. Postal Code of the beneficiary's current physical address (for foreign addresses).",
+        "party": "Applicant",
+        "notes": "Foreign postal code. Only for addresses outside the U.S. Leave blank for U.S. addresses (use ZIP Code field instead)."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line6a_StreetNumberName[0]",
+        "description": "Part 1, Physical Address 2, Item 6.a. Street Number and Name of the spouse beneficiary's second most recent physical address (within the last 5 years).",
+        "party": "Applicant",
+        "notes": "Continue listing addresses chronologically backward. Must be a physical address. If the beneficiary has lived at their current address for the entire 5-year period, this may be left blank or filled with the prior address. Addresses must collectively cover the full 5-year history."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line6b_Unit[0]",
+        "description": "Part 1, Physical Address 2, Item 6.b. Unit type radio button: 'Apt.' (Apartment) for the beneficiary's second physical address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive radio button group with Unit[1] and Unit[2]. Select only one or leave all unselected."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line6b_Unit[1]",
+        "description": "Part 1, Physical Address 2, Item 6.b. Unit type radio button: 'Ste.' (Suite) for the beneficiary's second physical address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[0] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line6b_Unit[2]",
+        "description": "Part 1, Physical Address 2, Item 6.b. Unit type radio button: 'Flr.' (Floor) for the beneficiary's second physical address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[0] and Unit[1]."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line6b_AptSteFlrNumber[0]",
+        "description": "Part 1, Physical Address 2, Item 6.b. The apartment, suite, or floor number for the beneficiary's second physical address.",
+        "party": "Applicant",
+        "notes": "Only fill if a unit type is selected. Enter the unit number/letter only."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line6c_CityOrTown[0]",
+        "description": "Part 1, Physical Address 2, Item 6.c. City or Town of the beneficiary's second physical address.",
+        "party": "Applicant",
+        "notes": "Full city name, no abbreviations."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line6d_State[0]",
+        "description": "Part 1, Physical Address 2, Item 6.d. State (U.S.) of the beneficiary's second physical address.",
+        "party": "Applicant",
+        "notes": "Dropdown. Only for U.S. addresses. Leave blank for foreign addresses."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line6e_ZipCode[0]",
+        "description": "Part 1, Physical Address 2, Item 6.e. ZIP Code (U.S.) of the beneficiary's second physical address.",
+        "party": "Applicant",
+        "notes": "5- or 9-digit ZIP. Only for U.S. addresses."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line6f_Province[0]",
+        "description": "Part 1, Physical Address 2, Item 6.f. Province of the beneficiary's second physical address (foreign addresses).",
+        "party": "Applicant",
+        "notes": "Only for non-U.S. addresses."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line6h_Country[0]",
+        "description": "Part 1, Physical Address 2, Item 6.h. Country of the beneficiary's second physical address.",
+        "party": "Applicant",
+        "notes": "Full country name as recognized by the U.S. Department of State."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line6g_PostalCode[0]",
+        "description": "Part 1, Physical Address 2, Item 6.g. Postal Code of the beneficiary's second physical address (foreign addresses).",
+        "party": "Applicant",
+        "notes": "Only for non-U.S. addresses. Leave blank for U.S. addresses."
+      },
+      {
+        "field": "form1[0].#subform[0].CheckBox1[0]",
+        "description": "Header block checkbox: 'Select this box if Form G-28 is attached.' Indicates that Form G-28, Notice of Entry of Appearance as Attorney or Accredited Representative, is being filed with this I-130A.",
+        "party": "Preparer",
+        "notes": "Only checked if an attorney or accredited representative has entered an appearance for the spouse beneficiary specifically for this I-130A. The G-28 for the I-130A may differ from the G-28 attached to the I-130 if different counsel represents the beneficiary."
+      },
+      {
+        "field": "form1[0].#subform[0].AttorneyStateBarNumber[0]",
+        "description": "Header block: Attorney State Bar Number (if applicable). The state bar license number of the attorney completing this form.",
+        "party": "Preparer",
+        "notes": "Only completed by attorneys. Accredited representatives and non-attorney preparers leave blank. Format varies by state bar."
+      },
+      {
+        "field": "form1[0].#subform[0].#area[0].USCISOnlineAcctNumber[0]",
+        "description": "Header block: Attorney or Accredited Representative USCIS Online Account Number (if any). The USCIS online account number assigned to the attorney or accredited representative.",
+        "party": "Preparer",
+        "notes": "12-digit number if the representative has a USCIS online account. Leave blank if none. This is the representative's own account number, not the beneficiary's."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line7a_DateFrom[0]",
+        "description": "Part 1, Physical Address 2, Item 7.a. Date From (mm/dd/yyyy). The date the beneficiary began residing at Physical Address 2.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy. Must be within the last 5 years. The Date To of this address should align with or precede the Date From of Physical Address 1 to ensure continuous coverage."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line7b_DateTo[0]",
+        "description": "Part 1, Physical Address 2, Item 7.b. Date To (mm/dd/yyyy). The date the beneficiary stopped residing at Physical Address 2.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy. Should not overlap with the start date of Physical Address 1. Leave blank or enter the date they moved out."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line3a_FamilyName[0]",
+        "description": "Part 1, Your Full Name, Item 3.a. Family Name (Last Name) of the spouse beneficiary.",
+        "party": "Applicant",
+        "notes": "Must match the name exactly as it appears on the beneficiary's passport or travel document. Use current legal name. If name changed due to marriage, use the name on the current passport unless legally changed. This must be consistent with the beneficiary's name on Form I-130."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line3b_GivenName[0]",
+        "description": "Part 1, Your Full Name, Item 3.b. Given Name (First Name) of the spouse beneficiary.",
+        "party": "Applicant",
+        "notes": "Must match passport/travel document exactly. Do not use nicknames or informal names."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line3c_MiddleName[0]",
+        "description": "Part 1, Your Full Name, Item 3.c. Middle Name of the spouse beneficiary.",
+        "party": "Applicant",
+        "notes": "As it appears on the passport or travel document. If the beneficiary has no middle name, leave blank. Do not enter 'N/A' or 'None'."
+      },
+      {
+        "field": "form1[0].#subform[0].#area[1].Pt2Line3_USCISELISActNumber[0]",
+        "description": "Part 1, Item 2. USCIS Online Account Number (if any). The spouse beneficiary's own USCIS online account number.",
+        "party": "Applicant",
+        "notes": "12-digit number assigned when the beneficiary creates an account on the USCIS website (myaccount.uscis.gov). Leave blank if the beneficiary does not have one. Not the same as the A-Number. Not the attorney's account number."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line5a_DateFrom[0]",
+        "description": "Part 1, Physical Address 1, Item 5.a. Date From (mm/dd/yyyy). The date the beneficiary began residing at Physical Address 1 (current address).",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy. This is the move-in date for the current address."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line5b_DateTo[0]",
+        "description": "Part 1, Physical Address 1, Item 5.b. Date To (mm/dd/yyyy). For the current address, this should be 'PRESENT' or the current date.",
+        "party": "Applicant",
+        "notes": "The printed form shows 'PRESENT' pre-filled next to this field for Address 1, indicating this is the current residence. If the PDF field is fillable, enter the current date or leave as 'PRESENT'. The form itself labels this as PRESENT for the current address."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line8e_PostalCode[0]",
+        "description": "Part 1, Last Physical Address Outside the United States, Item 8.e. Postal Code of the beneficiary's last foreign address of more than one year.",
+        "party": "Applicant",
+        "notes": "Foreign postal code. Required even if this address was already listed above. This section specifically asks for the last address outside the U.S. where the beneficiary lived for more than one year."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line8f_Country[0]",
+        "description": "Part 1, Last Physical Address Outside the United States, Item 8.f. Country of the beneficiary's last foreign address of more than one year.",
+        "party": "Applicant",
+        "notes": "Full country name. Must be a country outside the United States."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line8d_Province[0]",
+        "description": "Part 1, Last Physical Address Outside the United States, Item 8.d. Province of the beneficiary's last foreign address of more than one year.",
+        "party": "Applicant",
+        "notes": "Province, state, or regional subdivision of the foreign country."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line8c_CityOrTown[0]",
+        "description": "Part 1, Last Physical Address Outside the United States, Item 8.c. City or Town of the beneficiary's last foreign address of more than one year.",
+        "party": "Applicant",
+        "notes": "Full city name in the foreign country."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line8b_AptSteFlrNumber[0]",
+        "description": "Part 1, Last Physical Address Outside the United States, Item 8.b. Apartment, suite, or floor number for the beneficiary's last foreign address.",
+        "party": "Applicant",
+        "notes": "Only fill if a unit type is selected."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line8b_Unit[0]",
+        "description": "Part 1, Last Physical Address Outside the United States, Item 8.b. Unit type radio button: 'Apt.' for the beneficiary's last foreign address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[1] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line8b_Unit[1]",
+        "description": "Part 1, Last Physical Address Outside the United States, Item 8.b. Unit type radio button: 'Ste.' for the beneficiary's last foreign address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[0] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line8b_Unit[2]",
+        "description": "Part 1, Last Physical Address Outside the United States, Item 8.b. Unit type radio button: 'Flr.' for the beneficiary's last foreign address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[0] and Unit[1]."
+      },
+      {
+        "field": "form1[0].#subform[0].Pt1Line8a_StreetNumberName[0]",
+        "description": "Part 1, Last Physical Address Outside the United States, Item 8.a. Street Number and Name of the beneficiary's last address outside the U.S. where they resided for more than one year.",
+        "party": "Applicant",
+        "notes": "This address must be outside the United States and must have been occupied for more than one year, even if already listed in the address history above. Use local address format."
+      },
+      {
+        "field": "form1[0].#subform[0].VolagNumber[0]",
+        "description": "Header block: Volag Number (if any). The Voluntary Agency number assigned to the accredited representative's organization.",
+        "party": "Preparer",
+        "notes": "Only applicable if the preparer is affiliated with a DOJ-recognized voluntary agency. Leave blank if not applicable. Most attorneys leave this blank."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line9b_DateTo[0]",
+        "description": "Part 1, Last Physical Address Outside the United States, Item 9.b. Date To (mm/dd/yyyy). The date the beneficiary stopped residing at the last foreign address of more than one year.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy. If still residing there, enter the current date or 'PRESENT'."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line9a_DateFrom[0]",
+        "description": "Part 1, Last Physical Address Outside the United States, Item 9.a. Date From (mm/dd/yyyy). The date the beneficiary began residing at the last foreign address of more than one year.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line10_GivenName[0]",
+        "description": "Part 1, Information About Parent 1, Item 10.b. Given Name (First Name) of Parent 1.",
+        "party": "Applicant",
+        "notes": "Parent 1's first name as it appears on the beneficiary's birth certificate or equivalent. The form labels this section 'Full Name of Parent 1' and uses 'Family Name (Maiden Name)' for the last name, indicating this is typically the birth mother but can be either parent."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line10_MiddleName[0]",
+        "description": "Part 1, Information About Parent 1, Item 10.c. Middle Name of Parent 1.",
+        "party": "Applicant",
+        "notes": "Leave blank if Parent 1 has no middle name."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line12CityTownOfBirth[0]",
+        "description": "Part 1, Information About Parent 1, Item 13. City/Town/Village of Birth of Parent 1.",
+        "party": "Applicant",
+        "notes": "Despite the field ID referencing 'Line12', this corresponds to printed Item 13 on the form. Use the birth city as shown on the parent's birth certificate or the beneficiary's birth certificate."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line14_CountryofBirth[0]",
+        "description": "Part 1, Information About Parent 1, Item 14. Country of Birth of Parent 1.",
+        "party": "Applicant",
+        "notes": "Use the current name of the country if the country name has changed since the parent's birth (e.g., use 'Russia' instead of 'USSR'). Follow DOS country naming conventions."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line15_CountryofResidence[0]",
+        "description": "Part 1, Information About Parent 1, Item 16. Country of Residence of Parent 1.",
+        "party": "Applicant",
+        "notes": "Despite the field ID referencing 'Line15', this corresponds to printed Item 16. Current country where Parent 1 resides. If deceased, some practitioners leave blank or write 'Deceased'."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line13_CountryofBirth[0]",
+        "description": "Part 1, Information About Parent 1, Item 15. City/Town/Village of Residence of Parent 1.",
+        "party": "Applicant",
+        "notes": "Despite the field ID referencing 'CountryofBirth', this corresponds to printed Item 15 (City/Town/Village of Residence). This is an ID mismatch — the field captures the city/town where Parent 1 currently lives."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line11_DateofBirth[0]",
+        "description": "Part 1, Information About Parent 1, Item 11. Date of Birth (mm/dd/yyyy) of Parent 1.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy. Source: beneficiary's birth certificate or parent's identity document."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line10_FamilyName[0]",
+        "description": "Part 1, Information About Parent 1, Item 10.a. Family Name (Maiden Name) of Parent 1.",
+        "party": "Applicant",
+        "notes": "The form specifically asks for 'Maiden Name' as the label for Parent 1's family name, indicating this is typically the birth mother. Enter the pre-marriage surname. If Parent 1 is the father, enter the father's surname."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line2a_StreetNumberName[0]",
+        "description": "Part 2, Employer 1, Item 2.a. Street Number and Name of the address of the beneficiary's current (or most recent) employer.",
+        "party": "Applicant",
+        "notes": "Physical address of the employer. For remote workers, use the employer's main office address."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line2b_Unit[0]",
+        "description": "Part 2, Employer 1, Item 2.b. Unit type radio button: 'Apt.' for the employer's address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[1] and Unit[2]. Uncommon for employer addresses; typically Ste. or Flr. is used."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line2b_Unit[1]",
+        "description": "Part 2, Employer 1, Item 2.b. Unit type radio button: 'Ste.' (Suite) for the employer's address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[0] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line2b_Unit[2]",
+        "description": "Part 2, Employer 1, Item 2.b. Unit type radio button: 'Flr.' (Floor) for the employer's address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[0] and Unit[1]."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line2b_AptSteFlrNumber[0]",
+        "description": "Part 2, Employer 1, Item 2.b. The suite, apartment, or floor number of the employer's address.",
+        "party": "Applicant",
+        "notes": "Only fill if a unit type radio button is selected."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line2c_CityOrTown[0]",
+        "description": "Part 2, Employer 1, Item 2.c. City or Town of the employer's address.",
+        "party": "Applicant",
+        "notes": "Full city name."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line2f_Province[0]",
+        "description": "Part 2, Employer 1, Item 2.f. Province of the employer's address (foreign addresses).",
+        "party": "Applicant",
+        "notes": "Only for employers outside the U.S."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line2g_PostalCode[0]",
+        "description": "Part 2, Employer 1, Item 2.g. Postal Code of the employer's address (foreign addresses).",
+        "party": "Applicant",
+        "notes": "Only for employers outside the U.S."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line2e_ZipCode[0]",
+        "description": "Part 2, Employer 1, Item 2.e. ZIP Code of the employer's address (U.S. addresses).",
+        "party": "Applicant",
+        "notes": "5- or 9-digit ZIP code for U.S. employer addresses."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line2d_State[0]",
+        "description": "Part 2, Employer 1, Item 2.d. State of the employer's address (U.S. addresses).",
+        "party": "Applicant",
+        "notes": "Dropdown. Only for U.S. employer addresses."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line2h_Country[0]",
+        "description": "Part 2, Employer 1, Item 2.h. Country of the employer's address.",
+        "party": "Applicant",
+        "notes": "Full country name."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line1_EmployerOrCompName[0]",
+        "description": "Part 2, Employer 1, Item 1. Name of Employer/Company. The name of the beneficiary's current or most recent employer.",
+        "party": "Applicant",
+        "notes": "If currently unemployed, type or print 'Unemployed' per the form instructions. Use the full legal business name. Self-employed beneficiaries should enter 'Self-employed' or the business name."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line17_DateofBirth[0]",
+        "description": "Part 1, Information About Parent 2, Item 18. Date of Birth (mm/dd/yyyy) of Parent 2.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy. Despite the field ID referencing 'Line17', this maps to printed Item 18. Source: beneficiary's birth certificate or parent's identity document."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line19_CountryofBirth[0]",
+        "description": "Part 1, Information About Parent 2, Item 21. Country of Birth of Parent 2.",
+        "party": "Applicant",
+        "notes": "Despite the field ID referencing 'Line19', this corresponds to printed Item 21. Use current country name per DOS conventions."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line21_CountryofResidence[0]",
+        "description": "Part 1, Information About Parent 2, Item 23. Country of Residence of Parent 2.",
+        "party": "Applicant",
+        "notes": "Despite the field ID referencing 'Line21', this corresponds to printed Item 23. Current country of residence. If deceased, leave blank or write 'Deceased'."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line20_CityTownVillageofRes[0]",
+        "description": "Part 1, Information About Parent 2, Item 22. City/Town/Village of Residence of Parent 2.",
+        "party": "Applicant",
+        "notes": "Despite the field ID referencing 'Line20', this corresponds to printed Item 22."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line18_CityTownOfBirth[0]",
+        "description": "Part 1, Information About Parent 2, Item 20. City/Town/Village of Birth of Parent 2.",
+        "party": "Applicant",
+        "notes": "Despite the field ID referencing 'Line18', this corresponds to printed Item 20. City/town/village of birth from the birth certificate or parent's ID."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line16_MiddleName[0]",
+        "description": "Part 1, Information About Parent 2, Item 17.c. Middle Name of Parent 2.",
+        "party": "Applicant",
+        "notes": "Leave blank if Parent 2 has no middle name."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line16_GivenName[0]",
+        "description": "Part 1, Information About Parent 2, Item 17.b. Given Name (First Name) of Parent 2.",
+        "party": "Applicant",
+        "notes": "Parent 2's given name as on the beneficiary's birth certificate."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line16_FamilyName[0]",
+        "description": "Part 1, Information About Parent 2, Item 17.a. Family Name (Last Name) of Parent 2.",
+        "party": "Applicant",
+        "notes": "Unlike Parent 1, this field is labeled 'Family Name (Last Name)' rather than 'Maiden Name'. Enter the current or birth surname of Parent 2."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line3_Occupation[0]",
+        "description": "Part 2, Employer 1, Item 3. Your Occupation. The beneficiary's job title or occupation at Employer 1.",
+        "party": "Applicant",
+        "notes": "Use a descriptive job title (e.g., 'Software Engineer', 'Homemaker', 'Student'). If unemployed, this field may be left blank or marked 'N/A'."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line4a_DateFrom[0]",
+        "description": "Part 2, Employer 1, Item 4.a. Date From (mm/dd/yyyy). The date the beneficiary began employment at Employer 1.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy. For current employment, this is the hire/start date."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line4b_DateTo[0]",
+        "description": "Part 2, Employer 1, Item 4.b. Date To (mm/dd/yyyy). The date the beneficiary ended (or expects to end) employment at Employer 1.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy. If currently employed, enter 'PRESENT' or the current date."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line6_StreetNumberName[0]",
+        "description": "Part 2, Employer 2, Item 6.a. Street Number and Name of the address of the beneficiary's second most recent employer.",
+        "party": "Applicant",
+        "notes": "Physical address of the second employer. Only needed if the beneficiary had more than one employer in the last 5 years."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line6_Unit[0]",
+        "description": "Part 2, Employer 2, Item 6.b. Unit type radio button: 'Apt.' for the second employer's address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[1] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line6_Unit[1]",
+        "description": "Part 2, Employer 2, Item 6.b. Unit type radio button: 'Ste.' for the second employer's address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[0] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line6_Unit[2]",
+        "description": "Part 2, Employer 2, Item 6.b. Unit type radio button: 'Flr.' for the second employer's address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[0] and Unit[1]."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line6_AptSteFlrNumber[0]",
+        "description": "Part 2, Employer 2, Item 6.b. Apartment, suite, or floor number for the second employer's address.",
+        "party": "Applicant",
+        "notes": "Only fill if a unit type is selected."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line6_CityOrTown[0]",
+        "description": "Part 2, Employer 2, Item 6.c. City or Town of the second employer's address.",
+        "party": "Applicant",
+        "notes": "Full city name."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line6_Province[0]",
+        "description": "Part 2, Employer 2, Item 6.f. Province of the second employer's address (foreign addresses).",
+        "party": "Applicant",
+        "notes": "Only for employers outside the U.S."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line6_PostalCode[0]",
+        "description": "Part 2, Employer 2, Item 6.g. Postal Code of the second employer's address (foreign addresses).",
+        "party": "Applicant",
+        "notes": "Only for employers outside the U.S."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line6_ZipCode[0]",
+        "description": "Part 2, Employer 2, Item 6.e. ZIP Code of the second employer's address (U.S. addresses).",
+        "party": "Applicant",
+        "notes": "5- or 9-digit ZIP code."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line6_State[0]",
+        "description": "Part 2, Employer 2, Item 6.d. State of the second employer's address (U.S. addresses).",
+        "party": "Applicant",
+        "notes": "Dropdown. Only for U.S. addresses."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line6_Country[0]",
+        "description": "Part 2, Employer 2, Item 6.h. Country of the second employer's address.",
+        "party": "Applicant",
+        "notes": "Full country name."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt2Line5_EmployerOrCompName[0]",
+        "description": "Part 2, Employer 2, Item 5. Name of Employer/Company. The name of the beneficiary's second most recent employer.",
+        "party": "Applicant",
+        "notes": "Full legal business name. Only needed if the beneficiary had a second employer within the 5-year history."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line12_Male[0]",
+        "description": "Part 1, Information About Parent 1, Item 12. Sex: 'Male' radio button for Parent 1.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Female radio button. Select the biological sex of Parent 1."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line12_Female[0]",
+        "description": "Part 1, Information About Parent 1, Item 12. Sex: 'Female' radio button for Parent 1.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Male radio button."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line19_Male[0]",
+        "description": "Part 1, Information About Parent 2, Item 19. Sex: 'Male' radio button for Parent 2.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Female radio button. Select the biological sex of Parent 2."
+      },
+      {
+        "field": "form1[0].#subform[1].Pt1Line19_Female[0]",
+        "description": "Part 1, Information About Parent 2, Item 19. Sex: 'Female' radio button for Parent 2.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Male radio button."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt2Line7_Occupation[0]",
+        "description": "Part 2 (continued), Employer 2, Item 7. Your Occupation. The beneficiary's job title or occupation at Employer 2.",
+        "party": "Applicant",
+        "notes": "Descriptive job title for the second employment entry."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line3_Occupation[0]",
+        "description": "Part 3, Information About Your Employment Outside the United States, Item 3. Your Occupation. The beneficiary's occupation at their last employer outside the U.S.",
+        "party": "Applicant",
+        "notes": "Descriptive job title for the last foreign employment. If the beneficiary has never worked outside the U.S., the form instructs to provide this information in Part 7."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line1_EmployerOrCompName[0]",
+        "description": "Part 3, Information About Your Employment Outside the United States, Item 1. Name of Employer/Company. The name of the beneficiary's last employer outside the United States.",
+        "party": "Applicant",
+        "notes": "If the beneficiary never worked outside the U.S., leave blank and note in Part 7. Provide the last foreign employer even if already listed in Part 2."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt2Line8a_DateFrom[0]",
+        "description": "Part 2 (continued), Employer 2, Item 8.a. Date From (mm/dd/yyyy). The date the beneficiary began employment at Employer 2.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt2Line8b_DateTo[0]",
+        "description": "Part 2 (continued), Employer 2, Item 8.b. Date To (mm/dd/yyyy). The date the beneficiary ended employment at Employer 2.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line4a_DateFrom[0]",
+        "description": "Part 3, Information About Your Employment Outside the United States, Item 4.a. Date From (mm/dd/yyyy). The date the beneficiary began employment at the last foreign employer.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line4b_DateTo[0]",
+        "description": "Part 3, Information About Your Employment Outside the United States, Item 4.b. Date To (mm/dd/yyyy). The date the beneficiary ended employment at the last foreign employer.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy. If still employed there, enter the current date or 'PRESENT'."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt4Line1Checkbox[0]",
+        "description": "Part 4, Spouse Beneficiary's Statement, Item 1.a. Checkbox: 'I can read and understand English, and I have read and understand every question and instruction on this form and my answer to every question.'",
+        "party": "Applicant",
+        "notes": "Select this if the beneficiary can read and understand English. Mutually exclusive with Item 1.b. (Pt4Line1Checkbox[1]). One of 1.a. or 1.b. must be selected."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt4Line1b_Language[0]",
+        "description": "Part 4, Spouse Beneficiary's Statement, Item 1.b. Language field: the language in which the interpreter read the form to the beneficiary. Appears after 'The interpreter named in Part 5. read to me every question and instruction on this form and my answer to every question in [language], a language in which I am fluent, and I understood everything.'",
+        "party": "Applicant",
+        "notes": "Only fill if checkbox 1.b. is selected (beneficiary cannot read English). Enter the full name of the language (e.g., 'Spanish', 'Mandarin Chinese'). Must match the language declared in Part 5 by the interpreter."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt4_Checkbox[0]",
+        "description": "Part 4, Spouse Beneficiary's Statement, Item 2. Checkbox: 'At my request, the preparer named in Part 6., [name], prepared this form for me based only upon information I provided or authorized.'",
+        "party": "Applicant",
+        "notes": "Select only if a preparer (other than the beneficiary) completed the form. If selected, Part 6 must be completed. This checkbox is independent of the 1.a./1.b. selection."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt4Line2_RepresentativeName[0]",
+        "description": "Part 4, Spouse Beneficiary's Statement, Item 2. Name of the preparer inserted into the certification statement: 'At my request, the preparer named in Part 6., [this name], prepared this form for me...'",
+        "party": "Applicant",
+        "notes": "Enter the full name of the preparer as it appears in Part 6. Must match Part 6, Items 1.a. and 1.b. Only fill if the Part 4, Item 2 checkbox is selected."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt4Line3_DaytimePhoneNumber1[0]",
+        "description": "Part 4, Spouse Beneficiary's Contact Information, Item 3. Spouse Beneficiary's Daytime Telephone Number.",
+        "party": "Applicant",
+        "notes": "Include country code for international numbers. Format: typically (###) ###-#### for U.S. numbers. This is a required field for beneficiaries residing in the U.S."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt4Line5_Email[0]",
+        "description": "Part 4, Spouse Beneficiary's Contact Information, Item 5. Spouse Beneficiary's Email Address (if any).",
+        "party": "Applicant",
+        "notes": "Optional. USCIS may use this to send electronic notifications. Use a valid, actively monitored email address."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt4Line4_MobileNumber1[0]",
+        "description": "Part 4, Spouse Beneficiary's Contact Information, Item 4. Spouse Beneficiary's Mobile Telephone Number (if any).",
+        "party": "Applicant",
+        "notes": "Optional. Include country code for international numbers."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line2a_StreetNumberName[0]",
+        "description": "Part 3, Information About Your Employment Outside the United States, Item 2.a. Street Number and Name of the last foreign employer's address.",
+        "party": "Applicant",
+        "notes": "Address of the employer outside the U.S. Use local address format."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line2b_Unit[0]",
+        "description": "Part 3, Item 2.b. Unit type radio button: 'Apt.' for the last foreign employer's address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[1] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line2b_Unit[1]",
+        "description": "Part 3, Item 2.b. Unit type radio button: 'Ste.' for the last foreign employer's address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[0] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line2b_Unit[2]",
+        "description": "Part 3, Item 2.b. Unit type radio button: 'Flr.' for the last foreign employer's address.",
+        "party": "Applicant",
+        "notes": "Mutually exclusive with Unit[0] and Unit[1]."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line2b_AptSteFlrNumber[0]",
+        "description": "Part 3, Item 2.b. Apartment, suite, or floor number for the last foreign employer's address.",
+        "party": "Applicant",
+        "notes": "Only fill if a unit type is selected."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line2c_CityOrTown[0]",
+        "description": "Part 3, Item 2.c. City or Town of the last foreign employer's address.",
+        "party": "Applicant",
+        "notes": "Full city name in the foreign country."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line2f_Province[0]",
+        "description": "Part 3, Item 2.f. Province of the last foreign employer's address.",
+        "party": "Applicant",
+        "notes": "Province or administrative region of the foreign employer."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line2g_PostalCode[0]",
+        "description": "Part 3, Item 2.g. Postal Code of the last foreign employer's address.",
+        "party": "Applicant",
+        "notes": "Foreign postal code."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line2e_ZipCode[0]",
+        "description": "Part 3, Item 2.e. ZIP Code field for the last foreign employer's address.",
+        "party": "Applicant",
+        "notes": "This field is typically not applicable since Part 3 asks for employment outside the U.S. However, it exists on the form. Leave blank for foreign addresses."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line2d_State[0]",
+        "description": "Part 3, Item 2.d. State field for the last foreign employer's address.",
+        "party": "Applicant",
+        "notes": "Typically not applicable for Part 3 (employment outside the U.S.). Leave blank for foreign addresses."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt3Line2h_Country[0]",
+        "description": "Part 3, Item 2.h. Country of the last foreign employer's address.",
+        "party": "Applicant",
+        "notes": "Must be a country other than the United States. Full country name per DOS conventions."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt4Line1Checkbox[1]",
+        "description": "Part 4, Spouse Beneficiary's Statement, Item 1.b. Checkbox: 'The interpreter named in Part 5. read to me every question and instruction on this form and my answer to every question in [language], a language in which I am fluent, and I understood everything.'",
+        "party": "Applicant",
+        "notes": "Select this if the beneficiary cannot read/understand English and used an interpreter. Mutually exclusive with Item 1.a. (Pt4Line1Checkbox[0]). If selected, must also fill the language field and complete Part 5."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt4Line6b_DateofSignature[0]",
+        "description": "Part 4, Spouse Beneficiary's Signature, Item 6.b. Date of Signature (mm/dd/yyyy). The date the spouse beneficiary signs the form.",
+        "party": "Applicant",
+        "notes": "Format: mm/dd/yyyy. Must be signed by the beneficiary if residing in the U.S. If the beneficiary resides overseas, they are not required to sign the form per the instructions. The date should be the actual date of signing, not a future or past date."
+      },
+      {
+        "field": "form1[0].#subform[2].Pt4Line6a_Signature[0]",
+        "description": "Part 4, Spouse Beneficiary's Signature, Item 6.a. Spouse Beneficiary's Signature (sign in ink). The beneficiary's wet-ink or electronic signature attesting under the certification: 'I certify, under penalty of perjury, that I provided or authorized all of the information in this form, I understand all of the information contained in, and submitted with, my form, and that all of this information is complete, true, and correct.' Also certifying authorization for USCIS to release information from records as needed for immigration law administration.",
+        "party": "Applicant",
+        "notes": "Signature field. If filing on paper, must be signed in ink. If filing electronically, digital signature. Beneficiaries residing overseas do not need to sign. A missing signature when required will result in rejection or denial. Cannot be signed by the preparer or attorney on the beneficiary's behalf."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line2_InterpreterBusinessorOrg[0]",
+        "description": "Part 5, Interpreter's Contact Information, Certification, and Signature, Item 2. Interpreter's Business or Organization Name (if any).",
+        "party": "Interpreter",
+        "notes": "Only fill if the interpreter is affiliated with a business or organization. Leave blank if the interpreter is an individual without organizational affiliation. Only complete Part 5 if a different interpreter was used for I-130A than for I-130."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line1b_InterpreterGivenName[0]",
+        "description": "Part 5, Item 1.b. Interpreter's Given Name (First Name).",
+        "party": "Interpreter",
+        "notes": "Legal first name of the interpreter."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line1a_InterpreterFamilyName[0]",
+        "description": "Part 5, Item 1.a. Interpreter's Family Name (Last Name).",
+        "party": "Interpreter",
+        "notes": "Legal last name of the interpreter."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line3c_CityOrTown[0]",
+        "description": "Part 5, Interpreter's Mailing Address, Item 3.c. City or Town.",
+        "party": "Interpreter",
+        "notes": "Full city name."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line3a_StreetNumberName[0]",
+        "description": "Part 5, Interpreter's Mailing Address, Item 3.a. Street Number and Name.",
+        "party": "Interpreter",
+        "notes": "This is a mailing address, so P.O. Boxes are acceptable unlike the beneficiary's physical address."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line3b_Unit[0]",
+        "description": "Part 5, Interpreter's Mailing Address, Item 3.b. Unit type radio button: 'Apt.'",
+        "party": "Interpreter",
+        "notes": "Mutually exclusive with Unit[1] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line3b_Unit[1]",
+        "description": "Part 5, Interpreter's Mailing Address, Item 3.b. Unit type radio button: 'Ste.'",
+        "party": "Interpreter",
+        "notes": "Mutually exclusive with Unit[0] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line3b_Unit[2]",
+        "description": "Part 5, Interpreter's Mailing Address, Item 3.b. Unit type radio button: 'Flr.'",
+        "party": "Interpreter",
+        "notes": "Mutually exclusive with Unit[0] and Unit[1]."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line3b_AptSteFlrNumber[0]",
+        "description": "Part 5, Interpreter's Mailing Address, Item 3.b. Apartment, suite, or floor number.",
+        "party": "Interpreter",
+        "notes": "Only fill if a unit type is selected."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line3g_PostalCode[0]",
+        "description": "Part 5, Interpreter's Mailing Address, Item 3.g. Postal Code (foreign addresses).",
+        "party": "Interpreter",
+        "notes": "Only for interpreters with foreign mailing addresses."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line3e_ZipCode[0]",
+        "description": "Part 5, Interpreter's Mailing Address, Item 3.e. ZIP Code (U.S. addresses).",
+        "party": "Interpreter",
+        "notes": "5- or 9-digit ZIP code for U.S. addresses."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line3d_State[0]",
+        "description": "Part 5, Interpreter's Mailing Address, Item 3.d. State (U.S. addresses).",
+        "party": "Interpreter",
+        "notes": "Dropdown. Only for U.S. addresses."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line3h_Country[0]",
+        "description": "Part 5, Interpreter's Mailing Address, Item 3.h. Country.",
+        "party": "Interpreter",
+        "notes": "Full country name."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line3f_Province[0]",
+        "description": "Part 5, Interpreter's Mailing Address, Item 3.f. Province (foreign addresses).",
+        "party": "Interpreter",
+        "notes": "Only for interpreters with foreign mailing addresses."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5_NameofLanguage[0]",
+        "description": "Part 5, Interpreter's Certification. Language field in the certification statement: 'I am fluent in English and [language], which is the same language provided in Part 4., Item Number 1.b., and I have read to this spouse beneficiary in the identified language every question and instruction on this form and his or her answer to every question.'",
+        "party": "Interpreter",
+        "notes": "Must match the language entered in Part 4, Item 1.b. (Pt4Line1b_Language). Enter the full language name (e.g., 'Spanish', 'Vietnamese')."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line6b_DateofSignature[0]",
+        "description": "Part 5, Interpreter's Signature, Item 7.b. Date of Signature (mm/dd/yyyy).",
+        "party": "Interpreter",
+        "notes": "Format: mm/dd/yyyy. Despite the field ID referencing 'Line6b', the printed form labels this as Item 7.b. Must be on or after the date the beneficiary signed (Part 4, Item 6.b.)."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line6a_Signature[0]",
+        "description": "Part 5, Interpreter's Signature, Item 7.a. Interpreter's Signature (sign in ink). The interpreter certifies under penalty of perjury: 'I am fluent in English and [language], which is the same language provided in Part 4., Item Number 1.b., and I have read to this spouse beneficiary in the identified language every question and instruction on this form and his or her answer to every question. The spouse beneficiary informed me that he or she understands every instruction, question, and answer on the form, including the Spouse Beneficiary's Certification, and has verified the accuracy of every answer.'",
+        "party": "Interpreter",
+        "notes": "Signature field. Despite the field ID referencing 'Line6a', the printed form labels this as Item 7.a. Must be a wet-ink or electronic signature."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line1b_PreparerGivenName[0]",
+        "description": "Part 6, Contact Information, Declaration, and Signature of the Person Preparing this Form, if Other Than the Spouse Beneficiary, Item 1.b. Preparer's Given Name (First Name).",
+        "party": "Preparer",
+        "notes": "Legal first name of the preparer. Only complete Part 6 if a different preparer was used for I-130A than for I-130, or if a preparer assisted."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line2_BusinessName[0]",
+        "description": "Part 6, Item 2. Preparer's Business or Organization Name (if any).",
+        "party": "Preparer",
+        "notes": "Name of the law firm, organization, or business. Leave blank if the preparer is an individual without organizational affiliation."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line1a_PreparerFamilyName[0]",
+        "description": "Part 6, Item 1.a. Preparer's Family Name (Last Name).",
+        "party": "Preparer",
+        "notes": "Legal last name of the preparer."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line4_InterpreterDaytimeTelephone[0]",
+        "description": "Part 5, Interpreter's Contact Information, Item 4. Interpreter's Daytime Telephone Number.",
+        "party": "Interpreter",
+        "notes": "Include country code for international numbers."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line5_Email[0]",
+        "description": "Part 5, Interpreter's Contact Information, Item 6. Interpreter's Email Address (if any).",
+        "party": "Interpreter",
+        "notes": "Optional. Despite the field ID referencing 'Line5', the printed form labels this as Item 6."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt5Line4_InterpreterDaytimeTelephone[1]",
+        "description": "Part 5, Interpreter's Contact Information, Item 5. Interpreter's Mobile Telephone Number (if any).",
+        "party": "Interpreter",
+        "notes": "Optional. Despite sharing a field ID prefix with the daytime telephone, this is Item 5 (Mobile Telephone Number) on the printed form."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line3c_CityOrTown[0]",
+        "description": "Part 6, Preparer's Mailing Address, Item 3.c. City or Town.",
+        "party": "Preparer",
+        "notes": "Full city name."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line3a_StreetNumberName[0]",
+        "description": "Part 6, Preparer's Mailing Address, Item 3.a. Street Number and Name.",
+        "party": "Preparer",
+        "notes": "Mailing address of the preparer. P.O. Boxes are acceptable."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line3b_Unit[0]",
+        "description": "Part 6, Preparer's Mailing Address, Item 3.b. Unit type radio button: 'Apt.'",
+        "party": "Preparer",
+        "notes": "Mutually exclusive with Unit[1] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line3b_Unit[1]",
+        "description": "Part 6, Preparer's Mailing Address, Item 3.b. Unit type radio button: 'Ste.'",
+        "party": "Preparer",
+        "notes": "Mutually exclusive with Unit[0] and Unit[2]."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line3b_Unit[2]",
+        "description": "Part 6, Preparer's Mailing Address, Item 3.b. Unit type radio button: 'Flr.'",
+        "party": "Preparer",
+        "notes": "Mutually exclusive with Unit[0] and Unit[1]."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line3b_AptSteFlrNumber[0]",
+        "description": "Part 6, Preparer's Mailing Address, Item 3.b. Apartment, suite, or floor number.",
+        "party": "Preparer",
+        "notes": "Only fill if a unit type is selected."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line3g_PostalCode[0]",
+        "description": "Part 6, Preparer's Mailing Address, Item 3.g. Postal Code (foreign addresses).",
+        "party": "Preparer",
+        "notes": "Only for preparers with foreign mailing addresses."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line3e_ZipCode[0]",
+        "description": "Part 6, Preparer's Mailing Address, Item 3.e. ZIP Code (U.S. addresses).",
+        "party": "Preparer",
+        "notes": "5- or 9-digit ZIP code."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line3d_State[0]",
+        "description": "Part 6, Preparer's Mailing Address, Item 3.d. State (U.S. addresses).",
+        "party": "Preparer",
+        "notes": "Dropdown. Only for U.S. addresses."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line3h_Country[0]",
+        "description": "Part 6, Preparer's Mailing Address, Item 3.h. Country.",
+        "party": "Preparer",
+        "notes": "Full country name."
+      },
+      {
+        "field": "form1[0].#subform[3].Pt6Line3f_Province[0]",
+        "description": "Part 6, Preparer's Mailing Address, Item 3.f. Province (foreign addresses).",
+        "party": "Preparer",
+        "notes": "Only for preparers with foreign mailing addresses."
+      },
+      {
+        "field": "form1[0].#subform[4].Pt6Line5_PreparerFaxNumber[0]",
+        "description": "Part 6 (continued), Preparer's Contact Information, Item 5. Preparer's Mobile Telephone Number (if any).",
+        "party": "Preparer",
+        "notes": "Despite the field ID referencing 'FaxNumber', the printed form on page 5 labels this as Item 5: 'Preparer's Mobile Telephone Number (if any)'. Optional."
+      },
+      {
+        "field": "form1[0].#subform[4].Pt6Line4_DaytimePhoneNumber[0]",
+        "description": "Part 6 (continued), Preparer's Contact Information, Item 4. Preparer's Daytime Telephone Number.",
+        "party": "Preparer",
+        "notes": "Include area code. Required if Part 6 is completed."
+      },
+      {
+        "field": "form1[0].#subform[4].Pt6Line6_Email[0]",
+        "description": "Part 6 (continued), Preparer's Contact Information, Item 6. Preparer's Email Address (if any).",
+        "party": "Preparer",
+        "notes": "Optional."
+      },
+      {
+        "field": "form1[0].#subform[4].Pt6Line7_Checkbox[0]",
+        "description": "Part 6 (continued), Preparer's Statement, Item 7.a. Checkbox: 'I am not an attorney or accredited representative but have prepared this form on behalf of the spouse beneficiary and with the spouse beneficiary's consent.'",
+        "party": "Preparer",
+        "notes": "Select this if the preparer is a non-attorney, non-accredited representative (e.g., a friend, family member, or community organization worker). Mutually exclusive with Item 7.b. (Pt6Line7_Checkbox[1])."
+      },
+      {
+        "field": "form1[0].#subform[4].Pt6Line7_Checkbox[1]",
+        "description": "Part 6 (continued), Preparer's Statement, Item 7.b. Checkbox: 'I am an attorney or accredited representative and my representation of the spouse beneficiary in this case [extends/does not extend] beyond the preparation of this form.'",
+        "party": "Preparer",
+        "notes": "Select this if the preparer is an attorney or accredited representative. Mutually exclusive with Item 7.a. (Pt6Line7_Checkbox[0]). When this is selected, the sub-checkboxes for 'extends' and 'does not extend' must also be completed."
+      },
+      {
+        "field": "form1[0].#subform[4].Pt6Line7b_Checkbox[0]",
+        "description": "Part 6 (continued), Preparer's Statement, Item 7.b. sub-checkbox: 'extends' — indicating the attorney/accredited representative's representation extends beyond the preparation of this form.",
+        "party": "Preparer",
+        "notes": "Select if the attorney's representation includes more than just form preparation (e.g., full representation through adjudication). Mutually exclusive with 'does not extend' (Pt6Line7b_Checkbox[1]). If selected, Form G-28 should be attached and the header checkbox should be checked."
+      },
+      {
+        "field": "form1[0].#subform[4].Pt6Line7b_Checkbox[1]",
+        "description": "Part 6 (continued), Preparer's Statement, Item 7.b. sub-checkbox: 'does not extend' — indicating the attorney/accredited representative's representation does not extend beyond the preparation of this form.",
+        "party": "Preparer",
+        "notes": "Select if the attorney only assisted with form preparation and is not representing the beneficiary in the underlying case. Mutually exclusive with 'extends' (Pt6Line7b_Checkbox[0])."
+      },
+      {
+        "field": "form1[0].#subform[4].Pt6Line8a_Signature[0]",
+        "description": "Part 6 (continued), Preparer's Signature, Item 8.a. Preparer's Signature (sign in ink). The preparer certifies under penalty of perjury: 'By my signature, I certify, under penalty of perjury, that I prepared this form at the request of the spouse beneficiary. The spouse beneficiary then reviewed this completed form and informed me that he or she understands all of the information contained in, and submitted with, his or her form, including the Spouse Beneficiary's Certification, and that all of this information is complete, true, and correct. I completed this form based only on information that the spouse beneficiary provided to me or authorized me to obtain or use.'",
+        "party": "Preparer",
+        "notes": "Signature field. Must be a wet-ink or electronic signature. The preparer is personally liable for the accuracy declaration."
+      },
+      {
+        "field": "form1[0].#subform[4].Pt6Line8b_DateofSignature[0]",
+        "description": "Part 6 (continued), Preparer's Signature, Item 8.b. Date of Signature (mm/dd/yyyy).",
+        "party": "Preparer",
+        "notes": "Format: mm/dd/yyyy. Should be on or after the date the beneficiary signed Part 4."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line3a_PageNumber[0]",
+        "description": "Part 7, Additional Information, Row 1. Page Number — the page number of the form field being continued.",
+        "party": "Applicant",
+        "notes": "Enter the page number (1–6) of the original item that requires additional space. Part 7 is used for overflow from any section of the form."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line3b_PartNumber[0]",
+        "description": "Part 7, Additional Information, Row 1. Part Number — the part number of the form field being continued.",
+        "party": "Applicant",
+        "notes": "Enter the part number (1–6) corresponding to the section being continued."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line3c_ItemNumber[0]",
+        "description": "Part 7, Additional Information, Row 1. Item Number — the specific item number being continued.",
+        "party": "Applicant",
+        "notes": "Enter the item number (e.g., '4.a.', '6.c.') of the field that needs additional space."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line3d_AdditionalInfo[0]",
+        "description": "Part 7, Additional Information, Row 1. Additional information text field for the item referenced by the Page/Part/Item numbers in this row.",
+        "party": "Applicant",
+        "notes": "Enter the overflow text. Common uses: additional addresses beyond the two provided in Part 1, additional employers beyond the two in Part 2, or noting 'Never worked outside the United States' for Part 3."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line4a_PageNumber[0]",
+        "description": "Part 7, Additional Information, Row 2. Page Number.",
+        "party": "Applicant",
+        "notes": "Page number of the original item requiring overflow."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line4b_PartNumber[0]",
+        "description": "Part 7, Additional Information, Row 2. Part Number.",
+        "party": "Applicant",
+        "notes": "Part number of the original item requiring overflow."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line4c_ItemNumber[0]",
+        "description": "Part 7, Additional Information, Row 2. Item Number.",
+        "party": "Applicant",
+        "notes": "Item number of the original field requiring overflow."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line4d_AdditionalInfo[0]",
+        "description": "Part 7, Additional Information, Row 2. Additional information text field.",
+        "party": "Applicant",
+        "notes": "Overflow content for the item referenced in this row."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line5a_PageNumber[0]",
+        "description": "Part 7, Additional Information, Row 3. Page Number.",
+        "party": "Applicant",
+        "notes": "Page number of the original item requiring overflow."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line5b_PartNumber[0]",
+        "description": "Part 7, Additional Information, Row 3. Part Number.",
+        "party": "Applicant",
+        "notes": "Part number of the original item requiring overflow."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line5c_ItemNumber[0]",
+        "description": "Part 7, Additional Information, Row 3. Item Number.",
+        "party": "Applicant",
+        "notes": "Item number of the original field requiring overflow."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line6a_PageNumber[0]",
+        "description": "Part 7, Additional Information, Row 4. Page Number.",
+        "party": "Applicant",
+        "notes": "Page number of the original item requiring overflow."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line6b_PartNumber[0]",
+        "description": "Part 7, Additional Information, Row 4. Part Number.",
+        "party": "Applicant",
+        "notes": "Part number of the original item requiring overflow."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line6c_ItemNumber[0]",
+        "description": "Part 7, Additional Information, Row 4. Item Number.",
+        "party": "Applicant",
+        "notes": "Item number of the original field requiring overflow."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt1Line3a_FamilyName[1]",
+        "description": "Part 7, Additional Information, Item 1.a. Family Name (Last Name) of the spouse beneficiary — repeated at the top of the continuation page for identification purposes.",
+        "party": "Applicant",
+        "notes": "Must match the name entered in Part 1, Item 3.a. on page 1. Required on every continuation sheet per form instructions."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt1Line3b_GivenName[1]",
+        "description": "Part 7, Additional Information, Item 1.b. Given Name (First Name) of the spouse beneficiary — repeated at the top of the continuation page.",
+        "party": "Applicant",
+        "notes": "Must match Part 1, Item 3.b."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt1Line3c_MiddleName[1]",
+        "description": "Part 7, Additional Information, Item 1.c. Middle Name of the spouse beneficiary — repeated at the top of the continuation page.",
+        "party": "Applicant",
+        "notes": "Must match Part 1, Item 3.c. Leave blank if no middle name."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line6d_AdditionalInfo[0]",
+        "description": "Part 7, Additional Information, Row 4. Additional information text field.",
+        "party": "Applicant",
+        "notes": "Overflow content for the item referenced in Row 4."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line5d_AdditionalInfo[0]",
+        "description": "Part 7, Additional Information, Row 3. Additional information text field.",
+        "party": "Applicant",
+        "notes": "Overflow content for the item referenced in Row 3."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line7a_PageNumber[0]",
+        "description": "Part 7, Additional Information, Row 5. Page Number.",
+        "party": "Applicant",
+        "notes": "Page number of the original item requiring overflow."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line7b_PartNumber[0]",
+        "description": "Part 7, Additional Information, Row 5. Part Number.",
+        "party": "Applicant",
+        "notes": "Part number of the original item requiring overflow."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line7c_ItemNumber[0]",
+        "description": "Part 7, Additional Information, Row 5. Item Number.",
+        "party": "Applicant",
+        "notes": "Item number of the original field requiring overflow."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt7Line7d_AdditionalInfo[0]",
+        "description": "Part 7, Additional Information, Row 5. Additional information text field.",
+        "party": "Applicant",
+        "notes": "Overflow content for the item referenced in Row 5. If more space is needed beyond the 5 rows provided, the instructions state to make copies of page 6 or attach a separate sheet with name, A-Number, page/part/item references, and signature/date."
+      },
+      {
+        "field": "form1[0].#subform[5].Pt1Line1_AlienNumber[1]",
+        "description": "Part 7, Additional Information, Item 2. A-Number (if any). The spouse beneficiary's Alien Registration Number repeated at the top of the continuation page for identification.",
+        "party": "Applicant",
+        "notes": "Must match Part 1, Item 1 (A-Number) on page 1. Required per instructions: 'Type or print your name and A-Number (if any) at the top of each sheet.' Format: up to 9 digits."
+      }
+    ]
+  }

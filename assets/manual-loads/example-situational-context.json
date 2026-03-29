@@ -1,0 +1,50 @@
+{
+  "userId": "user-abc",
+  "situationSummary": "Jane Mary Doe, a foreign national on an F-1 visa, married US citizen John Alexander Smith in Miami, FL on March 10, 2023. She is filing Form I-485 to adjust status to lawful permanent resident as an immediate relative. Her I-94 is current and she has no prior removal proceedings.",
+  "partyData": {
+    "Jane Mary Doe": {
+      "Full Legal Name": "Jane Mary Doe",
+      "Family Name": "Doe",
+      "Given Name": "Jane",
+      "Middle Name": "Mary",
+      "Date of Birth": "1990-01-01",
+      "Country of Birth": "Exampleland",
+      "Country of Citizenship": "Exampleland",
+      "Passport Number": "AB1234567",
+      "Passport Expiration Date": "2030-01-01",
+      "Current Immigration Status": "F-1 Student",
+      "I-94 Number": "00000000000",
+      "I-94 Admission Date": "2019-08-20",
+      "I-94 Authorized Stay": "D/S",
+      "Current US Address": "100 Example Ave, Apt 1, Anytown, FL 00000",
+      "Phone Number": "+1-555-555-0100",
+      "Email": "jane.doe@example.com",
+      "SSN": "Not yet issued",
+      "Prior Visas": ["F-1 (2019-present)"],
+      "Prior Removals or Deportations": "None",
+      "Criminal History": "None"
+    },
+    "John Alexander Smith": {
+      "Full Legal Name": "John Alexander Smith",
+      "Relationship to Applicant": "Spouse / US Citizen Petitioner",
+      "Date of Birth": "1988-03-04",
+      "Country of Birth": "United States",
+      "US Citizen": true,
+      "SSN": "XXX-XX-XXXX",
+      "Address": "100 Example Ave, Apt 1, Anytown, FL 00000"
+    },
+    "Marriage": {
+      "Date of Marriage": "2023-03-10",
+      "Place of Marriage": "Anytown, Florida, United States",
+      "Marriage Certificate Number": "0000-FL-XXX-00000"
+    },
+    "US Immigration Context": {
+      "Basis for Adjustment": "Immediate relative of US citizen (spouse)",
+      "Petition Type": "I-130 (approved)",
+      "Priority Date": "N/A — immediate relative, no waiting",
+      "Intended Visa Category": "IR-1",
+      "Filing Office": "USCIS Field Office"
+    }
+  },
+  "documents": []
+}

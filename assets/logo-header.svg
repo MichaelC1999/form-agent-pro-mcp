@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="460" height="80" viewBox="0 0 460 80" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <!-- Brand diagonal gradient (for document stroke/fill) -->
+    <linearGradient id="brand" x1="17" y1="12" x2="63" y2="68" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#38bdf8"/>
+      <stop offset="50%"  stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </linearGradient>
+    <!-- Active line gradient (horizontal) -->
+    <linearGradient id="active" x1="23" y1="0" x2="43" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </linearGradient>
+    <!-- PRO text gradient -->
+    <linearGradient id="pro-grad" x1="96" y1="0" x2="150" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </linearGradient>
+    <!-- Separator gradient (vertical) -->
+    <linearGradient id="sep" x1="0" y1="18" x2="0" y2="62" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#38bdf8" stop-opacity="0"/>
+      <stop offset="50%"  stop-color="#818cf8" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#c084fc" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Glow filter -->
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Soft aura -->
+    <filter id="aura" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- ── Aura behind icon ── -->
+  <ellipse cx="40" cy="40" rx="26" ry="32" fill="#818cf8" opacity="0.07" filter="url(#aura)"/>
+
+  <!-- ── Document body ── -->
+  <path d="M17,18 Q17,12 23,12 L51,12 L63,24 L63,62 Q63,68 57,68 L23,68 Q17,68 17,62 Z"
+    fill="#0e1628" stroke="url(#brand)" stroke-width="1.5"/>
+
+  <!-- ── Fold ── -->
+  <path d="M51,12 L63,24 L51,24 Z"
+    fill="#08101e" stroke="url(#brand)" stroke-width="1"/>
+
+  <!-- ── Form lines: filled ── -->
+  <line x1="24" y1="33" x2="57" y2="33"
+    stroke="rgba(255,255,255,0.38)" stroke-width="2" stroke-linecap="round"/>
+  <line x1="24" y1="43" x2="57" y2="43"
+    stroke="rgba(255,255,255,0.38)" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- ── Active line (being filled) ── -->
+  <line x1="24" y1="53" x2="43" y2="53"
+    stroke="url(#active)" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- ── Cursor dot ── -->
+  <circle cx="46" cy="53" r="3" fill="#c084fc" filter="url(#glow)"/>
+
+  <!-- ── Vertical separator ── -->
+  <line x1="84" y1="18" x2="84" y2="62"
+    stroke="url(#sep)" stroke-width="1"/>
+
+  <!-- ── Wordmark ── -->
+  <text x="96" y="40"
+    font-family="'Inter','Helvetica Neue',Arial,sans-serif"
+    font-size="26" font-weight="800" fill="#ffffff" letter-spacing="1.2">
+    FORM AGENT
+  </text>
+
+  <!-- ── PRO label ── -->
+  <text x="96" y="60"
+    font-family="'Inter','Helvetica Neue',Arial,sans-serif"
+    font-size="11" font-weight="700" fill="url(#pro-grad)" letter-spacing="5">
+    PRO
+  </text>
+</svg>

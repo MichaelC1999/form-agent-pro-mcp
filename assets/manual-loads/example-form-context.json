@@ -1,0 +1,24 @@
+{
+  "formId": "i-485",
+  "formMetadata": {
+    "purpose": "Applicant files to adjust status to lawful permanent resident while remaining in the US.",
+    "situations": "Immediate relatives of US citizens, employment-based preference immigrants, diversity visa winners, and others with an immediately available visa number who are physically present in the US.",
+    "use-cases": "Spouse of US citizen married in the US; beneficiary of approved I-140 with current priority date; asylee or refugee adjusting after one year.",
+    "filing-context": "Filed with USCIS along with I-864, I-693, I-131, and I-765 as a package. No consular processing.",
+    "parties-involved": "Applicant: the foreign national seeking permanent residence. Preparer: attorney or accredited representative who completed the form on the applicant's behalf."
+  },
+  "fields": [
+    {
+      "field": "form1[0].#subform[0].Pt1Line1a_FamilyName[0]",
+      "description": "Applicant's legal family name (last name) exactly as it appears on their passport or travel document.",
+      "party": "Applicant",
+      "notes": "Use passport spelling. Do not abbreviate or translate. All caps if the form prints in uppercase."
+    },
+    {
+      "field": "form1[0].#subform[0].Pt1Line1b_GivenName[0]",
+      "description": "Applicant's legal given name (first name) as it appears on their passport.",
+      "party": "Applicant",
+      "notes": "Use passport spelling. Single first name only — do not include middle name here."
+    }
+  ]
+}

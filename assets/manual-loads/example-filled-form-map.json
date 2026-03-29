@@ -1,0 +1,12 @@
+{
+  "formId": "i-485",
+  "userId": "user-abc",
+  "assumptionLevel": "moderate",
+  "fields": {
+    "form1[0].#subform[0].Pt1Line1a_FamilyName[0]": "Doe",
+    "form1[0].#subform[0].Pt1Line1b_GivenName[0]": "Jane",
+    "form1[0].#subform[0].Pt1Line1c_MiddleName[0]": "Mary",
+    "form1[0].#subform[0].Pt1Line2_DateofBirth[0]": "01/01/1990",
+    "form1[0].#subform[0].Pt1Line3_CountryofBirth[0]": "Exampleland"
+  }
+}
