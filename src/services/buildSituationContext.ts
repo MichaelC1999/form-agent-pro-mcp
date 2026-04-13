@@ -214,7 +214,8 @@ function buildImageBlocks(
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export async function buildSituationContext(
-  input: BuildSituationContextInput
+  input: BuildSituationContextInput,
+  existingContextId?: string
 ): Promise<ISituationalContext> {
   const { userId, uiAnswers, uploadedFiles } = input;
 
@@ -275,14 +276,22 @@ export async function buildSituationContext(
   }
 
   // 5. Persist to MongoDB
-  const doc = await SituationalContext.create({
+  const data = {
     userId,
-    createdAt: new Date(),
     partyData: parsed.partyData ?? {},
     documents: parsedDocuments,
     situationSummary: parsed.situationSummary ?? "",
     requiredForms: Array.isArray(parsed.requiredForms) ? parsed.requiredForms : [],
-  });
+    status: "ready" as const,
+  };
+
+  let doc;
+  if (existingContextId) {
+    doc = await SituationalContext.findByIdAndUpdate(existingContextId, data, { new: true });
+    if (!doc) throw new Error(`SituationalContext not found: ${existingContextId}`);
+  } else {
+    doc = await SituationalContext.create({ ...data, createdAt: new Date() });
+  }
 
   return doc.toObject() as ISituationalContext;
 }

@@ -8,6 +8,7 @@ import { fillFormMap } from "../services/fillFormMap";
 import { fillForm } from "../services/fillForm";
 import { runPipeline } from "../services/runPipeline";
 import { SituationalContext } from "../models/SituationalContext";
+import { requireAuth, authTag } from "../middleware/requireAuth";
 import type { AssumptionLevel } from "../types";
 
 const router = Router();
@@ -84,10 +85,11 @@ const VALID_ASSUMPTION_LEVELS: AssumptionLevel[] = ["conservative", "moderate", 
 //     ]
 //   }
 //
-router.post("/run", upload.array("documents", 20), async (req: Request, res: Response) => {
+router.post("/run", requireAuth, upload.array("documents", 20), async (req: Request, res: Response) => {
+  console.log(`[POST /api/pipeline/run] ${authTag(req)} | Running full pipeline`);
   try {
+    const userId = req.auth!.sub;
     const {
-      userId: userIdRaw,
       situationalContextId: situationalContextIdRaw,
       situationDescription,
       processDescription,
@@ -103,6 +105,7 @@ router.post("/run", upload.array("documents", 20), async (req: Request, res: Res
     let assumptionLevel: AssumptionLevel | undefined;
     if (assumptionLevelRaw) {
       if (!VALID_ASSUMPTION_LEVELS.includes(assumptionLevelRaw as AssumptionLevel)) {
+        console.log(`[POST /api/pipeline/run] ${authTag(req)} | 400 — invalid assumptionLevel`);
         res.status(400).json({
           error: `assumptionLevel must be one of: ${VALID_ASSUMPTION_LEVELS.join(", ")}`,
         });
@@ -118,31 +121,30 @@ router.post("/run", upload.array("documents", 20), async (req: Request, res: Res
       // RESUME mode — verify the context exists
       const existing = await SituationalContext.findById(situationalContextIdRaw).lean();
       if (!existing) {
+        console.log(`[POST /api/pipeline/run] ${authTag(req)} | 404 — context not found`);
         res.status(404).json({ error: `SituationalContext not found: ${situationalContextIdRaw}` });
         return;
       }
       situationalContextId = situationalContextIdRaw;
-      console.log(`[pipeline] Resuming with SituationalContext ${situationalContextId}`);
+      console.log(`[POST /api/pipeline/run] ${authTag(req)} | Resuming context id=${situationalContextId}`);
     } else {
       // FULL mode — validate required fields then generate
-      if (!userIdRaw) {
-        res.status(400).json({ error: "userId is required when situationalContextId is not provided" });
-        return;
-      }
       if (!situationDescription) {
+        console.log(`[POST /api/pipeline/run] ${authTag(req)} | 400 — missing situationDescription`);
         res.status(400).json({ error: "situationDescription is required when situationalContextId is not provided" });
         return;
       }
       if (!processDescription) {
+        console.log(`[POST /api/pipeline/run] ${authTag(req)} | 400 — missing processDescription`);
         res.status(400).json({ error: "processDescription is required when situationalContextId is not provided" });
         return;
       }
 
-      console.log(`[pipeline] Building situational context for user ${userIdRaw}...`);
+      console.log(`[POST /api/pipeline/run] ${authTag(req)} | Building situational context`);
       const uploadedFiles = (req.files as Express.Multer.File[] | undefined) ?? [];
 
       const situationalContextDoc = await buildSituationContext({
-        userId: userIdRaw,
+        userId,
         uiAnswers: { situationDescription, processDescription, additionalNotes },
         uploadedFiles: uploadedFiles.map((f) => ({
           path: f.path,
@@ -152,14 +154,14 @@ router.post("/run", upload.array("documents", 20), async (req: Request, res: Res
       });
 
       situationalContextId = String((situationalContextDoc as unknown as Record<string, unknown>)._id);
-      console.log(`[pipeline] SituationalContext saved: ${situationalContextId}`);
+      console.log(`[POST /api/pipeline/run] ${authTag(req)} | Context saved id=${situationalContextId}`);
     }
 
     // ── Steps 2 + 3: fillFormMap then fillForm (per form) ─────────────────
     // Resolve userId from the context doc for RESUME mode; for FULL mode it
     // was already set above from userIdRaw.
     const ctxForUserId = await SituationalContext.findById(situationalContextId).lean();
-    const resolvedUserId = (ctxForUserId as any)?.userId ?? userIdRaw ?? situationalContextId;
+    const resolvedUserId = (ctxForUserId as any)?.userId ?? userId;
 
     // Resolve form IDs: explicit list → requiredForms on context → error
     let resolvedFormIds = formIds;
@@ -167,6 +169,7 @@ router.post("/run", upload.array("documents", 20), async (req: Request, res: Res
       resolvedFormIds = ((ctxForUserId as any)?.requiredForms as string[] | undefined) ?? [];
     }
     if (resolvedFormIds.length === 0) {
+      console.log(`[POST /api/pipeline/run] ${authTag(req)} | 400 — no form IDs`);
       res.status(400).json({ error: "No formIds provided and SituationalContext has no requiredForms." });
       return;
     }
@@ -174,9 +177,12 @@ router.post("/run", upload.array("documents", 20), async (req: Request, res: Res
     // Validate blank PDFs before any AI calls
     const missingPdfs = resolvedFormIds.filter((id) => !fs.existsSync(getBlankPdfPath(id)));
     if (missingPdfs.length > 0) {
+      console.log(`[POST /api/pipeline/run] ${authTag(req)} | 400 — missing PDFs: ${missingPdfs.join(",")}`);
       res.status(400).json({ error: `Blank PDF not found for: ${missingPdfs.join(", ")}` });
       return;
     }
+
+    console.log(`[POST /api/pipeline/run] ${authTag(req)} | Processing ${resolvedFormIds.length} forms`);
 
     const formResults: Array<{
       formId: string;
@@ -207,7 +213,7 @@ router.post("/run", upload.array("documents", 20), async (req: Request, res: Res
 
         formResults.push({ formId, filledFormMapId, ...fillResult });
       } catch (formErr) {
-        console.error(`[pipeline] error processing form "${formId}":`, formErr);
+        console.error(`[POST /api/pipeline/run] ${authTag(req)} | Form failed ${formId}:`, formErr);
         formResults.push({
           formId,
           filledFormMapId: null,
@@ -220,8 +226,11 @@ router.post("/run", upload.array("documents", 20), async (req: Request, res: Res
       }
     }
 
+    const successCount = formResults.filter((f) => f.success).length;
+    console.log(`[POST /api/pipeline/run] ${authTag(req)} | 200 — ${successCount}/${formResults.length} forms succeeded`);
     res.json({ situationalContextId, forms: formResults });
   } catch (err) {
+    console.error(`[POST /api/pipeline/run] ${authTag(req)} | 500 — server error`);
     serverError(res, err);
   }
 });
@@ -253,12 +262,14 @@ router.post("/run", upload.array("documents", 20), async (req: Request, res: Res
 //     ]
 //   }
 //
-router.post("/fill-form-maps", async (req: Request, res: Response) => {
+router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) => {
+  console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | Batch filling form maps`);
   try {
     const { situationalContextId, assumptionLevel: assumptionLevelRaw } =
       req.body as Record<string, string | undefined>;
 
     if (!situationalContextId) {
+      console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | 400 — missing contextId`);
       res.status(400).json({ error: "situationalContextId is required" });
       return;
     }
@@ -266,6 +277,7 @@ router.post("/fill-form-maps", async (req: Request, res: Response) => {
     let assumptionLevel: AssumptionLevel = "conservative";
     if (assumptionLevelRaw) {
       if (!VALID_ASSUMPTION_LEVELS.includes(assumptionLevelRaw as AssumptionLevel)) {
+        console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | 400 — invalid assumptionLevel`);
         res.status(400).json({
           error: `assumptionLevel must be one of: ${VALID_ASSUMPTION_LEVELS.join(", ")}`,
         });
@@ -276,6 +288,7 @@ router.post("/fill-form-maps", async (req: Request, res: Response) => {
 
     const ctxDoc = await SituationalContext.findById(situationalContextId).lean();
     if (!ctxDoc) {
+      console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | 404 — context not found`);
       res.status(404).json({ error: `SituationalContext not found: ${situationalContextId}` });
       return;
     }
@@ -284,9 +297,12 @@ router.post("/fill-form-maps", async (req: Request, res: Response) => {
     const requiredForms: string[] = (ctxDoc as any).requiredForms ?? [];
 
     if (requiredForms.length === 0) {
+      console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | 400 — no required forms`);
       res.status(400).json({ error: "SituationalContext has no requiredForms." });
       return;
     }
+
+    console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | Processing ${requiredForms.length} forms`);
 
     const forms: Array<{
       formId: string;
@@ -315,7 +331,7 @@ router.post("/fill-form-maps", async (req: Request, res: Response) => {
           errors: [],
         });
       } catch (err) {
-        console.error(`[pipeline/fill-form-maps] error on form "${formId}":`, err);
+        console.error(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | Form failed ${formId}:`, err);
         forms.push({
           formId,
           filledFormMapId: null,
@@ -329,8 +345,10 @@ router.post("/fill-form-maps", async (req: Request, res: Response) => {
     }
 
     const overallSuccess = forms.every((f) => f.success);
+    console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | 200 — success=${overallSuccess}`);
     res.json({ situationalContextId, userId, success: overallSuccess, forms });
   } catch (err) {
+    console.error(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | 500 — server error`);
     serverError(res, err);
   }
 });
@@ -364,20 +382,23 @@ router.post("/fill-form-maps", async (req: Request, res: Response) => {
 //   }
 //
 router.post("/resume", async (req: Request, res: Response) => {
+  console.log(`[POST /api/pipeline/resume] ${authTag(req)} | Resuming PDF generation`);
   try {
     const { situationalContextId } = req.body as Record<string, string | undefined>;
 
     if (!situationalContextId) {
+      console.log(`[POST /api/pipeline/resume] ${authTag(req)} | 400 — missing contextId`);
       res.status(400).json({ error: "situationalContextId is required" });
       return;
     }
 
-    console.log(`[pipeline/resume] situationalContextId: ${situationalContextId}`);
-
+    console.log(`[POST /api/pipeline/resume] ${authTag(req)} | Running pipeline id=${situationalContextId}`);
     const result = await runPipeline(situationalContextId);
 
+    console.log(`[POST /api/pipeline/resume] ${authTag(req)} | 200 — pipeline complete`);
     res.json(result);
   } catch (err) {
+    console.error(`[POST /api/pipeline/resume] ${authTag(req)} | 500 — server error`);
     serverError(res, err);
   }
 });

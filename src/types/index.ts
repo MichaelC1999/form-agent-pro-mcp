@@ -60,9 +60,13 @@ export interface ParsedDocument {
  */
 export type PartyDataMap = Record<string, Record<string, unknown>>;
 
+export type SituationalContextStatus = "processing" | "ready" | "error";
+
 export interface ISituationalContext {
   userId: string;
   createdAt: Date;
+  /** Pipeline processing status */
+  status: SituationalContextStatus;
   /**
    * Structured party/subject data extracted by the LLM from all documents
    * and UI inputs combined.

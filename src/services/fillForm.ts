@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { FilledFormMap } from "../models/FilledFormMap";
-import { fillPdfWithPdftk, parseCheckboxStates } from "../lib/pdf";
+import { fillPdfWithPdftk } from "../lib/pdf";
 import type { FillFormInput, FillFormOutput, FormType, FieldMap } from "../types";
 
 // ─── Text sanitizer ───────────────────────────────────────────────────────────
@@ -133,42 +133,24 @@ class PdfFormFiller implements IFormFiller {
     const timestamp = `${mm}${dd}${yyyy} ${hh}${min}`;
     const outputPath = path.join(outputDir, `${userId}-${formId}-${timestamp}.pdf`);
 
-    // ── Classify fields (checkbox vs. text) ───────────────────────────────
-    //
-    // parseCheckboxStates reads pdftk dump_data_fields and identifies which
-    // fields are checkboxes and what their "on" state value is.
-    // This avoids running text-overflow wrapping on "0"/"1" boolean values.
-    //
-    // Note: fillPdfWithPdftk also calls parseCheckboxStates internally. That
-    // second call is intentional — the two steps are decoupled so each
-    // operates on the correct data without shared mutable state.
-    const checkboxStates = parseCheckboxStates(formPdfPath);
-
     const preparedFields: Record<string, string> = {};
     const filledFields: string[] = [];
     const skippedFields: string[] = [];
     const errors: string[] = [];
 
     for (const [fieldId, rawValue] of Object.entries(fields)) {
-      // Blank values are intentionally left empty in the FilledFormMap
-      // (LLM could not determine a confident answer). Pass them through so
-      // fillPdfWithPdftk skips them — the blank field stays as-is in the PDF.
       if (!rawValue) {
         skippedFields.push(fieldId);
         continue;
       }
 
-      const cbInfo = checkboxStates.get(fieldId);
-      const isCheckbox = cbInfo?.isCheckbox === true;
-
-      if (isCheckbox) {
-        // Checkbox values are exactly "1" (checked) or "0" (unchecked).
-        // No text transformation applies — pass through verbatim.
+      // Checkbox values ("1" or "0") are passed through verbatim — no text
+      // wrapping. The FDF template patching in fillPdfWithPdftk identifies
+      // which fields are checkboxes from the template structure, so we don't
+      // need pdftk dump_data_fields here.
+      if (rawValue === "1" || rawValue === "0") {
         preparedFields[fieldId] = rawValue;
       } else {
-        // Text, dropdown, and selector fields:
-        //   1. NFC-normalise (sanitizeTextValue) — collapses decomposed chars
-        //   2. Word-wrap (prepareTextValue)      — cleans up long values
         preparedFields[fieldId] = prepareTextValue(sanitizeTextValue(rawValue));
       }
 

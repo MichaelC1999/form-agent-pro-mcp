@@ -113,6 +113,7 @@ type CheckboxInfo = { onState: string; isCheckbox: boolean };
 
 /**
  * Parses pdftk dump output to get checkbox "on" state values.
+ * Only sees AcroForm-registered fields (may miss orphaned widgets).
  */
 export function parseCheckboxStates(pdfPath: string): Map<string, CheckboxInfo> {
   const result = spawnSync("pdftk", [pdfPath, "dump_data_fields"], { encoding: "utf-8" });
@@ -188,9 +189,67 @@ function encodeFdfValue(value: string): string {
   return `<${hex}>`;
 }
 
+// ─── Checkbox on-state inference ─────────────────────────────────────────────
+
 /**
- * Fills a PDF using pdftk FDF template approach.
- * Returns the path to the filled output PDF.
+ * Infers the checkbox "on" state from the short field name.
+ *
+ * USCIS forms use consistent naming conventions:
+ *  - _YN[0] / _YN[1]         → Y / N  (Yes / No)
+ *  - _YesNo[0] / _YesNo[1]   → Y / N
+ *  - _CB_Sex[0] / _CB_Sex[1] → M / F  (Male / Female)
+ *  - _CB[N] / _Checkbox[N]   → 1 (generic toggle)
+ *  - Numbered suffixes        → the index itself (1, 2, 3...)
+ *
+ * When the on-state can't be determined from naming, defaults to "1".
+ */
+function inferCheckboxOnState(shortFieldName: string): string {
+  // Extract the array index [N]
+  const idxMatch = shortFieldName.match(/\[(\d+)\]$/);
+  const idx = idxMatch ? parseInt(idxMatch[1], 10) : 0;
+  // Base name without [N]
+  const base = shortFieldName.replace(/\[\d+\]$/, "");
+
+  // Yes/No fields: [0] = Yes (Y), [1] = No (N)
+  if (/_YN$/.test(base) || /_YesNo$/.test(base)) {
+    return idx === 0 ? "Y" : "N";
+  }
+
+  // Sex fields: [0] = Male, [1] = Female
+  if (/_CB_Sex$/.test(base)) {
+    return idx === 0 ? "M" : "F";
+  }
+
+  // Generic checkbox/toggle fields
+  if (/_CB$/.test(base) || /_Checkbox$/.test(base)) {
+    return "1";
+  }
+
+  // Address unit type (Apt/Ste/Flr)
+  if (/_Unit\[0\]$/.test(shortFieldName)) return "APT";
+  if (/_Unit\[1\]$/.test(shortFieldName)) return "STE";
+  if (/_Unit\[2\]$/.test(shortFieldName)) return "FLR";
+
+  // Default: use "1" — works for most generic checkboxes
+  return "1";
+}
+
+// ─── FDF template patching (handles XFA orphaned widgets) ────────────────────
+
+/**
+ * Fills a PDF using pdftk's FDF template approach.
+ *
+ * For XFA-style USCIS forms, many fields are "orphaned widgets" not registered
+ * in the AcroForm /Fields hierarchy. pdftk's `dump_data_fields` only sees the
+ * AcroForm fields (~13 for I-485), but `generate_fdf` produces a complete FDF
+ * template with the correct nested /Kids structure covering ALL fields (~820).
+ *
+ * This function:
+ *  1. Generates the FDF template via `pdftk generate_fdf`
+ *  2. Identifies checkbox vs text fields from the template
+ *  3. Patches values into the template using short field name matching
+ *  4. Determines checkbox on-states from pdftk (AcroForm) + naming conventions
+ *  5. Fills the PDF with the patched template via `pdftk fill_form`
  */
 export function fillPdfWithPdftk(
   blankPdfPath: string,
@@ -201,45 +260,128 @@ export function fillPdfWithPdftk(
     throw new Error("pdftk is required. Install: brew install pdftk-java");
   }
 
-  const checkboxStates = parseCheckboxStates(blankPdfPath);
+  // ── 1. Get on-states for AcroForm-registered checkbox fields ──────────
+  const pdftkStates = parseCheckboxStates(blankPdfPath);
 
-  // Generate FDF template from the blank form
+  // ── 2. Generate FDF template ──────────────────────────────────────────
   const tempFdf = outputPdfPath + ".tmp.fdf";
-  const templateResult = spawnSync("pdftk", [blankPdfPath, "generate_fdf", "output", tempFdf], {
-    encoding: "utf-8",
-  });
+  const templateResult = spawnSync(
+    "pdftk",
+    [blankPdfPath, "generate_fdf", "output", tempFdf],
+    { encoding: "utf-8" }
+  );
   if (templateResult.status !== 0) {
     throw new Error(`pdftk generate_fdf failed: ${templateResult.stderr}`);
   }
 
   let fdfContent = fs.readFileSync(tempFdf, "utf-8");
 
-  // Patch values into the FDF
-  for (const [fullFieldName, value] of Object.entries(fieldData)) {
+  // ── 3. Build short name → value lookup from our field data ────────────
+  const shortNameToValue = new Map<string, { value: string; fullName: string }>();
+  for (const [fullName, value] of Object.entries(fieldData)) {
     if (!value) continue;
-
-    const parts = fullFieldName.split(".");
-    const shortFieldName = parts[parts.length - 1];
-    const escapedShort = shortFieldName.replace(/[[\]()]/g, "\\$&");
-    const fieldOption = checkboxStates.get(fullFieldName);
-    const isCheckbox = fieldOption?.isCheckbox && (value === "1" || value === "0");
-
-    if (isCheckbox && value === "1") {
-      const onState = fieldOption!.onState;
-      const pattern = new RegExp(`(/T \\(${escapedShort}\\)\\s*\\n/V )/(?:Off|)`, "g");
-      fdfContent = fdfContent.replace(pattern, `$1/${onState}`);
-    } else if (!isCheckbox) {
-      const encodedValue = encodeFdfValue(value);
-      const pattern = new RegExp(`(/T \\(${escapedShort}\\)\\s*\\n/V )\\([^)]*\\)`, "g");
-      fdfContent = fdfContent.replace(pattern, `$1${encodedValue}`);
-    }
+    const parts = fullName.split(".");
+    const shortName = parts[parts.length - 1];
+    // If multiple full names map to the same short name, last one wins
+    shortNameToValue.set(shortName, { value, fullName });
   }
 
+  // ── 4. Parse the FDF template line-by-line and patch values ───────────
+  //
+  // The template contains blocks like:
+  //   <<
+  //   /T (Pt1Line3_YN[1])
+  //   /V /Off
+  //   >>
+  // or:
+  //   <<
+  //   /T (Pt1Line2a_FamilyName[0])
+  //   /V ()
+  //   >>
+  //
+  // For checkbox fields (/V /...), we replace the value with the on-state.
+  // For text fields (/V (...)), we replace with the encoded value.
+  //
+  const lines = fdfContent.split("\n");
+  const result: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const tMatch = lines[i].match(/\/T \((.+?)\)/);
+    if (!tMatch) {
+      result.push(lines[i]);
+      continue;
+    }
+
+    const shortName = tMatch[1];
+    const entry = shortNameToValue.get(shortName);
+
+    // No data for this field — pass through unchanged
+    if (!entry) {
+      result.push(lines[i]);
+      continue;
+    }
+
+    const { value, fullName } = entry;
+
+    // Look ahead for the /V line (within next 2 lines)
+    let vLineIdx = -1;
+    for (let j = i + 1; j < Math.min(i + 3, lines.length); j++) {
+      if (lines[j].trim().startsWith("/V ")) {
+        vLineIdx = j;
+        break;
+      }
+    }
+
+    if (vLineIdx === -1) {
+      // No /V line found nearby — pass through
+      result.push(lines[i]);
+      continue;
+    }
+
+    // Push the /T line as-is
+    result.push(lines[i]);
+
+    // Copy any lines between /T and /V
+    for (let j = i + 1; j < vLineIdx; j++) {
+      result.push(lines[j]);
+    }
+
+    const vLine = lines[vLineIdx].trim();
+    const isCheckbox = vLine.startsWith("/V /");
+
+    if (isCheckbox && (value === "1" || value === "0")) {
+      if (value === "1") {
+        // Determine the on-state:
+        // 1. Check pdftk AcroForm states (authoritative for registered fields)
+        // 2. Fall back to naming-convention inference
+        const pdftkInfo = pdftkStates.get(fullName);
+        const onState = pdftkInfo?.onState ?? inferCheckboxOnState(shortName);
+        result.push(`/V /${onState}`);
+      } else {
+        // value === "0" → leave unchecked
+        result.push("/V /Off");
+      }
+    } else if (!isCheckbox) {
+      // Text field — replace /V () with encoded value
+      result.push(`/V ${encodeFdfValue(value)}`);
+    } else {
+      // Checkbox with a non-0/1 value — treat as text (shouldn't happen normally)
+      result.push(`/V ${encodeFdfValue(value)}`);
+    }
+
+    // Skip past the original /V line since we wrote a replacement
+    i = vLineIdx;
+  }
+
+  fdfContent = result.join("\n");
   fs.writeFileSync(tempFdf, fdfContent);
 
-  const fillResult = spawnSync("pdftk", [blankPdfPath, "fill_form", tempFdf, "output", outputPdfPath], {
-    encoding: "utf-8",
-  });
+  // ── 5. Fill the PDF with the patched template ─────────────────────────
+  const fillResult = spawnSync(
+    "pdftk",
+    [blankPdfPath, "fill_form", tempFdf, "output", outputPdfPath],
+    { encoding: "utf-8" }
+  );
 
   fs.unlinkSync(tempFdf);
 

@@ -10,6 +10,7 @@ import situationalContextRoutes from "./routes/situationalContext";
 import filledFormMapRoutes from "./routes/filledFormMap";
 import formFillRoutes from "./routes/formFill";
 import pipelineRoutes from "./routes/pipeline";
+import pdfRoutes from "./routes/pdf";
 
 const app = express();
 
@@ -38,6 +39,9 @@ app.use("/api/form-fill", formFillRoutes);       // fill PDF + extract aux helpe
 //
 // End-to-end pipeline (situation → filled PDFs in one call)
 app.use("/api/pipeline", pipelineRoutes);        // POST /api/pipeline/run
+//
+// PDF download (on-demand generation + streaming)
+app.use("/api/pdf", pdfRoutes);                  // GET /api/pdf/form/:id, /merged/:id
 
 // ─── 404 fallback ────────────────────────────────────────────────────────────
 app.use((_req, res) => {
