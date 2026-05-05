@@ -320,7 +320,7 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
   );
 
   const response = await client.messages.create({
-    model: "claude-opus-4-5",
+    model: "claude-opus-4-7",
     max_tokens: 32000,
     system: systemPrompt,
     messages: [

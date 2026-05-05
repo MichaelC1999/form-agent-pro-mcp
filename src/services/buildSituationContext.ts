@@ -244,8 +244,8 @@ export async function buildSituationContext(
 
   const client = getAnthropicClient();
   const response = await client.messages.create({
-    model: "claude-opus-4-5",
-    max_tokens: 8096,
+    model: "claude-opus-4-7",
+    max_tokens: 32000,
     system: buildSystemPrompt(),
     messages: [
       {
