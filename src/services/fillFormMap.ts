@@ -208,7 +208,7 @@ function parseLLMResponse(raw: string, expectedFieldIds: string[]): LLMResponse 
   try {
     parsed = JSON.parse(cleaned);
   } catch {
-    throw new Error(`Failed to parse form map response for "${formId}".`);
+    throw new Error(`Failed to parse LLM form map response (invalid JSON).`);
   }
 
   if (!parsed.fields || typeof parsed.fields !== "object") {
@@ -457,6 +457,7 @@ export async function getFillFormMapPromptText(
     situationalContext = {
       userId: "<<USER_ID>>",
       createdAt: new Date(),
+      status: "ready" as const,
       situationSummary:
         "<<PASTE situationSummary HERE — 2-3 sentence description of who the parties are, " +
         "what immigration process they are pursuing, and what needs to be done.>>",
