@@ -13,6 +13,8 @@ Building front end
 - Flow to download all of the forms in a single packet
 - Twitter landing page
 - Add Gabi + me portait to about page
+- "Application in progress" should check if the situation context was submit in last 3 hours. If not, show error - get in contact
+- FOllowing stripe checkout, better loading screen to show steps of the process and minimal feedback
 - Post-form download dashboard
 
 Marketing

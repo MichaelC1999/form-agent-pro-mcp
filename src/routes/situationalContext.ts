@@ -5,6 +5,7 @@ import { buildSituationContext } from "../services/buildSituationContext";
 import { fillFormMap } from "../services/fillFormMap";
 import { SituationalContext } from "../models/SituationalContext";
 import { requireAuth, authTag } from "../middleware/requireAuth";
+import { assertSessionPaid } from "../services/stripe";
 
 const router = Router();
 const upload = multer({ dest: os.tmpdir() });
@@ -28,11 +29,19 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
   console.log(`[POST /api/situation/build] ${authTag(req)} | Building situational context`);
   try {
     const userId = req.auth!.sub;
-    const { situationDescription, processDescription, additionalNotes } = req.body as {
+    const { situationDescription, processDescription, additionalNotes, stripeSessionId } = req.body as {
       situationDescription?: string;
       processDescription?: string;
       additionalNotes?: string;
+      stripeSessionId?: string;
     };
+
+    const paid = await assertSessionPaid(stripeSessionId, userId);
+    if (!paid.ok) {
+      console.log(`[POST /api/situation/build] ${authTag(req)} | ${paid.status} — ${paid.error}`);
+      res.status(paid.status).json({ error: paid.error });
+      return;
+    }
 
     if (!situationDescription) {
       console.log(`[POST /api/situation/build] ${authTag(req)} | 400 — missing situationDescription`);

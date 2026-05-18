@@ -11,6 +11,7 @@ import filledFormMapRoutes from "./routes/filledFormMap";
 import formFillRoutes from "./routes/formFill";
 import pipelineRoutes from "./routes/pipeline";
 import pdfRoutes from "./routes/pdf";
+import checkoutRoutes from "./routes/checkout";
 
 const app = express();
 
@@ -42,6 +43,9 @@ app.use("/api/pipeline", pipelineRoutes);        // POST /api/pipeline/run
 //
 // PDF download (on-demand generation + streaming)
 app.use("/api/pdf", pdfRoutes);                  // GET /api/pdf/form/:id, /merged/:id
+//
+// Stripe Checkout (payment gate for /api/situation/build)
+app.use("/api/checkout", checkoutRoutes);
 
 // ─── 404 fallback ────────────────────────────────────────────────────────────
 app.use((_req, res) => {
