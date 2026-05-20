@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { requireAuth, authTag } from "../middleware/requireAuth";
 import { stripe, stripePriceId } from "../services/stripe";
+import { logAppError } from "../models/AppError";
 
 const router = Router();
 
@@ -26,6 +27,12 @@ router.post("/create-session", requireAuth, async (req: Request, res: Response) 
     res.json({ sessionId: session.id, clientSecret: session.client_secret });
   } catch (err) {
     console.error(`[POST /api/checkout/create-session] ${authTag(req)} | 500`, err);
+    logAppError({
+      err,
+      service: "POST /api/checkout/create-session",
+      request: req,
+      errorType: "payment",
+    });
     res.status(500).json({ error: "Failed to create checkout session." });
   }
 });
@@ -45,6 +52,12 @@ router.get("/session/:id", requireAuth, async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error("[GET /api/checkout/session]", err);
+    logAppError({
+      err,
+      service: "GET /api/checkout/session/:id",
+      request: req,
+      errorType: "payment",
+    });
     res.status(404).json({ error: "Session not found." });
   }
 });

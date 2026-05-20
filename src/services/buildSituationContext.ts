@@ -5,6 +5,7 @@ import Tesseract from "tesseract.js";
 import { getAnthropicClient } from "../lib/anthropic";
 import { SituationalContext } from "../models/SituationalContext";
 import { logAnthropicResponse } from "../models/AnthropicLog";
+import { ClaudeContentError, ClaudeParseError } from "../models/AppError";
 import type {
   BuildSituationContextInput,
   ISituationalContext,
@@ -141,7 +142,44 @@ Return a single valid JSON object with this exact shape — no markdown fences, 
       "<Key in English>": "<sanitized value or narrative string in English>"
     }
   }
-}`;
+}
+
+─────────────────────────────────────────────────────────────────────────────
+ERROR PATH — MANDATORY
+─────────────────────────────────────────────────────────────────────────────
+
+If, AT ANY POINT, you determine that you CANNOT produce a valid, complete
+situational context — for example because:
+  • The UI answers are empty, contradictory, or do not describe an immigration
+    matter at all.
+  • The uploaded documents are unreadable, irrelevant to immigration, or
+    contain no useful identity / process information.
+  • You cannot confidently identify even one party or one required form.
+  • The materials describe a process that is not a US immigration filing.
+  • Any other ambiguity makes a high-quality response impossible.
+
+YOU MUST NOT GUESS, FABRICATE, OR RETURN A PARTIAL CONTEXT.
+
+Instead, return — and return ONLY — the following JSON object, with no
+markdown fences and no explanation outside the JSON:
+
+{
+  "error": {
+    "code": "<short_snake_case_code>",
+    "message": "<one-sentence plain-English description of why you cannot proceed>",
+    "details": "<optional second sentence describing what would be needed to succeed>"
+  }
+}
+
+Valid examples of "code":
+  insufficient_context, unreadable_documents, irrelevant_documents,
+  conflicting_information, non_immigration_matter, missing_parties,
+  cannot_determine_forms
+
+This error shape is the ONLY acceptable response when you cannot produce the
+full situational context. Do not mix the two shapes. Do not return an empty
+situationSummary, an empty partyData object, or fabricated forms in lieu of
+returning the error object.`;
 }
 
 function buildUserMessage(
@@ -268,11 +306,44 @@ export async function buildSituationContext(
   const rawJson = rawText?.type === "text" ? rawText.text.trim() : "";
   const cleaned = rawJson.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
 
-  let parsed: { situationSummary: string; requiredForms: string[]; partyData: PartyDataMap };
+  let parsed: {
+    situationSummary?: string;
+    requiredForms?: string[];
+    partyData?: PartyDataMap;
+    error?: { code?: string; message?: string; details?: string };
+  };
   try {
     parsed = JSON.parse(cleaned);
   } catch {
-    throw new Error(`Failed to parse situation context response.`);
+    throw new ClaudeParseError({
+      service: "buildSituationContext",
+      message: "Claude response was not valid JSON.",
+      rawResponse: cleaned.slice(0, 4000),
+    });
+  }
+
+  // Honour the explicit error shape: if Claude reports it could not produce a
+  // usable context, surface that as a typed error so the route layer can log
+  // it and respond with a meaningful status — never fall through to a partial
+  // save.
+  if (parsed.error && typeof parsed.error === "object") {
+    throw new ClaudeContentError({
+      service: "buildSituationContext",
+      code: parsed.error.code ?? "unspecified",
+      message: parsed.error.message ?? "Claude could not produce a situational context.",
+      details: parsed.error.details,
+      rawResponse: cleaned.slice(0, 4000),
+    });
+  }
+
+  if (!parsed.situationSummary || !parsed.partyData) {
+    // Defensive: model returned the success shape but it's not actually usable.
+    throw new ClaudeContentError({
+      service: "buildSituationContext",
+      code: "incomplete_response",
+      message: "Claude returned a context that is missing required fields.",
+      rawResponse: cleaned.slice(0, 4000),
+    });
   }
 
   // 5. Persist to MongoDB

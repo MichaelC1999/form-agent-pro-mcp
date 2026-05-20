@@ -178,6 +178,61 @@ export interface ExtractPdfInput {
   existingMapId?: string; // if provided, update that map; else create new
 }
 
+// ─── AppError ─────────────────────────────────────────────────────────────────
+
+/**
+ * Categorises every error we persist so we can filter quickly in MongoDB.
+ *
+ *  anthropic_content        — Claude returned a structured `{ error: ... }`
+ *                              JSON object (insufficient context, etc.)
+ *  anthropic_parse          — Claude response could not be parsed as JSON
+ *  anthropic_api            — Anthropic SDK threw (rate limit, network, etc.)
+ *  validation               — Request failed input validation
+ *  not_found                — Required resource was missing
+ *  auth                     — Auth/permission failure
+ *  payment                  — Stripe / payment gate failure
+ *  pdf                      — pdftk / pdf-lib / file-system failure
+ *  server                   — Catch-all unexpected exception
+ */
+export type AppErrorType =
+  | "anthropic_content"
+  | "anthropic_parse"
+  | "anthropic_api"
+  | "validation"
+  | "not_found"
+  | "auth"
+  | "payment"
+  | "pdf"
+  | "server";
+
+export interface IAppError {
+  /** What kind of failure this is (see AppErrorType above) */
+  errorType: AppErrorType;
+  /** Service or module that detected the failure (e.g. "fillFormMap") */
+  service: string;
+  /** HTTP route that handled the request (e.g. "POST /api/pipeline/run") */
+  route?: string;
+  /** Human-readable summary */
+  message: string;
+  /** Optional stack trace for server-side errors */
+  stack?: string;
+  /** Optional short code surfaced by Claude or thrown by a service */
+  code?: string;
+  /** Client IP of the request that triggered this error */
+  ipAddress?: string;
+  /** Authenticated user's email (from Google sign-in payload) */
+  userEmail?: string;
+  /** Authenticated user's sub id */
+  userId?: string;
+  /** Optional form ID context */
+  formId?: string;
+  /** Optional SituationalContext ID context */
+  situationalContextId?: string;
+  /** Free-form payload for service-specific detail (LLM error JSON, etc.) */
+  metadata?: Record<string, unknown>;
+  createdAt: Date;
+}
+
 // ─── AnthropicLog ─────────────────────────────────────────────────────────────
 
 export interface IAnthropicLog {

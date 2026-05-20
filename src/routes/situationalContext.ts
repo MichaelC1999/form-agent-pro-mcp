@@ -6,13 +6,31 @@ import { fillFormMap } from "../services/fillFormMap";
 import { SituationalContext } from "../models/SituationalContext";
 import { requireAuth, authTag } from "../middleware/requireAuth";
 import { assertSessionPaid } from "../services/stripe";
+import {
+  logAppError,
+  requestErrorMeta,
+  ClaudeContentError,
+  ClaudeParseError,
+} from "../models/AppError";
 
 const router = Router();
 const upload = multer({ dest: os.tmpdir() });
 
-function serverError(res: Response, err: unknown): void {
-  console.error("[situationalContext]", err);
-  res.status(500).json({ error: "An internal error occurred. Please try again." });
+function serverError(
+  req: Request,
+  res: Response,
+  err: unknown,
+  service: string
+): void {
+  console.error(`[${service}]`, err);
+  let status = 500;
+  if (err instanceof ClaudeContentError) status = 422;
+  else if (err instanceof ClaudeParseError) status = 502;
+  logAppError({ err, service, request: req });
+  const message = err instanceof ClaudeContentError
+    ? err.message
+    : "An internal error occurred. Please try again.";
+  res.status(status).json({ error: message });
 }
 
 // POST /api/situation/build
@@ -66,6 +84,10 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
       requiredForms: [],
     });
 
+    // Snapshot request meta now so we can still tag background errors with the
+    // originating IP and email after the response has been sent.
+    const backgroundRequestMeta = requestErrorMeta(req, "POST /api/situation/build (background)");
+
     // Return 202 immediately — the pipeline runs in the background
     console.log(`[POST /api/situation/build] ${authTag(req)} | 202 — stub created id=${stub._id}`);
     res.status(202).json({
@@ -109,18 +131,33 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
             console.log(`[background] ${authTag(req)} | Form map ready ${formId}`);
           } catch (err) {
             console.error(`[background] ${authTag(req)} | Form map failed ${formId}:`, err);
+            logAppError({
+              err,
+              service: "POST /api/situation/build (background fillFormMap)",
+              request: backgroundRequestMeta,
+              formId,
+              situationalContextId: stub._id.toString(),
+              userId,
+            });
           }
         }
 
         console.log(`[background] ${authTag(req)} | Pipeline complete id=${stub._id}`);
       } catch (err) {
         console.error(`[background] ${authTag(req)} | Pipeline failed id=${stub._id}:`, err);
+        logAppError({
+          err,
+          service: "POST /api/situation/build (background buildSituationContext)",
+          request: backgroundRequestMeta,
+          situationalContextId: stub._id.toString(),
+          userId,
+        });
         await SituationalContext.findByIdAndUpdate(stub._id, { status: "error" }).catch(() => {});
       }
     })();
   } catch (err) {
     console.error(`[POST /api/situation/build] ${authTag(req)} | 500 — server error`);
-    serverError(res, err);
+    serverError(req, res, err, "POST /api/situation/build");
   }
 });
 
@@ -135,7 +172,7 @@ router.get("/user/:userId", requireAuth, async (req: Request, res: Response) => 
     res.json(docs);
   } catch (err) {
     console.error(`[GET /api/situation/user] ${authTag(req)} | 500 — server error`);
-    serverError(res, err);
+    serverError(req, res, err, "GET /api/situation/user/:userId");
   }
 });
 
@@ -153,7 +190,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     res.json(doc.toObject());
   } catch (err) {
     console.error(`[GET /api/situation/:id] ${authTag(req)} | 500 — server error`);
-    serverError(res, err);
+    serverError(req, res, err, "GET /api/situation/:id");
   }
 });
 

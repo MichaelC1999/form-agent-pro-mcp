@@ -4,6 +4,7 @@ import { FormContext } from "../models/FormContext";
 import { SituationalContext } from "../models/SituationalContext";
 import { FilledFormMap } from "../models/FilledFormMap";
 import { logAnthropicResponse } from "../models/AnthropicLog";
+import { ClaudeContentError, ClaudeParseError } from "../models/AppError";
 import type {
   FillFormMapInput,
   IFilledFormMap,
@@ -107,7 +108,45 @@ Return a single valid JSON object with this exact shape — no markdown fences, 
 }
 
 - "fields" must contain every field ID from the FORM CONTEXT — every single one, including those left blank.
-- "skipped" should include any field where you were uncertain, found conflicting data, or applied an inference that may need human review. This is an audit log, not a penalty.`;
+- "skipped" should include any field where you were uncertain, found conflicting data, or applied an inference that may need human review. This is an audit log, not a penalty.
+
+─────────────────────────────────────────────────────────────────────────────
+ERROR PATH — MANDATORY
+─────────────────────────────────────────────────────────────────────────────
+
+If, AT ANY POINT, you determine that you CANNOT produce a usable filled form
+map — for example because:
+  • The FORM CONTEXT is empty, malformed, or appears to describe a different
+    form than the SITUATIONAL CONTEXT references.
+  • The SITUATIONAL CONTEXT contains no information about any party that this
+    form applies to (e.g. you are filling an I-130 but no petitioner exists).
+  • The two contexts are fundamentally incompatible (e.g. asked to fill a
+    naturalization form when the situational context describes a marriage
+    petition with no green-card holder).
+  • Both inputs are present but produce zero defensible fills — i.e. literally
+    every field would have to be blank, making the output meaningless.
+  • Any other ambiguity makes a high-quality response impossible.
+
+YOU MUST NOT GUESS, FABRICATE FIELDS, OR RETURN AN ALL-BLANK FIELD MAP.
+
+Instead, return — and return ONLY — the following JSON object, with no
+markdown fences and no explanation outside the JSON:
+
+{
+  "error": {
+    "code": "<short_snake_case_code>",
+    "message": "<one-sentence plain-English description of why you cannot fill this form>",
+    "details": "<optional second sentence describing what would be needed to succeed>"
+  }
+}
+
+Valid examples of "code":
+  insufficient_context, missing_required_party, form_context_mismatch,
+  empty_form_context, incompatible_form, conflicting_data
+
+This error shape is the ONLY acceptable response when you cannot produce a
+meaningful fill. Do not return the "fields" shape with every value blank in
+place of this error object — that is a forbidden output.`;
 }
 
 /**
@@ -201,18 +240,45 @@ interface LLMResponse {
   skipped: Array<{ fieldId: string; reason: string }>;
 }
 
+interface LLMRawResponse {
+  fields?: Record<string, string>;
+  skipped?: Array<{ fieldId: string; reason: string }>;
+  error?: { code?: string; message?: string; details?: string };
+}
+
 function parseLLMResponse(raw: string, expectedFieldIds: string[]): LLMResponse {
   const cleaned = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
 
-  let parsed: LLMResponse;
+  let parsed: LLMRawResponse;
   try {
     parsed = JSON.parse(cleaned);
   } catch {
-    throw new Error(`Failed to parse LLM form map response (invalid JSON).`);
+    throw new ClaudeParseError({
+      service: "fillFormMap",
+      message: "Claude response was not valid JSON.",
+      rawResponse: cleaned.slice(0, 4000),
+    });
+  }
+
+  // Honour the explicit error shape from the prompt — surface it as a typed
+  // error so the route layer can persist the AppError and reject the call.
+  if (parsed.error && typeof parsed.error === "object") {
+    throw new ClaudeContentError({
+      service: "fillFormMap",
+      code: parsed.error.code ?? "unspecified",
+      message: parsed.error.message ?? "Claude could not fill the form.",
+      details: parsed.error.details,
+      rawResponse: cleaned.slice(0, 4000),
+    });
   }
 
   if (!parsed.fields || typeof parsed.fields !== "object") {
-    throw new Error(`fillFormMap response missing "fields" object.`);
+    throw new ClaudeContentError({
+      service: "fillFormMap",
+      code: "missing_fields_object",
+      message: 'Claude response is missing the "fields" object and did not return an error.',
+      rawResponse: cleaned.slice(0, 4000),
+    });
   }
 
   // Ensure every expected field is present in the output — fill blanks for any
@@ -232,9 +298,9 @@ function parseLLMResponse(raw: string, expectedFieldIds: string[]): LLMResponse 
     }
   }
 
-  parsed.skipped = Array.isArray(parsed.skipped) ? parsed.skipped : [];
+  const skipped = Array.isArray(parsed.skipped) ? parsed.skipped : [];
 
-  return parsed;
+  return { fields: parsed.fields, skipped };
 }
 
 // ─── Key compression ──────────────────────────────────────────────────────────

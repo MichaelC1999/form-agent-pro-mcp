@@ -9,14 +9,40 @@ import { fillForm } from "../services/fillForm";
 import { runPipeline } from "../services/runPipeline";
 import { SituationalContext } from "../models/SituationalContext";
 import { requireAuth, authTag } from "../middleware/requireAuth";
-import type { AssumptionLevel } from "../types";
+import { logAppError, ClaudeContentError, ClaudeParseError } from "../models/AppError";
+import type { AppErrorType, AssumptionLevel } from "../types";
 
 const router = Router();
 const upload = multer({ dest: os.tmpdir() });
 
-function serverError(res: Response, err: unknown): void {
-  console.error("[pipeline]", err);
-  res.status(500).json({ error: "An internal error occurred. Please try again." });
+interface ServerErrorOpts {
+  service: string;
+  errorType?: AppErrorType;
+  formId?: string;
+  situationalContextId?: string;
+}
+
+function serverError(
+  req: Request,
+  res: Response,
+  err: unknown,
+  opts: ServerErrorOpts
+): void {
+  console.error(`[${opts.service}]`, err);
+
+  // Surface Claude content errors as 422 so callers can distinguish them from
+  // raw 500s. Persist every error to MongoDB along with the request IP/email
+  // so we can audit failures by user later.
+  let status = 500;
+  if (err instanceof ClaudeContentError) status = 422;
+  else if (err instanceof ClaudeParseError) status = 502;
+
+  logAppError({ err, request: req, ...opts });
+
+  const message = err instanceof ClaudeContentError
+    ? err.message
+    : "An internal error occurred. Please try again.";
+  res.status(status).json({ error: message });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -214,6 +240,13 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
         formResults.push({ formId, filledFormMapId, ...fillResult });
       } catch (formErr) {
         console.error(`[POST /api/pipeline/run] ${authTag(req)} | Form failed ${formId}:`, formErr);
+        logAppError({
+          err: formErr,
+          service: "POST /api/pipeline/run",
+          request: req,
+          formId,
+          situationalContextId,
+        });
         formResults.push({
           formId,
           filledFormMapId: null,
@@ -221,7 +254,11 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
           outputPath: "",
           filledFields: [],
           skippedFields: [],
-          errors: [`Failed to process form "${formId}".`],
+          errors: [
+            formErr instanceof ClaudeContentError
+              ? formErr.message
+              : `Failed to process form "${formId}".`,
+          ],
         });
       }
     }
@@ -231,7 +268,7 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
     res.json({ situationalContextId, forms: formResults });
   } catch (err) {
     console.error(`[POST /api/pipeline/run] ${authTag(req)} | 500 — server error`);
-    serverError(res, err);
+    serverError(req, res, err, { service: "POST /api/pipeline/run" });
   }
 });
 
@@ -332,6 +369,13 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
         });
       } catch (err) {
         console.error(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | Form failed ${formId}:`, err);
+        logAppError({
+          err,
+          service: "POST /api/pipeline/fill-form-maps",
+          request: req,
+          formId,
+          situationalContextId,
+        });
         forms.push({
           formId,
           filledFormMapId: null,
@@ -339,7 +383,11 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
           fieldCount: 0,
           filledCount: 0,
           skippedCount: 0,
-          errors: [`Failed to process form "${formId}".`],
+          errors: [
+            err instanceof ClaudeContentError
+              ? err.message
+              : `Failed to process form "${formId}".`,
+          ],
         });
       }
     }
@@ -349,7 +397,7 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
     res.json({ situationalContextId, userId, success: overallSuccess, forms });
   } catch (err) {
     console.error(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | 500 — server error`);
-    serverError(res, err);
+    serverError(req, res, err, { service: "POST /api/pipeline/fill-form-maps" });
   }
 });
 
@@ -399,7 +447,7 @@ router.post("/resume", async (req: Request, res: Response) => {
     res.json(result);
   } catch (err) {
     console.error(`[POST /api/pipeline/resume] ${authTag(req)} | 500 — server error`);
-    serverError(res, err);
+    serverError(req, res, err, { service: "POST /api/pipeline/resume" });
   }
 });
 

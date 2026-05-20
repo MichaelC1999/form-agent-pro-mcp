@@ -2,13 +2,27 @@ import { Router, Request, Response } from "express";
 import { fillFormMap } from "../services/fillFormMap";
 import { FilledFormMap } from "../models/FilledFormMap";
 import { requireAuth, authTag } from "../middleware/requireAuth";
+import { logAppError, ClaudeContentError, ClaudeParseError } from "../models/AppError";
 import type { AssumptionLevel } from "../types";
 
 const router = Router();
 
-function serverError(res: Response, err: unknown): void {
-  console.error("[filledFormMap]", err);
-  res.status(500).json({ error: "An internal error occurred. Please try again." });
+function serverError(
+  req: Request,
+  res: Response,
+  err: unknown,
+  service: string,
+  extra?: { formId?: string; situationalContextId?: string }
+): void {
+  console.error(`[${service}]`, err);
+  let status = 500;
+  if (err instanceof ClaudeContentError) status = 422;
+  else if (err instanceof ClaudeParseError) status = 502;
+  logAppError({ err, service, request: req, ...extra });
+  const message = err instanceof ClaudeContentError
+    ? err.message
+    : "An internal error occurred. Please try again.";
+  res.status(status).json({ error: message });
 }
 
 // ─── POST /api/filled-map/fill ────────────────────────────────────────────────
@@ -38,7 +52,11 @@ router.post("/fill", requireAuth, async (req: Request, res: Response) => {
     res.status(201).json(result);
   } catch (err) {
     console.error(`[POST /api/filled-map/fill] ${authTag(req)} | 500 — server error`);
-    serverError(res, err);
+    const { formId, situationalContextId } = (req.body ?? {}) as {
+      formId?: string;
+      situationalContextId?: string;
+    };
+    serverError(req, res, err, "POST /api/filled-map/fill", { formId, situationalContextId });
   }
 });
 
@@ -55,7 +73,7 @@ router.get("/user/:userId", requireAuth, async (req: Request, res: Response) => 
     res.json(docs);
   } catch (err) {
     console.error(`[GET /api/filled-map/user] ${authTag(req)} | 500 — server error`);
-    serverError(res, err);
+    serverError(req, res, err, "GET /api/filled-map/user/:userId");
   }
 });
 
@@ -73,7 +91,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     res.json(doc.toObject());
   } catch (err) {
     console.error(`[GET /api/filled-map/:id] ${authTag(req)} | 500 — server error`);
-    serverError(res, err);
+    serverError(req, res, err, "GET /api/filled-map/:id");
   }
 });
 

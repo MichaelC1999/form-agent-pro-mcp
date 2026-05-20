@@ -3,14 +3,16 @@ import multer from "multer";
 import * as os from "os";
 import { buildFormMap } from "../services/buildFormMap";
 import { FormMap } from "../models/FormMap";
+import { logAppError } from "../models/AppError";
 
 const router = Router();
 
 // Multer — accept the blank PDF uploaded directly; store in system temp dir
 const upload = multer({ dest: os.tmpdir() });
 
-function serverError(res: Response, err: unknown): void {
-  console.error("[formMap]", err);
+function serverError(req: Request, res: Response, err: unknown, service: string, formId?: string): void {
+  console.error(`[${service}]`, err);
+  logAppError({ err, service, request: req, formId });
   res.status(500).json({ error: "An internal error occurred. Please try again." });
 }
 
@@ -62,7 +64,7 @@ router.post("/build", upload.single("pdf"), async (req: Request, res: Response) 
       fields: result.fields,
     });
   } catch (err) {
-    serverError(res, err);
+    serverError(req, res, err, `${req.method} ${req.path}`, (req.params?.formId ?? (req.body as { formId?: string })?.formId));
   }
 });
 
@@ -77,7 +79,7 @@ router.get("/:formId", async (req: Request, res: Response) => {
     }
     res.json(doc.toObject());
   } catch (err) {
-    serverError(res, err);
+    serverError(req, res, err, `${req.method} ${req.path}`, (req.params?.formId ?? (req.body as { formId?: string })?.formId));
   }
 });
 

@@ -3,15 +3,23 @@ import multer from "multer";
 import * as os from "os";
 import { buildFormContext, getFormContextPromptText } from "../services/buildFormContext";
 import { FormContext } from "../models/FormContext";
+import { logAppError, ClaudeContentError, ClaudeParseError } from "../models/AppError";
 
 const router = Router();
 
 // ─── Multer — optional supplemental context file uploads ──────────────────────
 const upload = multer({ dest: os.tmpdir() });
 
-function serverError(res: Response, err: unknown): void {
-  console.error("[formContext]", err);
-  res.status(500).json({ error: "An internal error occurred. Please try again." });
+function serverError(req: Request, res: Response, err: unknown, service: string, formId?: string): void {
+  console.error(`[${service}]`, err);
+  let status = 500;
+  if (err instanceof ClaudeContentError) status = 422;
+  else if (err instanceof ClaudeParseError) status = 502;
+  logAppError({ err, service, request: req, formId });
+  const message = err instanceof ClaudeContentError
+    ? err.message
+    : "An internal error occurred. Please try again.";
+  res.status(status).json({ error: message });
 }
 
 // ─── POST /api/form-context/build ────────────────────────────────────────────
@@ -41,7 +49,7 @@ router.post("/build", upload.array("contextFiles", 10), async (req: Request, res
       fields: result.fields,
     });
   } catch (err) {
-    serverError(res, err);
+    serverError(req, res, err, `${req.method} ${req.path}`, (req.body as { formId?: string })?.formId);
   }
 });
 
@@ -74,7 +82,7 @@ router.post(
 
       res.json({ systemPrompt, userMessage });
     } catch (err) {
-      serverError(res, err);
+      serverError(req, res, err, `${req.method} ${req.path}`, (req.body as { formId?: string })?.formId);
     }
   }
 );
@@ -89,7 +97,7 @@ router.get("/:formId", async (req: Request, res: Response) => {
     }
     res.json(doc.toObject());
   } catch (err) {
-    serverError(res, err);
+    serverError(req, res, err, `${req.method} ${req.path}`, req.params.formId);
   }
 });
 

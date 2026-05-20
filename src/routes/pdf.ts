@@ -7,6 +7,7 @@ import { fillForm } from "../services/fillForm";
 import { FilledFormMap } from "../models/FilledFormMap";
 import { SituationalContext } from "../models/SituationalContext";
 import { requireAuth, authTag } from "../middleware/requireAuth";
+import { logAppError } from "../models/AppError";
 
 const router = Router();
 
@@ -16,8 +17,15 @@ function getBlankPdfPath(formId: string): string {
   return path.join(ASSETS_FORMS_DIR, formId, "blank.pdf");
 }
 
-function serverError(res: Response, err: unknown): void {
-  console.error("[pdf]", err);
+function serverError(
+  req: Request,
+  res: Response,
+  err: unknown,
+  service: string,
+  extra?: { formId?: string; situationalContextId?: string }
+): void {
+  console.error(`[${service}]`, err);
+  logAppError({ err, service, request: req, errorType: "pdf", ...extra });
   res.status(500).json({ error: "An internal error occurred. Please try again." });
 }
 
@@ -101,7 +109,7 @@ router.get("/form/:filledFormMapId", requireAuth, async (req: Request, res: Resp
     streamPdfAndCleanup(res, outputPath, `${formId}.pdf`);
   } catch (err) {
     console.error(`[GET /api/pdf/form] ${authTag(req)} | 500 — generation failed`);
-    serverError(res, err);
+    serverError(req, res, err, "GET /api/pdf/form/:filledFormMapId");
   }
 });
 
@@ -164,6 +172,14 @@ router.get("/merged/:situationalContextId", requireAuth, async (req: Request, re
         pdfPaths.push(p);
       } catch (err) {
         console.error(`[GET /api/pdf/merged] ${authTag(req)} | Skipping ${(m as any).formId}:`, err);
+        logAppError({
+          err,
+          service: "GET /api/pdf/merged/:situationalContextId",
+          request: req,
+          errorType: "pdf",
+          formId: (m as any).formId,
+          situationalContextId: req.params.situationalContextId,
+        });
       }
     }
 
@@ -205,7 +221,9 @@ router.get("/merged/:situationalContextId", requireAuth, async (req: Request, re
     streamPdfAndCleanup(res, tmpMergedPath, "immigration-forms.pdf");
   } catch (err) {
     console.error(`[GET /api/pdf/merged] ${authTag(req)} | 500 — merge failed`);
-    serverError(res, err);
+    serverError(req, res, err, "GET /api/pdf/merged/:situationalContextId", {
+      situationalContextId: req.params.situationalContextId,
+    });
   }
 });
 

@@ -3,15 +3,29 @@ import multer from "multer";
 import * as os from "os";
 import { fillForm } from "../services/fillForm";
 import { extractPdf } from "../services/extractPdf";
-import type { FormType } from "../types";
+import { logAppError } from "../models/AppError";
+import type { AppErrorType, FormType } from "../types";
 
 const router = Router();
 const upload = multer({ dest: os.tmpdir() });
 
 const VALID_FORM_TYPES: FormType[] = ["pdf"];
 
-function serverError(res: Response, err: unknown): void {
-  console.error("[formFill]", err);
+function serverError(
+  req: Request,
+  res: Response,
+  err: unknown,
+  service: string,
+  opts?: { formId?: string; errorType?: AppErrorType }
+): void {
+  console.error(`[${service}]`, err);
+  logAppError({
+    err,
+    service,
+    request: req,
+    formId: opts?.formId,
+    errorType: opts?.errorType,
+  });
   res.status(500).json({ error: "An internal error occurred. Please try again." });
 }
 
@@ -49,17 +63,20 @@ router.post("/fill", async (req: Request, res: Response) => {
 
     res.json(result);
   } catch (err) {
-    serverError(res, err);
+    serverError(req, res, err, `${req.method} ${req.path}`, {
+      formId: (req.body as { formId?: string })?.formId,
+      errorType: "pdf",
+    });
   }
 });
 
 // POST /api/form-fill/extract
-router.post("/extract", upload.single("pdf"), async (_req: Request, res: Response) => {
+router.post("/extract", upload.single("pdf"), async (req: Request, res: Response) => {
   try {
     // TODO: extract params, call extractPdf
     res.status(501).json({ error: "Not implemented" });
   } catch (err) {
-    serverError(res, err);
+    serverError(req, res, err, `${req.method} ${req.path}`, { errorType: "pdf" });
   }
 });
 
