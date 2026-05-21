@@ -173,8 +173,9 @@ place of this error object — that is a forbidden output.`;
 function buildUserMessage(params: {
   formContext: IFormContext;
   situationalContext: ISituationalContext;
+  beneficiaryKey?: string;
 }): string {
-  const { formContext, situationalContext } = params;
+  const { formContext, situationalContext, beneficiaryKey } = params;
   const hr = "─".repeat(72);
   const parts: string[] = [];
 
@@ -184,6 +185,38 @@ function buildUserMessage(params: {
   parts.push(hr);
   parts.push(`Situation Summary:\n${situationalContext.situationSummary}`);
   parts.push(`\nParty & Situational Data:\n${JSON.stringify(situationalContext.partyData, null, 2)}`);
+
+  // ── 1b. Additional user-provided context (from retry-form attempts) ───────
+  // The retry-form flow on the report page lets the user supply more text and
+  // documents when a fill failed. Each saved entry is scoped to a specific
+  // (formId, beneficiaryKey) pair — we only inject the entries that match the
+  // current fill so we don't bleed unrelated clarifications into the prompt.
+  const matchingAdditional = (situationalContext.additionalContexts ?? []).filter((ac) => {
+    if (ac.formId !== formContext.formId) return false;
+    const acKey = ac.beneficiaryKey ?? undefined;
+    return acKey === beneficiaryKey;
+  });
+  if (matchingAdditional.length > 0) {
+    parts.push(`\n${hr}`);
+    parts.push(
+      `ADDITIONAL USER-PROVIDED CONTEXT  |  ${matchingAdditional.length} clarification(s) the user attached AFTER an earlier fill attempt for this form`
+    );
+    parts.push(hr);
+    parts.push(
+      "Treat these clarifications as authoritative — they were provided specifically to resolve gaps or errors in a prior generation of this form. If they conflict with the situational context above, the additional context wins for THIS form only."
+    );
+    matchingAdditional.forEach((ac, i) => {
+      parts.push(`\n--- Clarification #${i + 1} (submitted ${new Date(ac.createdAt).toISOString()}) ---`);
+      if (ac.userNote && ac.userNote.trim() !== "") {
+        parts.push(`User note:\n${ac.userNote.trim()}`);
+      }
+      if (ac.documents && ac.documents.length > 0) {
+        for (const doc of ac.documents) {
+          parts.push(`\n[Attached document: ${doc.originalName}]\n${doc.rawText || "(no text extracted)"}`);
+        }
+      }
+    });
+  }
 
   // ── 2. Form metadata ──────────────────────────────────────────────────────
   parts.push(`\n${hr}`);
@@ -397,7 +430,7 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
     formId,
     userId,
     situationalContextId,
-    assumptionLevel = "conservative",
+    assumptionLevel = "liberal",
     beneficiaryKey,
   } = input;
 
@@ -447,7 +480,11 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
 
   // 3. Build prompts using the compressed FormContext
   const systemPrompt = buildSystemPrompt(assumptionLevel, beneficiaryKey);
-  const userMessage = buildUserMessage({ formContext: compressedFormContext, situationalContext });
+  const userMessage = buildUserMessage({
+    formContext: compressedFormContext,
+    situationalContext,
+    beneficiaryKey,
+  });
 
   // 4. Anthropic call — claude-opus-4-5 for strong multi-document reasoning
   const client = getAnthropicClient();
@@ -534,7 +571,7 @@ export async function getFillFormMapPromptText(
     situationalContextId?: string;
   },
 ): Promise<{ systemPrompt: string; userMessage: string }> {
-  const { formId, situationalContextId, assumptionLevel = "conservative", beneficiaryKey } = input;
+  const { formId, situationalContextId, assumptionLevel = "liberal", beneficiaryKey } = input;
 
   // Only the form context is needed to build the prompt — the form map is not
   // sent to the LLM, so it is not loaded here.
@@ -575,7 +612,11 @@ export async function getFillFormMapPromptText(
 
   return {
     systemPrompt: buildSystemPrompt(assumptionLevel, beneficiaryKey),
-    userMessage: buildUserMessage({ formContext: compressedFormContext, situationalContext }),
+    userMessage: buildUserMessage({
+      formContext: compressedFormContext,
+      situationalContext,
+      beneficiaryKey,
+    }),
   };
 }
 
@@ -603,7 +644,7 @@ if (require.main === module) {
 
     let formId: string | undefined;
     let situationalContextId: string | undefined;
-    let assumptionLevel: AssumptionLevel = "conservative";
+    let assumptionLevel: AssumptionLevel = "liberal";
 
     for (let i = 0; i < args.length; i++) {
       const arg = args[i];

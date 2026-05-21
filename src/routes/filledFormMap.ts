@@ -45,7 +45,7 @@ router.post("/fill", requireAuth, async (req: Request, res: Response) => {
 
     const validLevels: AssumptionLevel[] = ["conservative", "moderate", "liberal"];
     const level: AssumptionLevel =
-      validLevels.includes(assumptionLevel) ? assumptionLevel : "conservative";
+      validLevels.includes(assumptionLevel) ? assumptionLevel : "liberal";
 
     const result = await fillFormMap({
       formId,

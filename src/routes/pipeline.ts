@@ -323,7 +323,7 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
       return;
     }
 
-    let assumptionLevel: AssumptionLevel = "conservative";
+    let assumptionLevel: AssumptionLevel = "liberal";
     if (assumptionLevelRaw) {
       if (!VALID_ASSUMPTION_LEVELS.includes(assumptionLevelRaw as AssumptionLevel)) {
         console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | 400 — invalid assumptionLevel`);

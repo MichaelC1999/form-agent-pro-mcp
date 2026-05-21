@@ -22,7 +22,7 @@ const FilledFormMapSchema = new Schema<FilledFormMapDocument>(
     assumptionLevel: {
       type: String,
       enum: ["conservative", "moderate", "liberal"] as AssumptionLevel[],
-      default: "conservative",
+      default: "liberal",
     },
     // fields: { "<fieldId>": "filled value" }
     fields:  { type: Schema.Types.Mixed, required: true, default: {} },

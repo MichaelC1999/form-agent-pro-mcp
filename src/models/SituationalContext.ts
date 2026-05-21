@@ -1,7 +1,23 @@
 import { Schema, model, Document } from "mongoose";
-import type { ISituationalContext, ParsedDocument } from "../types";
+import type {
+  ISituationalContext,
+  ParsedDocument,
+  FormGenerationFailure,
+  AdditionalContext,
+} from "../types";
 
 export interface SituationalContextDocument extends ISituationalContext, Document {}
+
+const FormGenerationFailureSchema = new Schema<FormGenerationFailure>(
+  {
+    formId: { type: String, required: true },
+    beneficiaryKey: { type: String },
+    code: { type: String },
+    reason: { type: String, required: true },
+    failedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
 
 const ParsedDocumentSchema = new Schema<ParsedDocument>(
   {
@@ -10,6 +26,17 @@ const ParsedDocumentSchema = new Schema<ParsedDocument>(
     rawText: { type: String, default: "" },
     extractedFacts: { type: Schema.Types.Mixed },
     uploadedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
+const AdditionalContextSchema = new Schema<AdditionalContext>(
+  {
+    formId: { type: String, required: true },
+    beneficiaryKey: { type: String },
+    userNote: { type: String, default: "" },
+    documents: { type: [ParsedDocumentSchema], default: [] },
+    createdAt: { type: Date, default: Date.now },
   },
   { _id: false }
 );
@@ -31,6 +58,12 @@ const SituationalContextSchema = new Schema<SituationalContextDocument>(
     // `[{ formId: "i-485", beneficiaryKey: "Maria" }]` shape can be stored.
     // Always read through `normalizeRequiredForms` from types/index.ts.
     requiredForms: { type: Schema.Types.Mixed, default: [] },
+    // Set by the background pipeline when it finishes processing every entry
+    // in requiredForms. Frontend uses this to flip "Pending" → "Not generated"
+    // for any form that didn't produce a FilledFormMap.
+    pipelineCompletedAt: { type: Date },
+    failedForms: { type: [FormGenerationFailureSchema], default: [] },
+    additionalContexts: { type: [AdditionalContextSchema], default: [] },
   },
   { timestamps: false }
 );

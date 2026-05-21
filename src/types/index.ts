@@ -69,6 +69,40 @@ export type PartyDataMap = Record<string, Record<string, unknown>>;
 export type SituationalContextStatus = "processing" | "ready" | "error";
 
 /**
+ * A single (form, beneficiary) pair the background pipeline tried and failed
+ * to generate a FilledFormMap for. The report UI uses this list to render
+ * "Not generated" instead of an indefinite "Pending" spinner.
+ */
+export interface FormGenerationFailure {
+  formId: string;
+  beneficiaryKey?: string;
+  /** Short Claude error code (e.g. "missing_required_party") when available. */
+  code?: string;
+  /** Human-readable reason — surfaced to the UI. */
+  reason: string;
+  failedAt: Date;
+}
+
+/**
+ * One round of user-provided clarification for a specific (form, beneficiary)
+ * pair. Created when the user retries a "Not generated" row on the /report
+ * page. fillFormMap reads matching entries on every subsequent call and
+ * injects them as ADDITIONAL CONTEXT in the prompt so the model has the
+ * extra information when re-attempting the fill.
+ */
+export interface AdditionalContext {
+  /** Which form this clarification is scoped to. */
+  formId: string;
+  /** Which beneficiary it's scoped to. Absent for household-scope forms. */
+  beneficiaryKey?: string;
+  /** Free-text note typed by the user. May be empty if only files supplied. */
+  userNote: string;
+  /** Parsed text and metadata for each file the user attached on this retry. */
+  documents: ParsedDocument[];
+  createdAt: Date;
+}
+
+/**
  * A single form the situation requires. The beneficiaryKey is the name of
  * the party in partyData this form should be filled for (e.g. "Maria Souza"
  * when a parent is petitioning for two children, each needing their own
@@ -107,6 +141,26 @@ export interface ISituationalContext {
    * Always read through `normalizeRequiredForms` to handle both shapes.
    */
   requiredForms: RequiredFormsStored;
+  /**
+   * Set by the background pipeline once it has finished iterating over every
+   * required form (success OR fail). The frontend uses presence of this
+   * timestamp to flip per-form rows from "Pending" to "Not generated" when no
+   * FilledFormMap was produced.
+   */
+  pipelineCompletedAt?: Date;
+  /**
+   * (form, beneficiary) pairs the background pipeline tried and failed to
+   * generate. Mirrors AppError but lives on the context so the report UI can
+   * surface failures without a separate query.
+   */
+  failedForms?: FormGenerationFailure[];
+  /**
+   * User-provided clarifications attached to specific (form, beneficiary)
+   * pairs via the retry flow on the report page. Each entry is appended on
+   * retry; fillFormMap injects matching entries into the prompt so the model
+   * sees the additional context on subsequent generations.
+   */
+  additionalContexts?: AdditionalContext[];
 }
 
 /**

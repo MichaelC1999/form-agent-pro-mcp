@@ -20,14 +20,14 @@ import type {
 
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff"]);
 
-function getMimeCategory(file: UploadedFile): DocumentMimeCategory {
+export function getMimeCategory(file: UploadedFile): DocumentMimeCategory {
   const ext = path.extname(file.originalname).toLowerCase();
   if (ext === ".pdf" || file.mimetype === "application/pdf") return "pdf";
   if (IMAGE_EXTS.has(ext) || file.mimetype.startsWith("image/")) return "image";
   return "text";
 }
 
-async function extractRawText(file: UploadedFile, category: DocumentMimeCategory): Promise<string> {
+export async function extractRawText(file: UploadedFile, category: DocumentMimeCategory): Promise<string> {
   switch (category) {
     case "pdf": {
       const buffer = fs.readFileSync(file.path);
