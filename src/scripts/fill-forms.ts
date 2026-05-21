@@ -46,7 +46,8 @@ async function main(): Promise<void> {
     let anyFailure = false;
     for (const r of result.forms) {
       const status = r.success ? "✅" : "❌";
-      console.log(`\n  ${status} ${r.formId}`);
+      const label = r.beneficiaryKey ? `${r.formId} (${r.beneficiaryKey})` : r.formId;
+      console.log(`\n  ${status} ${label}`);
       if (r.filledFormMapId) console.log(`     FilledFormMap : ${r.filledFormMapId}`);
       if (r.outputPath)      console.log(`     Output        : ${r.outputPath}`);
       console.log(`     Fields filled : ${r.filledFields.length}`);

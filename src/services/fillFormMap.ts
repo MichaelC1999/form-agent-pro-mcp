@@ -48,8 +48,23 @@ const ASSUMPTION_INSTRUCTIONS: Record<AssumptionLevel, string> = {
  * staying anchored to relevancy — it will never hallucinate data that has no
  * basis in the situational context.
  */
-function buildSystemPrompt(assumptionLevel: AssumptionLevel): string {
-  return `You are an expert immigration form-filling agent. Your job is to match real applicant and situational data to the correct fields on a government immigration form.
+function buildSystemPrompt(assumptionLevel: AssumptionLevel, beneficiaryKey?: string): string {
+  const beneficiaryScope = beneficiaryKey
+    ? `
+
+─────────────────────────────────────────────────────────────────────────────
+BENEFICIARY SCOPE — CRITICAL
+─────────────────────────────────────────────────────────────────────────────
+
+This form is being filled for the beneficiary identified by the key "${beneficiaryKey}" in the SITUATIONAL CONTEXT's partyData object.
+
+- For any field whose Party is the beneficiary/applicant, you MUST use ONLY the data under partyData["${beneficiaryKey}"].
+- For fields whose Party is the petitioner/sponsor/preparer, use that party's data as found in the situational context (typically a single petitioner shared across all beneficiaries).
+- Data belonging to OTHER beneficiaries (other top-level party keys that look like beneficiaries — children, siblings, other dependents of the same petitioner) MUST be ignored. Do NOT mix names, dates, document numbers, or biographic attributes between beneficiaries.
+- If the situational context contains no data under partyData["${beneficiaryKey}"], or that party clearly does not match the form's intended beneficiary, follow the ERROR PATH below with code "missing_required_party".`
+    : "";
+
+  return `You are an expert immigration form-filling agent. Your job is to match real applicant and situational data to the correct fields on a government immigration form.${beneficiaryScope}
 
 You will be given two inputs:
 1. FORM CONTEXT — A structured knowledge base describing every field on the form. For each field you will see: its exact field ID, a precise description of what it asks for, which party it belongs to (Applicant, Petitioner, Preparer, etc.), and notes on formatting, edge cases, and sources.
@@ -383,6 +398,7 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
     userId,
     situationalContextId,
     assumptionLevel = "conservative",
+    beneficiaryKey,
   } = input;
 
   // 1. Load form context + situational context for the prompt.
@@ -403,8 +419,23 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
   console.log(
     `[fillFormMap] Prerequisites loaded — ` +
     `${fieldIds.length} fields from context, ` +
-    `assumptionLevel: "${assumptionLevel}"`
+    `assumptionLevel: "${assumptionLevel}"` +
+    (beneficiaryKey ? `, beneficiaryKey: "${beneficiaryKey}"` : "")
   );
+
+  // Validate the beneficiary key (if provided) exists in partyData. Catching
+  // this here surfaces a clearer error than letting the LLM hit "no data".
+  if (beneficiaryKey) {
+    const partyKeys = Object.keys(situationalContext.partyData ?? {});
+    if (!partyKeys.includes(beneficiaryKey)) {
+      throw new ClaudeContentError({
+        service: "fillFormMap",
+        code: "missing_required_party",
+        message: `beneficiaryKey "${beneficiaryKey}" is not present in the situational context's partyData.`,
+        details: `Available party keys: ${partyKeys.join(", ") || "(none)"}`,
+      });
+    }
+  }
 
   // 2. Compress field keys for the prompt.
   //    Full XFA IDs (~22 tokens each) are replaced with short alphanumeric keys
@@ -415,7 +446,7 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
   const compressedFormContext = remapFormContextKeys(formContext, keyMap.fullToShort);
 
   // 3. Build prompts using the compressed FormContext
-  const systemPrompt = buildSystemPrompt(assumptionLevel);
+  const systemPrompt = buildSystemPrompt(assumptionLevel, beneficiaryKey);
   const userMessage = buildUserMessage({ formContext: compressedFormContext, situationalContext });
 
   // 4. Anthropic call — claude-opus-4-5 for strong multi-document reasoning
@@ -479,6 +510,7 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
     userId,
     createdAt: new Date(),
     assumptionLevel,
+    ...(beneficiaryKey ? { beneficiaryKey } : {}),
     fields: mergedFields,
     skipped: llmResult.skipped,
   });
@@ -502,7 +534,7 @@ export async function getFillFormMapPromptText(
     situationalContextId?: string;
   },
 ): Promise<{ systemPrompt: string; userMessage: string }> {
-  const { formId, situationalContextId, assumptionLevel = "conservative" } = input;
+  const { formId, situationalContextId, assumptionLevel = "conservative", beneficiaryKey } = input;
 
   // Only the form context is needed to build the prompt — the form map is not
   // sent to the LLM, so it is not loaded here.
@@ -542,7 +574,7 @@ export async function getFillFormMapPromptText(
   }
 
   return {
-    systemPrompt: buildSystemPrompt(assumptionLevel),
+    systemPrompt: buildSystemPrompt(assumptionLevel, beneficiaryKey),
     userMessage: buildUserMessage({ formContext: compressedFormContext, situationalContext }),
   };
 }
@@ -648,35 +680,46 @@ if (require.main === module) {
     }
 
     const userId = (ctxDoc as any).userId as string;
+    const { normalizeRequiredForms } = await import("../types");
 
-    // Resolve which forms to process
-    let formIds: string[];
+    // Resolve which forms to process — list of {formId, beneficiaryKey?}
+    let entries: Array<{ formId: string; beneficiaryKey?: string }>;
     if (formId) {
-      formIds = [formId];
+      entries = [{ formId }];
     } else {
-      formIds = ((ctxDoc as any).requiredForms as string[] | undefined) ?? [];
-      if (formIds.length === 0) {
+      entries = normalizeRequiredForms((ctxDoc as any).requiredForms);
+      if (entries.length === 0) {
         console.error("❌ No --formId given and SituationalContext has no requiredForms.");
         await disconnectDB();
         process.exit(1);
       }
-      console.log(`[fillFormMap] No --formId given — using requiredForms: ${formIds.join(", ")}`);
+      const label = entries
+        .map((e) => (e.beneficiaryKey ? `${e.formId} (${e.beneficiaryKey})` : e.formId))
+        .join(", ");
+      console.log(`[fillFormMap] No --formId given — using requiredForms: ${label}`);
     }
     let anyFailure = false;
 
-    for (const fId of formIds) {
+    for (const entry of entries) {
+      const labelId = entry.beneficiaryKey ? `${entry.formId} (${entry.beneficiaryKey})` : entry.formId;
       try {
-        const result = await fillFormMap({ formId: fId, userId, situationalContextId, assumptionLevel });
+        const result = await fillFormMap({
+          formId: entry.formId,
+          userId,
+          situationalContextId,
+          assumptionLevel,
+          beneficiaryKey: entry.beneficiaryKey,
+        });
         const fields = result.fields as FieldMap;
         const filledCount = Object.values(fields).filter((v) => v !== "").length;
         const totalCount = Object.keys(fields).length;
 
-        console.log(`\n✅ ${fId}`);
+        console.log(`\n✅ ${labelId}`);
         console.log(`   Assumption    : ${result.assumptionLevel}`);
         console.log(`   Fields filled : ${filledCount} / ${totalCount}`);
         console.log(`   MongoDB _id   : ${(result as any)._id}`);
       } catch (err) {
-        console.error(`\n❌ ${fId}: ${err instanceof Error ? err.message : err}`);
+        console.error(`\n❌ ${labelId}: ${err instanceof Error ? err.message : err}`);
         anyFailure = true;
       }
     }

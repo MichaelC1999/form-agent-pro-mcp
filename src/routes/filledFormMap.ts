@@ -30,7 +30,7 @@ router.post("/fill", requireAuth, async (req: Request, res: Response) => {
   console.log(`[POST /api/filled-map/fill] ${authTag(req)} | Filling single form map`);
   try {
     const userId = req.auth!.sub;
-    const { formId, situationalContextId, assumptionLevel } = req.body ?? {};
+    const { formId, situationalContextId, assumptionLevel, beneficiaryKey } = req.body ?? {};
 
     if (!formId || typeof formId !== "string") {
       console.log(`[POST /api/filled-map/fill] ${authTag(req)} | 400 — missing formId`);
@@ -47,7 +47,15 @@ router.post("/fill", requireAuth, async (req: Request, res: Response) => {
     const level: AssumptionLevel =
       validLevels.includes(assumptionLevel) ? assumptionLevel : "conservative";
 
-    const result = await fillFormMap({ formId, userId, situationalContextId, assumptionLevel: level });
+    const result = await fillFormMap({
+      formId,
+      userId,
+      situationalContextId,
+      assumptionLevel: level,
+      ...(typeof beneficiaryKey === "string" && beneficiaryKey.trim() !== ""
+        ? { beneficiaryKey }
+        : {}),
+    });
     console.log(`[POST /api/filled-map/fill] ${authTag(req)} | 201 — form map created for ${formId}`);
     res.status(201).json(result);
   } catch (err) {
@@ -67,6 +75,7 @@ router.get("/user/:userId", requireAuth, async (req: Request, res: Response) => 
     // Use verified identity — ignore the URL param to prevent enumeration
     const filter: Record<string, string> = { userId: req.auth!.sub };
     if (req.query.formId) filter.formId = String(req.query.formId);
+    if (req.query.beneficiaryKey) filter.beneficiaryKey = String(req.query.beneficiaryKey);
 
     const docs = await FilledFormMap.find(filter).sort({ createdAt: -1 }).lean();
     console.log(`[GET /api/filled-map/user] ${authTag(req)} | 200 — returned ${docs.length} maps`);

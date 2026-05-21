@@ -4,6 +4,7 @@ import * as os from "os";
 import { buildSituationContext } from "../services/buildSituationContext";
 import { fillFormMap } from "../services/fillFormMap";
 import { SituationalContext } from "../models/SituationalContext";
+import { normalizeRequiredForms } from "../types";
 import { requireAuth, authTag } from "../middleware/requireAuth";
 import { assertSessionPaid } from "../services/stripe";
 import {
@@ -47,12 +48,40 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
   console.log(`[POST /api/situation/build] ${authTag(req)} | Building situational context`);
   try {
     const userId = req.auth!.sub;
-    const { situationDescription, processDescription, additionalNotes, stripeSessionId } = req.body as {
+    const {
+      situationDescription,
+      processDescription,
+      additionalNotes,
+      stripeSessionId,
+      beneficiaryCount: beneficiaryCountRaw,
+      beneficiaryNames: beneficiaryNamesRaw,
+    } = req.body as {
       situationDescription?: string;
       processDescription?: string;
       additionalNotes?: string;
       stripeSessionId?: string;
+      beneficiaryCount?: string;
+      beneficiaryNames?: string;
     };
+
+    // Parse multi-beneficiary signal (optional — single-beneficiary submissions
+    // omit these fields entirely and the server runs identically to before).
+    let beneficiaryCount: number | undefined;
+    if (typeof beneficiaryCountRaw === "string" && beneficiaryCountRaw.trim() !== "") {
+      const n = parseInt(beneficiaryCountRaw, 10);
+      if (Number.isFinite(n) && n > 1 && n <= 20) beneficiaryCount = n;
+    }
+    let beneficiaryNames: string[] | undefined;
+    if (typeof beneficiaryNamesRaw === "string" && beneficiaryNamesRaw.trim() !== "") {
+      try {
+        const parsed = JSON.parse(beneficiaryNamesRaw);
+        if (Array.isArray(parsed)) {
+          beneficiaryNames = parsed.filter((s): s is string => typeof s === "string" && s.trim() !== "");
+        }
+      } catch {
+        // Ignore malformed JSON — beneficiary names are an optional hint
+      }
+    }
 
     const paid = await assertSessionPaid(stripeSessionId, userId);
     if (!paid.ok) {
@@ -105,7 +134,13 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
         const ctx = await buildSituationContext(
           {
             userId,
-            uiAnswers: { situationDescription, processDescription, additionalNotes },
+            uiAnswers: {
+              situationDescription,
+              processDescription,
+              additionalNotes,
+              beneficiaryCount,
+              beneficiaryNames,
+            },
             uploadedFiles: uploadedFiles.map((f) => ({
               path: f.path,
               originalname: f.originalname,
@@ -115,22 +150,29 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
           stub._id.toString()
         );
 
+        const requiredEntries = normalizeRequiredForms(ctx.requiredForms);
+        const formsLabel = requiredEntries
+          .map((e) => (e.beneficiaryKey ? `${e.formId} (${e.beneficiaryKey})` : e.formId))
+          .join(", ");
         console.log(
-          `[background] ${authTag(req)} | Context ready id=${stub._id} forms=${ctx.requiredForms.join(",") || "none"}`
+          `[background] ${authTag(req)} | Context ready id=${stub._id} forms=${formsLabel || "none"}`
         );
 
-        // Step 2: Fill form maps for each required form
-        for (const formId of ctx.requiredForms) {
+        // Step 2: Fill form maps for each required (form, beneficiary) entry
+        for (const entry of requiredEntries) {
+          const { formId, beneficiaryKey } = entry;
+          const label = beneficiaryKey ? `${formId} (${beneficiaryKey})` : formId;
           try {
-            console.log(`[background] ${authTag(req)} | Filling form map ${formId}`);
+            console.log(`[background] ${authTag(req)} | Filling form map ${label}`);
             await fillFormMap({
               formId,
               userId,
               situationalContextId: stub._id.toString(),
+              beneficiaryKey,
             });
-            console.log(`[background] ${authTag(req)} | Form map ready ${formId}`);
+            console.log(`[background] ${authTag(req)} | Form map ready ${label}`);
           } catch (err) {
-            console.error(`[background] ${authTag(req)} | Form map failed ${formId}:`, err);
+            console.error(`[background] ${authTag(req)} | Form map failed ${label}:`, err);
             logAppError({
               err,
               service: "POST /api/situation/build (background fillFormMap)",

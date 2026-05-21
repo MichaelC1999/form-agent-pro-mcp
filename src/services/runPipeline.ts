@@ -2,6 +2,7 @@ import * as path from "path";
 import { SituationalContext } from "../models/SituationalContext";
 import { FilledFormMap } from "../models/FilledFormMap";
 import { fillForm } from "./fillForm";
+import { normalizeRequiredForms } from "../types";
 
 const ASSETS_FORMS_DIR = path.resolve(__dirname, "../../assets/forms");
 
@@ -13,6 +14,7 @@ function getBlankPdfPath(formId: string): string {
 
 export interface PipelineFormResult {
   formId: string;
+  beneficiaryKey?: string;
   filledFormMapId: string;
   success: boolean;
   outputPath: string;
@@ -48,33 +50,48 @@ export async function runPipeline(situationalContextId: string): Promise<RunPipe
   }
 
   const userId = (ctxDoc as any).userId as string;
-  const requiredForms: string[] = (ctxDoc as any).requiredForms ?? [];
+  const requiredEntries = normalizeRequiredForms((ctxDoc as any).requiredForms);
 
-  if (requiredForms.length === 0) {
+  if (requiredEntries.length === 0) {
     throw new Error(
       `SituationalContext ${situationalContextId} has no requiredForms.`
     );
   }
 
-  // 2. For each required form, find the most recent FilledFormMap
+  // 2. For each (form, beneficiary) entry, find the most recent matching
+  //    FilledFormMap. Lookup keys on beneficiaryKey when present so each
+  //    beneficiary's fill is paired with the right PDF.
   const forms: PipelineFormResult[] = [];
 
-  for (const formId of requiredForms) {
+  for (const entry of requiredEntries) {
+    const { formId, beneficiaryKey } = entry;
+    const label = beneficiaryKey ? `${formId} (${beneficiaryKey})` : formId;
+
+    const query: Record<string, unknown> = { userId, formId };
+    if (beneficiaryKey) {
+      query.beneficiaryKey = beneficiaryKey;
+    } else {
+      // Match docs that have no beneficiaryKey set (household-scope) — exclude
+      // per-beneficiary fills from being chosen as a household-scope match.
+      query.beneficiaryKey = { $in: [null, undefined, ""] };
+    }
+
     const filledMap = await FilledFormMap
-      .findOne({ userId, formId })
+      .findOne(query)
       .sort({ createdAt: -1 })
       .lean();
 
     if (!filledMap) {
-      console.warn(`[runPipeline] ⚠️  No FilledFormMap found for form "${formId}" (userId: ${userId}) — skipping`);
+      console.warn(`[runPipeline] ⚠️  No FilledFormMap found for ${label} (userId: ${userId}) — skipping`);
       forms.push({
         formId,
+        beneficiaryKey,
         filledFormMapId: "",
         success: false,
         outputPath: "",
         filledFields: [],
         skippedFields: [],
-        errors: [`No FilledFormMap found for form "${formId}". Run fillFormMap first.`],
+        errors: [`No FilledFormMap found for "${label}". Run fillFormMap first.`],
       });
       continue;
     }
@@ -90,15 +107,16 @@ export async function runPipeline(situationalContextId: string): Promise<RunPipe
       });
 
       console.log(
-        `[runPipeline] ${fillResult.success ? "✓" : "✗"} ${formId} → ${fillResult.outputPath}`
+        `[runPipeline] ${fillResult.success ? "✓" : "✗"} ${label} → ${fillResult.outputPath}`
       );
 
-      forms.push({ formId, filledFormMapId, ...fillResult });
+      forms.push({ formId, beneficiaryKey, filledFormMapId, ...fillResult });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error(`[runPipeline] ❌ ${formId}: ${message}`);
+      console.error(`[runPipeline] ❌ ${label}: ${message}`);
       forms.push({
         formId,
+        beneficiaryKey,
         filledFormMapId,
         success: false,
         outputPath: "",

@@ -16,6 +16,9 @@ const FilledFormMapSchema = new Schema<FilledFormMapDocument>(
     formId: { type: String, required: true, index: true },
     userId: { type: String, required: true, index: true },
     createdAt: { type: Date, default: Date.now },
+    // Absent for legacy single-beneficiary fills and for forms filed once
+    // per household (I-864, N-400, etc.).
+    beneficiaryKey: { type: String, index: true },
     assumptionLevel: {
       type: String,
       enum: ["conservative", "moderate", "liberal"] as AssumptionLevel[],
@@ -30,5 +33,7 @@ const FilledFormMapSchema = new Schema<FilledFormMapDocument>(
 );
 
 FilledFormMapSchema.index({ formId: 1, userId: 1, createdAt: -1 });
+// Compound index for the per-beneficiary dedupe used by /pdf/merged.
+FilledFormMapSchema.index({ userId: 1, formId: 1, beneficiaryKey: 1, createdAt: -1 });
 
 export const FilledFormMap = model<FilledFormMapDocument>("FilledFormMap", FilledFormMapSchema);

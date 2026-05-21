@@ -10,7 +10,8 @@ import { runPipeline } from "../services/runPipeline";
 import { SituationalContext } from "../models/SituationalContext";
 import { requireAuth, authTag } from "../middleware/requireAuth";
 import { logAppError, ClaudeContentError, ClaudeParseError } from "../models/AppError";
-import type { AppErrorType, AssumptionLevel } from "../types";
+import { normalizeRequiredForms } from "../types";
+import type { AppErrorType, AssumptionLevel, RequiredFormEntry } from "../types";
 
 const router = Router();
 const upload = multer({ dest: os.tmpdir() });
@@ -189,29 +190,36 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
     const ctxForUserId = await SituationalContext.findById(situationalContextId).lean();
     const resolvedUserId = (ctxForUserId as any)?.userId ?? userId;
 
-    // Resolve form IDs: explicit list → requiredForms on context → error
-    let resolvedFormIds = formIds;
-    if (resolvedFormIds.length === 0) {
-      resolvedFormIds = ((ctxForUserId as any)?.requiredForms as string[] | undefined) ?? [];
+    // Resolve form entries: explicit list (legacy string[]) → requiredForms on
+    // context (mixed shape) → error. Always normalize into RequiredFormEntry.
+    let resolvedEntries: RequiredFormEntry[];
+    if (formIds.length > 0) {
+      // Explicit override from request body — beneficiary scoping is not
+      // expressed here; treat each entry as a household-scope form.
+      resolvedEntries = formIds.map((id) => ({ formId: id }));
+    } else {
+      resolvedEntries = normalizeRequiredForms((ctxForUserId as any)?.requiredForms);
     }
-    if (resolvedFormIds.length === 0) {
+    if (resolvedEntries.length === 0) {
       console.log(`[POST /api/pipeline/run] ${authTag(req)} | 400 — no form IDs`);
       res.status(400).json({ error: "No formIds provided and SituationalContext has no requiredForms." });
       return;
     }
 
-    // Validate blank PDFs before any AI calls
-    const missingPdfs = resolvedFormIds.filter((id) => !fs.existsSync(getBlankPdfPath(id)));
+    // Validate blank PDFs once per distinct formId before any AI calls
+    const distinctFormIds = Array.from(new Set(resolvedEntries.map((e) => e.formId)));
+    const missingPdfs = distinctFormIds.filter((id) => !fs.existsSync(getBlankPdfPath(id)));
     if (missingPdfs.length > 0) {
       console.log(`[POST /api/pipeline/run] ${authTag(req)} | 400 — missing PDFs: ${missingPdfs.join(",")}`);
       res.status(400).json({ error: `Blank PDF not found for: ${missingPdfs.join(", ")}` });
       return;
     }
 
-    console.log(`[POST /api/pipeline/run] ${authTag(req)} | Processing ${resolvedFormIds.length} forms`);
+    console.log(`[POST /api/pipeline/run] ${authTag(req)} | Processing ${resolvedEntries.length} form entries`);
 
     const formResults: Array<{
       formId: string;
+      beneficiaryKey?: string;
       filledFormMapId: string | null;
       success: boolean;
       outputPath: string;
@@ -220,13 +228,16 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
       errors: string[];
     }> = [];
 
-    for (const formId of resolvedFormIds) {
+    for (const entry of resolvedEntries) {
+      const { formId, beneficiaryKey } = entry;
+      const label = beneficiaryKey ? `${formId} (${beneficiaryKey})` : formId;
       try {
         const filledMapDoc = await fillFormMap({
           formId,
           userId: resolvedUserId,
           situationalContextId,
           assumptionLevel,
+          beneficiaryKey,
         });
         const filledFormMapId = String((filledMapDoc as any)._id);
 
@@ -237,9 +248,9 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
           formPdfPath: getBlankPdfPath(formId),
         });
 
-        formResults.push({ formId, filledFormMapId, ...fillResult });
+        formResults.push({ formId, beneficiaryKey, filledFormMapId, ...fillResult });
       } catch (formErr) {
-        console.error(`[POST /api/pipeline/run] ${authTag(req)} | Form failed ${formId}:`, formErr);
+        console.error(`[POST /api/pipeline/run] ${authTag(req)} | Form failed ${label}:`, formErr);
         logAppError({
           err: formErr,
           service: "POST /api/pipeline/run",
@@ -249,6 +260,7 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
         });
         formResults.push({
           formId,
+          beneficiaryKey,
           filledFormMapId: null,
           success: false,
           outputPath: "",
@@ -257,7 +269,7 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
           errors: [
             formErr instanceof ClaudeContentError
               ? formErr.message
-              : `Failed to process form "${formId}".`,
+              : `Failed to process form "${label}".`,
           ],
         });
       }
@@ -331,18 +343,19 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
     }
 
     const userId = (ctxDoc as any).userId as string;
-    const requiredForms: string[] = (ctxDoc as any).requiredForms ?? [];
+    const requiredEntries = normalizeRequiredForms((ctxDoc as any).requiredForms);
 
-    if (requiredForms.length === 0) {
+    if (requiredEntries.length === 0) {
       console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | 400 — no required forms`);
       res.status(400).json({ error: "SituationalContext has no requiredForms." });
       return;
     }
 
-    console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | Processing ${requiredForms.length} forms`);
+    console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | Processing ${requiredEntries.length} form entries`);
 
     const forms: Array<{
       formId: string;
+      beneficiaryKey?: string;
       filledFormMapId: string | null;
       success: boolean;
       fieldCount: number;
@@ -351,15 +364,24 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
       errors: string[];
     }> = [];
 
-    for (const formId of requiredForms) {
+    for (const entry of requiredEntries) {
+      const { formId, beneficiaryKey } = entry;
+      const label = beneficiaryKey ? `${formId} (${beneficiaryKey})` : formId;
       try {
-        const filledMapDoc = await fillFormMap({ formId, userId, situationalContextId, assumptionLevel });
+        const filledMapDoc = await fillFormMap({
+          formId,
+          userId,
+          situationalContextId,
+          assumptionLevel,
+          beneficiaryKey,
+        });
         const fields = filledMapDoc.fields as Record<string, string>;
         const fieldCount = Object.keys(fields).length;
         const filledCount = Object.values(fields).filter((v) => v !== "").length;
 
         forms.push({
           formId,
+          beneficiaryKey,
           filledFormMapId: String((filledMapDoc as any)._id),
           success: true,
           fieldCount,
@@ -368,7 +390,7 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
           errors: [],
         });
       } catch (err) {
-        console.error(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | Form failed ${formId}:`, err);
+        console.error(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | Form failed ${label}:`, err);
         logAppError({
           err,
           service: "POST /api/pipeline/fill-form-maps",
@@ -378,6 +400,7 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
         });
         forms.push({
           formId,
+          beneficiaryKey,
           filledFormMapId: null,
           success: false,
           fieldCount: 0,
@@ -386,7 +409,7 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
           errors: [
             err instanceof ClaudeContentError
               ? err.message
-              : `Failed to process form "${formId}".`,
+              : `Failed to process form "${label}".`,
           ],
         });
       }

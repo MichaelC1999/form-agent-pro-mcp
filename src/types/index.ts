@@ -48,6 +48,12 @@ export interface ParsedDocument {
   mimeCategory: DocumentMimeCategory;
   /** Raw text extracted by OCR / pdf-parse before the LLM sees it */
   rawText: string;
+  /**
+   * Structured facts extracted from this single document by the per-document
+   * Claude extraction call. Present only when EXTRACTION_MODE=per_document.
+   * Shape is open — mirrors what the extraction prompt emits per doc.
+   */
+  extractedFacts?: Record<string, unknown>;
   uploadedAt: Date;
 }
 
@@ -61,6 +67,24 @@ export interface ParsedDocument {
 export type PartyDataMap = Record<string, Record<string, unknown>>;
 
 export type SituationalContextStatus = "processing" | "ready" | "error";
+
+/**
+ * A single form the situation requires. The beneficiaryKey is the name of
+ * the party in partyData this form should be filled for (e.g. "Maria Souza"
+ * when a parent is petitioning for two children, each needing their own
+ * I-130). Forms filed once per household (I-864 from the petitioner, N-400,
+ * etc.) omit beneficiaryKey.
+ *
+ * On read the value may also be a bare string (legacy single-beneficiary
+ * records pre-dating multi-beneficiary support). Use
+ * `normalizeRequiredForms` at every read site to convert.
+ */
+export interface RequiredFormEntry {
+  formId: string;
+  beneficiaryKey?: string;
+}
+
+export type RequiredFormsStored = Array<RequiredFormEntry | string>;
 
 export interface ISituationalContext {
   userId: string;
@@ -77,11 +101,36 @@ export interface ISituationalContext {
   /** 2-3 sentence summary of the process the user is trying to accomplish */
   situationSummary: string;
   /**
-   * Ordered list of USCIS form IDs the LLM determined are required for this
-   * situation (e.g. ["i-485", "i-130", "i-864"]).  Used by downstream
-   * pipeline steps to know which forms to fill.
+   * Ordered list of USCIS forms the LLM determined are required for this
+   * situation. Stored as a mixed array — entries are either bare form ID
+   * strings (legacy) or `{ formId, beneficiaryKey? }` objects (current).
+   * Always read through `normalizeRequiredForms` to handle both shapes.
    */
-  requiredForms: string[];
+  requiredForms: RequiredFormsStored;
+}
+
+/**
+ * Normalises the mixed-shape `requiredForms` array into the rich
+ * RequiredFormEntry shape. Legacy string entries become entries with no
+ * beneficiaryKey (single-beneficiary semantics).
+ */
+export function normalizeRequiredForms(
+  raw: RequiredFormsStored | undefined | null
+): RequiredFormEntry[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((entry) => {
+      if (typeof entry === "string") return { formId: entry };
+      if (entry && typeof entry === "object" && typeof entry.formId === "string") {
+        const out: RequiredFormEntry = { formId: entry.formId };
+        if (typeof entry.beneficiaryKey === "string" && entry.beneficiaryKey.trim() !== "") {
+          out.beneficiaryKey = entry.beneficiaryKey;
+        }
+        return out;
+      }
+      return null;
+    })
+    .filter((e): e is RequiredFormEntry => e !== null);
 }
 
 // ─── FilledFormMap ───────────────────────────────────────────────────────────
@@ -96,6 +145,12 @@ export interface IFilledFormMap {
   userId: string;
   createdAt: Date;
   assumptionLevel: AssumptionLevel;
+  /**
+   * Which beneficiary in the situational context this fill belongs to.
+   * Absent for forms filed once per household (I-864, N-400, etc.) and for
+   * legacy single-beneficiary records.
+   */
+  beneficiaryKey?: string;
   fields: FieldMap; // { "<fieldId>": "filled value" }
   skipped: SkippedField[]; // fields the LLM could not confidently fill
 }
@@ -109,6 +164,18 @@ export interface UIAnswers {
   processDescription: string;
   /** Any additional open-ended notes from the UI */
   additionalNotes?: string;
+  /**
+   * Explicit beneficiary count from the UI. Optional; when omitted the model
+   * infers the structure from documents + descriptions (single-beneficiary
+   * default). Sent only when the user picked >1 in the workflow.
+   */
+  beneficiaryCount?: number;
+  /**
+   * Optional beneficiary names from the UI, in the order shown in the form.
+   * Strings here become hints for what the model's `beneficiaryKey` values
+   * should look like in partyData.
+   */
+  beneficiaryNames?: string[];
 }
 
 export interface UploadedFile {
@@ -143,6 +210,12 @@ export interface FillFormMapInput {
   userId: string;
   situationalContextId: string;
   assumptionLevel?: AssumptionLevel;
+  /**
+   * Optional party key inside the situational context that this fill is for.
+   * When set, the LLM is told to use only that beneficiary's data (plus the
+   * petitioner's where required) and ignore other beneficiaries.
+   */
+  beneficiaryKey?: string;
 }
 
 /**

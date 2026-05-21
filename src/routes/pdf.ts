@@ -8,6 +8,7 @@ import { FilledFormMap } from "../models/FilledFormMap";
 import { SituationalContext } from "../models/SituationalContext";
 import { requireAuth, authTag } from "../middleware/requireAuth";
 import { logAppError } from "../models/AppError";
+import { normalizeRequiredForms } from "../types";
 
 const router = Router();
 
@@ -132,25 +133,30 @@ router.get("/merged/:situationalContextId", requireAuth, async (req: Request, re
       return;
     }
 
-    // Find the most recent FilledFormMap per formId for this user
+    // Find every FilledFormMap for this user (latest first)
     const allMaps = await FilledFormMap.find({ userId: req.auth!.sub })
       .sort({ createdAt: -1 })
       .lean();
 
-    // Deduplicate: keep only the most recent per formId
-    const latestPerForm = new Map<string, any>();
+    // Deduplicate by (formId, beneficiaryKey). The key encodes both so a
+    // multi-beneficiary submission keeps a distinct fill per beneficiary.
+    const dedupKey = (formId: string, beneficiaryKey: string | undefined): string =>
+      `${formId}::${beneficiaryKey ?? ""}`;
+    const latestPerEntry = new Map<string, any>();
     for (const m of allMaps) {
       const fid = (m as any).formId as string;
-      if (!latestPerForm.has(fid)) {
-        latestPerForm.set(fid, m);
+      const bk = (m as any).beneficiaryKey as string | undefined;
+      const k = dedupKey(fid, bk);
+      if (!latestPerEntry.has(k)) {
+        latestPerEntry.set(k, m);
       }
     }
 
-    // Filter to only forms in this context's requiredForms
-    const requiredForms: string[] = (ctx as any).requiredForms ?? [];
-    const mapsToFill = requiredForms
-      .filter((fid) => latestPerForm.has(fid))
-      .map((fid) => latestPerForm.get(fid)!);
+    // Select the latest map for each entry in this context's requiredForms.
+    const requiredEntries = normalizeRequiredForms((ctx as any).requiredForms);
+    const mapsToFill = requiredEntries
+      .map((e) => latestPerEntry.get(dedupKey(e.formId, e.beneficiaryKey)))
+      .filter((m): m is NonNullable<typeof m> => Boolean(m));
 
     if (mapsToFill.length === 0) {
       console.log(`[GET /api/pdf/merged] ${authTag(req)} | 400 — no filled maps found`);

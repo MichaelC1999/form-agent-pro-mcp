@@ -12,6 +12,7 @@ import type {
   ParsedDocument,
   DocumentMimeCategory,
   PartyDataMap,
+  RequiredFormsStored,
   UploadedFile,
 } from "../types";
 
@@ -61,7 +62,7 @@ PART A — Situational Summary
 Write a 2-3 sentence summary in English describing: (a) who the parties are, (b) what immigration process they are trying to complete, and (c) what our service needs to do to help them.
 
 PART B — Required Forms
-Based on the situation, produce an ordered list of USCIS form IDs that will need to be completed. Use the lowercase hyphenated format matching these examples:
+Based on the situation, produce an ordered list of USCIS forms that will need to be completed. Use the lowercase hyphenated format matching these examples:
   i-485  (Application to Register Permanent Residence or Adjust Status)
   i-130  (Petition for Alien Relative)
   i-130a (Supplemental Information for Spouse Beneficiary)
@@ -77,7 +78,19 @@ Based on the situation, produce an ordered list of USCIS form IDs that will need
   i-90   (Application to Replace Permanent Resident Card)
   i-539  (Application to Extend/Change Nonimmigrant Status)
   i-140  (Immigrant Petition for Alien Workers)
-Include only forms genuinely required for this specific situation. Order them in the sequence they should be filed (primary petition first, supporting forms after).
+
+Each entry MUST be an object of the shape:
+  { "formId": "<form-id>", "beneficiaryKey": "<party name from partyData>" }
+
+The "beneficiaryKey" MUST match EXACTLY one of the top-level keys in your "partyData" object (e.g. "Maria Souza"). It identifies the beneficiary this form is being filed for.
+
+PER-BENEFICIARY vs. ONCE-PER-HOUSEHOLD FORMS — important:
+- For forms filed PER BENEFICIARY (one filing per beneficiary), emit one entry per (form × beneficiary) pair. These forms include: i-130, i-130a, i-485, i-765, i-131, i-693, i-751, n-600, i-90, i-539, i-140.
+  Example: if a single petitioner is sponsoring two children, requiredForms must contain:
+    { "formId": "i-130", "beneficiaryKey": "Child A" }, { "formId": "i-130", "beneficiaryKey": "Child B" }, { "formId": "i-485", "beneficiaryKey": "Child A" }, { "formId": "i-485", "beneficiaryKey": "Child B" }
+- For forms filed ONCE PER HOUSEHOLD (a single filing covers the whole sponsor unit), still emit a single entry but OMIT the beneficiaryKey field. These forms include: i-864, i-864a, n-400.
+
+Include only forms genuinely required for this specific situation. Order entries in the sequence they should be filed (primary petition first, supporting forms after). When there is only one beneficiary in partyData, you still must produce object entries with the beneficiaryKey set to that beneficiary's party name.
 
 PART C — Structured Party Data
 Extract and organize every piece of information from the documents and UI answers into a structured JSON object.
@@ -136,7 +149,10 @@ If a value is not present anywhere in the provided materials, omit the key entir
 Return a single valid JSON object with this exact shape — no markdown fences, no explanation outside the JSON:
 {
   "situationSummary": "<2-3 sentence summary in English>",
-  "requiredForms": ["<form-id>", "<form-id>"],
+  "requiredForms": [
+    { "formId": "<form-id>", "beneficiaryKey": "<party name from partyData>" },
+    { "formId": "<household-form-id>" }
+  ],
   "partyData": {
     "<Party or Subject Name>": {
       "<Key in English>": "<sanitized value or narrative string in English>"
@@ -182,6 +198,42 @@ situationSummary, an empty partyData object, or fabricated forms in lieu of
 returning the error object.`;
 }
 
+/**
+ * Renders the explicit multi-beneficiary signal from the UI as a single
+ * authoritative paragraph for the model. Only emitted when count > 1.
+ */
+function buildBeneficiarySignal(
+  uiAnswers: BuildSituationContextInput["uiAnswers"]
+): string | null {
+  const count = uiAnswers.beneficiaryCount;
+  if (typeof count !== "number" || count <= 1) return null;
+
+  const names = (uiAnswers.beneficiaryNames ?? [])
+    .map((n) => (typeof n === "string" ? n.trim() : ""))
+    .filter((n) => n.length > 0);
+
+  const lines: string[] = [];
+  lines.push(
+    `IMPORTANT — MULTI-BENEFICIARY APPLICATION: The user has explicitly indicated that this application covers ${count} distinct beneficiaries.`
+  );
+  if (names.length > 0) {
+    lines.push(
+      `The beneficiary names provided by the user are: ${names.map((n) => `"${n}"`).join(", ")}.`
+    );
+    lines.push(
+      `When emitting partyData, use these exact strings as the top-level keys for each beneficiary (matching the spelling and casing the user provided). Use the same strings as "beneficiaryKey" values inside requiredForms entries.`
+    );
+  } else {
+    lines.push(
+      `Beneficiary names were not provided. Identify each beneficiary from the documents and use a clear, specific party-name string as the top-level key in partyData and as the "beneficiaryKey" inside requiredForms entries.`
+    );
+  }
+  lines.push(
+    `Produce ${count} distinct top-level beneficiary entries in partyData (separate from any petitioner/sponsor entries). Emit one requiredForms entry per (per-beneficiary form × beneficiary) pair as described in the system prompt.`
+  );
+  return lines.join("\n");
+}
+
 function buildUserMessage(
   uiAnswers: BuildSituationContextInput["uiAnswers"],
   parsedDocuments: Array<{ originalName: string; rawText: string }>
@@ -193,6 +245,11 @@ function buildUserMessage(
   parts.push(`Immigration Goal / Process:\n${uiAnswers.processDescription}`);
   if (uiAnswers.additionalNotes) {
     parts.push(`Additional Notes:\n${uiAnswers.additionalNotes}`);
+  }
+
+  const beneficiarySignal = buildBeneficiarySignal(uiAnswers);
+  if (beneficiarySignal) {
+    parts.push(`\n${beneficiarySignal}`);
   }
 
   if (parsedDocuments.length > 0) {
@@ -249,15 +306,431 @@ function buildImageBlocks(
   return blocks;
 }
 
+// ─── Per-document extraction (EXTRACTION_MODE=per_document) ──────────────────
+//
+// In per_document mode we make one Claude call per uploaded document, each
+// emitting a structured "facts" JSON, and then a single synthesis call that
+// turns the array of facts + UI answers into the same {situationSummary,
+// requiredForms, partyData} shape produced by the monolithic path.
+//
+// Tradeoffs vs. monolithic (single mega-call):
+//   + Each document gets the model's full attention — better extraction
+//     quality on messy OCR / multi-page docs.
+//   + The extraction system prompt is identical across docs, so it can be
+//     cached via cache_control; calls 2..N cost ~10% of the first.
+//   + Synthesis sees clean structured JSON instead of raw OCR text, which
+//     reduces token usage on a per-call basis and makes form-required logic
+//     more reliable.
+//   - More total Claude calls (N + 1 instead of 1). Without caching this
+//     would balloon costs; with caching + structured synthesis input it is
+//     roughly comparable to monolithic at typical doc counts.
+
+function buildExtractionSystemPrompt(): string {
+  return `You are an immigration document fact extractor. You will receive ONE document — either as OCR-extracted text, an image, or both — and your job is to extract every piece of useful information from it as structured JSON.
+
+Be exhaustive. Capture every field, label, number, date, name, address, signature line, stamp, watermark, photo description, or annotation you can identify on this single document. Do not invent or guess data that is not visibly present.
+
+TRANSLATION RULES:
+- Output keys and values in English. Translate foreign labels accurately (e.g. "Data de Nascimento" → "Date of Birth"; "Naturalidade" → "Place of Birth").
+- Preserve proper nouns exactly as written — never translate personal names, city names, employer names, or street names.
+- For abbreviations or codes (CBO occupation codes, CNPJ tax IDs, MRZ lines), include both the original code and its translated meaning.
+
+DATA SANITIZATION RULES:
+- Normalize dates to ISO 8601 (YYYY-MM-DD) when unambiguous.
+- Strip incidental document-context artifacts. Examples:
+  - "Sarasota, FL USA (Open To Relocation)" → "Sarasota, FL, USA"
+  - "R$ 1.948,17/month" → "R$ 1,948.17 / month"
+  - "DOE<<JANE<MARY" (MRZ) → "Jane Mary Doe"
+- Always decompose addresses into separate keys: Street Number, Street Name, Apt/Unit, City, State/Province, Zip/Postal Code, Country.
+
+BIOGRAPHIC ATTRIBUTES — extract when visible on the document:
+Height, Weight, Eye Color, Hair Color, Race/Ethnicity, Sex, Complexion/Skin Tone, Place of Birth, Country of Birth, Country of Citizenship.
+
+Return a single valid JSON object with this shape — no markdown fences, no prose outside the JSON:
+
+{
+  "documentType": "<short label, e.g. \\"US Passport\\", \\"Brazilian Marriage Certificate\\", \\"I-797 Receipt Notice\\", \\"Driver's License\\", \\"Tax Return\\">",
+  "primaryParty": "<full name of the person this document is primarily about, if applicable — else omit>",
+  "issuingAuthority": "<who issued the document, if applicable — else omit>",
+  "facts": {
+    "<Subject or Party Name>": {
+      "<Key in English>": "<sanitized value>"
+    }
+  },
+  "notes": "<optional 1-sentence note about ambiguity, low-quality scan, or anything a synthesizer should be aware of — omit if nothing useful to say>"
+}
+
+ERROR PATH — MANDATORY
+If you cannot extract anything useful from this document — e.g. it is unreadable, blank, totally irrelevant to immigration, or you cannot identify what kind of document it is — return ONLY this JSON object instead of the success shape:
+
+{
+  "error": {
+    "code": "<short_snake_case_code>",
+    "message": "<one-sentence plain-English description of why this document cannot be processed>"
+  }
+}
+
+Valid examples of "code": unreadable_document, blank_document, irrelevant_document, unknown_document_type, corrupt_image.
+
+Do not mix shapes. Do not return an empty "facts" object in lieu of the error shape.`;
+}
+
+function buildExtractionUserMessage(doc: { originalName: string; rawText: string }): string {
+  return [
+    `Document filename: ${doc.originalName}`,
+    "",
+    "OCR / PDF-parsed text:",
+    doc.rawText ? doc.rawText : "(no text could be extracted from this file)",
+    "",
+    "Extract every fact present on this document as the JSON object described in the system prompt.",
+  ].join("\n");
+}
+
+interface ExtractedDocumentResult {
+  documentName: string;
+  /** Present when extraction succeeded. */
+  facts?: Record<string, unknown>;
+  /** Present when Claude returned the error JSON shape. */
+  error?: { code: string; message: string };
+}
+
+async function extractDocumentFacts(
+  doc: ParsedDocument,
+  imageBlock: { type: "image"; source: { type: "base64"; media_type: AnthropicMediaType; data: string } } | undefined,
+  ctx: { userId: string }
+): Promise<ExtractedDocumentResult> {
+  const client = getAnthropicClient();
+  const userText = buildExtractionUserMessage({ originalName: doc.originalName, rawText: doc.rawText });
+
+  const response = await client.messages.create({
+    model: "claude-opus-4-7",
+    max_tokens: 8000,
+    // Use the array form so we can attach cache_control. After the first call
+    // the cached prompt block is reused at ~10% cost.
+    system: [
+      {
+        type: "text",
+        text: buildExtractionSystemPrompt(),
+        cache_control: { type: "ephemeral" },
+      },
+    ],
+    messages: [
+      {
+        role: "user",
+        content: [
+          ...(imageBlock ? [imageBlock] : []),
+          { type: "text", text: userText },
+        ],
+      },
+    ],
+  });
+
+  logAnthropicResponse(response, {
+    service: "buildSituationContext:extract",
+    userId: ctx.userId,
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  const raw = textBlock?.type === "text" ? textBlock.text.trim() : "";
+  const cleaned = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+
+  let parsed: {
+    documentType?: string;
+    primaryParty?: string;
+    issuingAuthority?: string;
+    facts?: Record<string, unknown>;
+    notes?: string;
+    error?: { code?: string; message?: string };
+  };
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new ClaudeParseError({
+      service: "buildSituationContext:extract",
+      message: `Per-document extraction returned invalid JSON for "${doc.originalName}".`,
+      rawResponse: cleaned.slice(0, 4000),
+    });
+  }
+
+  // Soft-fail per-doc content errors so synthesis can still run on the docs
+  // that did extract cleanly. Hard-failing here would mean one bad scan
+  // taking down the entire pipeline.
+  if (parsed.error && typeof parsed.error === "object") {
+    return {
+      documentName: doc.originalName,
+      error: {
+        code: parsed.error.code ?? "unspecified",
+        message: parsed.error.message ?? "Document could not be extracted.",
+      },
+    };
+  }
+
+  return {
+    documentName: doc.originalName,
+    facts: {
+      documentType: parsed.documentType,
+      primaryParty: parsed.primaryParty,
+      issuingAuthority: parsed.issuingAuthority,
+      facts: parsed.facts ?? {},
+      ...(parsed.notes ? { notes: parsed.notes } : {}),
+    },
+  };
+}
+
+/** Bounded-concurrency Promise.all so we don't fire 50 calls at once. */
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let cursor = 0;
+  const workers = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
+    while (true) {
+      const i = cursor++;
+      if (i >= items.length) return;
+      results[i] = await fn(items[i], i);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
+
+// ─── Synthesis (EXTRACTION_MODE=per_document) ────────────────────────────────
+
+function buildSynthesisSystemPrompt(): string {
+  return `You are an expert immigration document analyst. You are receiving pre-extracted, structured facts from a set of uploaded documents (the OCR step and per-document fact extraction have already been performed). Your job is to synthesize those facts together with the user's self-reported answers into a complete situational context for the immigration process they are pursuing.
+
+You will be given:
+1. The user's UI answers describing their situation and the immigration process they want to pursue.
+2. An array of per-document extraction results. Each entry has a documentName and either a "facts" object (successful extraction) or an "error" object (the document could not be extracted — note this and proceed without it).
+
+Your output is the same three-part artifact a single monolithic call would have produced:
+
+PART A — Situational Summary
+2-3 sentences in English describing (a) who the parties are, (b) what immigration process they are trying to complete, and (c) what our service needs to do to help them.
+
+PART B — Required Forms
+An ordered list of USCIS forms required for this situation. Use lowercase-hyphenated form IDs (e.g. "i-485", "i-130", "i-130a", "i-864", "i-864a", "i-765", "i-131", "i-693", "i-944", "i-751", "n-400", "n-600", "i-90", "i-539", "i-140"). Order them in the sequence they should be filed (primary petition first, supporting forms after). Include only forms genuinely required for this specific situation.
+
+Each entry MUST be an object of the shape:
+  { "formId": "<form-id>", "beneficiaryKey": "<party name from partyData>" }
+
+The "beneficiaryKey" MUST match EXACTLY one of the top-level keys in your "partyData" object. It identifies the beneficiary this form is being filed for.
+
+PER-BENEFICIARY vs. ONCE-PER-HOUSEHOLD FORMS — important:
+- For forms filed PER BENEFICIARY (one filing per beneficiary), emit one entry per (form × beneficiary) pair. These forms include: i-130, i-130a, i-485, i-765, i-131, i-693, i-751, n-600, i-90, i-539, i-140.
+  Example: if a single petitioner is sponsoring two children, requiredForms must contain four entries — one i-130 per child and one i-485 per child.
+- For forms filed ONCE PER HOUSEHOLD (a single filing covers the whole sponsor unit), emit a single entry and OMIT the beneficiaryKey field. These forms include: i-864, i-864a, n-400.
+- When there is only one beneficiary in partyData, still produce object entries with beneficiaryKey set to that beneficiary's party name.
+
+PART C — Structured Party Data
+A top-level JSON object whose keys are specific parties or situational subjects (e.g. "John Alexander Doe", "Jane Mary Doe", "Marriage (Brazil, 2024)", "US Immigration Context"). Merge facts about the same person from multiple documents under a single party key. Values are key-value pairs of sanitized, English-translated facts. Capture EVERY fact present across the extracted documents — redundancy across subjects is acceptable; omissions are not. Decompose addresses into separate keys (Street Number, Street Name, Apt/Unit, City, State/Province, Zip/Postal Code, Country).
+
+PHYSICAL & BIOGRAPHIC ATTRIBUTES — for every individual party, include the following when present in ANY extracted document:
+Height, Weight, Eye Color, Hair Color, Race/Ethnicity, Sex, Complexion/Skin Tone, Place of Birth, Country of Birth, Country of Citizenship/Nationality.
+Omit any key whose value is not present anywhere in the materials — never guess or fill in placeholders.
+
+Return a single valid JSON object with this exact shape — no markdown fences, no prose outside the JSON:
+
+{
+  "situationSummary": "<2-3 sentence summary in English>",
+  "requiredForms": [
+    { "formId": "<form-id>", "beneficiaryKey": "<party name from partyData>" },
+    { "formId": "<household-form-id>" }
+  ],
+  "partyData": {
+    "<Party or Subject Name>": {
+      "<Key in English>": "<value or narrative string in English>"
+    }
+  }
+}
+
+─────────────────────────────────────────────────────────────────────────────
+ERROR PATH — MANDATORY
+─────────────────────────────────────────────────────────────────────────────
+
+If you cannot synthesize a usable situational context — e.g. every extracted document is an error, the UI answers describe a non-immigration matter, you cannot confidently identify even one party or one required form, or the materials are fundamentally inconsistent — return ONLY this JSON object instead:
+
+{
+  "error": {
+    "code": "<short_snake_case_code>",
+    "message": "<one-sentence plain-English description of why you cannot proceed>",
+    "details": "<optional second sentence describing what would be needed to succeed>"
+  }
+}
+
+Valid codes: insufficient_context, all_documents_failed_extraction, irrelevant_documents, conflicting_information, non_immigration_matter, missing_parties, cannot_determine_forms.
+
+Do not mix shapes. Do not return a partially-populated success object in lieu of the error shape.`;
+}
+
+function buildSynthesisUserMessage(
+  uiAnswers: BuildSituationContextInput["uiAnswers"],
+  extracted: ExtractedDocumentResult[]
+): string {
+  const parts: string[] = [];
+
+  parts.push("--- UI ANSWERS ---");
+  parts.push(`Situation Description:\n${uiAnswers.situationDescription}`);
+  parts.push(`Immigration Goal / Process:\n${uiAnswers.processDescription}`);
+  if (uiAnswers.additionalNotes) {
+    parts.push(`Additional Notes:\n${uiAnswers.additionalNotes}`);
+  }
+
+  const beneficiarySignal = buildBeneficiarySignal(uiAnswers);
+  if (beneficiarySignal) {
+    parts.push(`\n${beneficiarySignal}`);
+  }
+
+  parts.push("\n--- PER-DOCUMENT EXTRACTION RESULTS ---");
+  if (extracted.length === 0) {
+    parts.push("(no documents were uploaded)");
+  } else {
+    parts.push(JSON.stringify(extracted, null, 2));
+  }
+
+  parts.push(
+    "\nSynthesize the above into the JSON object described in the system prompt. Do not omit any fact present in the extracted documents."
+  );
+
+  return parts.join("\n");
+}
+
+interface SynthesisOutput {
+  situationSummary: string;
+  requiredForms: RequiredFormsStored;
+  partyData: PartyDataMap;
+}
+
+async function synthesizeContext(
+  uiAnswers: BuildSituationContextInput["uiAnswers"],
+  extracted: ExtractedDocumentResult[],
+  ctx: { userId: string }
+): Promise<SynthesisOutput> {
+  const client = getAnthropicClient();
+
+  const response = await client.messages.create({
+    model: "claude-opus-4-7",
+    max_tokens: 32000,
+    system: buildSynthesisSystemPrompt(),
+    messages: [
+      {
+        role: "user",
+        content: [{ type: "text", text: buildSynthesisUserMessage(uiAnswers, extracted) }],
+      },
+    ],
+  });
+
+  logAnthropicResponse(response, {
+    service: "buildSituationContext:synthesize",
+    userId: ctx.userId,
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  const raw = textBlock?.type === "text" ? textBlock.text.trim() : "";
+  const cleaned = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+
+  let parsed: {
+    situationSummary?: string;
+    requiredForms?: RequiredFormsStored;
+    partyData?: PartyDataMap;
+    error?: { code?: string; message?: string; details?: string };
+  };
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new ClaudeParseError({
+      service: "buildSituationContext:synthesize",
+      message: "Synthesis response was not valid JSON.",
+      rawResponse: cleaned.slice(0, 4000),
+    });
+  }
+
+  if (parsed.error && typeof parsed.error === "object") {
+    throw new ClaudeContentError({
+      service: "buildSituationContext:synthesize",
+      code: parsed.error.code ?? "unspecified",
+      message: parsed.error.message ?? "Synthesis could not produce a situational context.",
+      details: parsed.error.details,
+      rawResponse: cleaned.slice(0, 4000),
+    });
+  }
+
+  if (!parsed.situationSummary || !parsed.partyData) {
+    throw new ClaudeContentError({
+      service: "buildSituationContext:synthesize",
+      code: "incomplete_response",
+      message: "Synthesis returned a context that is missing required fields.",
+      rawResponse: cleaned.slice(0, 4000),
+    });
+  }
+
+  return {
+    situationSummary: parsed.situationSummary,
+    requiredForms: Array.isArray(parsed.requiredForms) ? parsed.requiredForms : [],
+    partyData: parsed.partyData,
+  };
+}
+
 // ─── Service ──────────────────────────────────────────────────────────────────
+
+type ExtractionMode = "monolithic" | "per_document";
+
+function resolveExtractionMode(): ExtractionMode {
+  const raw = (process.env.EXTRACTION_MODE ?? "").toLowerCase().trim();
+  return raw === "per_document" ? "per_document" : "monolithic";
+}
+
+/**
+ * Image block keyed by uploaded-file index, so the per-doc path can match
+ * each ParsedDocument to its corresponding base64 image (if any).
+ */
+function buildImageBlocksByIndex(
+  files: UploadedFile[],
+  categories: DocumentMimeCategory[]
+): Array<{ type: "image"; source: { type: "base64"; media_type: AnthropicMediaType; data: string } } | undefined> {
+  const blocks: Array<{ type: "image"; source: { type: "base64"; media_type: AnthropicMediaType; data: string } } | undefined> = [];
+  const SUPPORTED: Record<string, AnthropicMediaType> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    webp: "image/webp",
+  };
+
+  for (let i = 0; i < files.length; i++) {
+    if (categories[i] !== "image") {
+      blocks.push(undefined);
+      continue;
+    }
+    const file = files[i];
+    if (!fs.existsSync(file.path)) {
+      blocks.push(undefined);
+      continue;
+    }
+    const ext = path.extname(file.originalname).replace(".", "").toLowerCase();
+    const mediaType = SUPPORTED[ext];
+    if (!mediaType) {
+      blocks.push(undefined);
+      continue;
+    }
+    const data = fs.readFileSync(file.path).toString("base64");
+    blocks.push({ type: "image", source: { type: "base64", media_type: mediaType, data } });
+  }
+
+  return blocks;
+}
 
 export async function buildSituationContext(
   input: BuildSituationContextInput,
   existingContextId?: string
 ): Promise<ISituationalContext> {
   const { userId, uiAnswers, uploadedFiles } = input;
+  const mode = resolveExtractionMode();
+  console.log(`[buildSituationContext] EXTRACTION_MODE=${mode} | ${uploadedFiles.length} document(s)`);
 
-  // 1. Categorise and pre-process each uploaded file
+  // 1. Categorise and pre-process each uploaded file (shared between modes)
   const categories = uploadedFiles.map(getMimeCategory);
 
   const parsedDocuments: ParsedDocument[] = [];
@@ -273,86 +746,113 @@ export async function buildSituationContext(
     });
   }
 
-  // 2. Build the Anthropic message — text summary of all docs + optional image blocks
-  const imageBlocks = buildImageBlocks(uploadedFiles, categories);
-  const userText = buildUserMessage(
-    uiAnswers,
-    parsedDocuments.map((d) => ({ originalName: d.originalName, rawText: d.rawText }))
-  );
+  // 2. Branch on extraction mode to produce {situationSummary, requiredForms, partyData}
+  let synthesized: SynthesisOutput;
 
-  const client = getAnthropicClient();
-  const response = await client.messages.create({
-    model: "claude-opus-4-7",
-    max_tokens: 32000,
-    system: buildSystemPrompt(),
-    messages: [
-      {
-        role: "user",
-        content: [
-          // Attach image files so the model can perform its own visual extraction
-          // on top of the OCR text we already extracted
-          ...imageBlocks,
-          { type: "text", text: userText },
-        ],
-      },
-    ],
-  });
+  if (mode === "per_document") {
+    // Run per-doc extraction in parallel (bounded). Each call uses an
+    // ephemerally-cached system prompt so calls 2..N are cheap to send.
+    const imageBlocksByIndex = buildImageBlocksByIndex(uploadedFiles, categories);
+    const extracted = await mapWithConcurrency(parsedDocuments, 5, async (doc, i) =>
+      extractDocumentFacts(doc, imageBlocksByIndex[i], { userId })
+    );
 
-  // 3. Log full response payload to MongoDB (non-blocking)
-  logAnthropicResponse(response, { service: "buildSituationContext", userId });
+    // Attach the extracted facts back onto the persisted parsed-doc records
+    // so they are auditable / re-usable without another Claude call.
+    for (let i = 0; i < parsedDocuments.length; i++) {
+      const result = extracted[i];
+      parsedDocuments[i].extractedFacts = result.error
+        ? { error: result.error }
+        : result.facts;
+    }
 
-  // 4. Parse LLM response
-  const rawText = response.content.find((b) => b.type === "text");
-  const rawJson = rawText?.type === "text" ? rawText.text.trim() : "";
-  const cleaned = rawJson.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+    const okCount = extracted.filter((e) => !e.error).length;
+    console.log(
+      `[buildSituationContext] per_document extraction complete — ${okCount}/${extracted.length} succeeded`
+    );
 
-  let parsed: {
-    situationSummary?: string;
-    requiredForms?: string[];
-    partyData?: PartyDataMap;
-    error?: { code?: string; message?: string; details?: string };
-  };
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    throw new ClaudeParseError({
-      service: "buildSituationContext",
-      message: "Claude response was not valid JSON.",
-      rawResponse: cleaned.slice(0, 4000),
+    synthesized = await synthesizeContext(uiAnswers, extracted, { userId });
+  } else {
+    // Monolithic — single Claude call with all OCR text + all images.
+    const imageBlocks = buildImageBlocks(uploadedFiles, categories);
+    const userText = buildUserMessage(
+      uiAnswers,
+      parsedDocuments.map((d) => ({ originalName: d.originalName, rawText: d.rawText }))
+    );
+
+    const client = getAnthropicClient();
+    const response = await client.messages.create({
+      model: "claude-opus-4-7",
+      max_tokens: 32000,
+      system: buildSystemPrompt(),
+      messages: [
+        {
+          role: "user",
+          content: [
+            // Attach image files so the model can perform its own visual extraction
+            // on top of the OCR text we already extracted
+            ...imageBlocks,
+            { type: "text", text: userText },
+          ],
+        },
+      ],
     });
+
+    logAnthropicResponse(response, { service: "buildSituationContext", userId });
+
+    const rawText = response.content.find((b) => b.type === "text");
+    const rawJson = rawText?.type === "text" ? rawText.text.trim() : "";
+    const cleaned = rawJson.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+
+    let parsed: {
+      situationSummary?: string;
+      requiredForms?: RequiredFormsStored;
+      partyData?: PartyDataMap;
+      error?: { code?: string; message?: string; details?: string };
+    };
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      throw new ClaudeParseError({
+        service: "buildSituationContext",
+        message: "Claude response was not valid JSON.",
+        rawResponse: cleaned.slice(0, 4000),
+      });
+    }
+
+    if (parsed.error && typeof parsed.error === "object") {
+      throw new ClaudeContentError({
+        service: "buildSituationContext",
+        code: parsed.error.code ?? "unspecified",
+        message: parsed.error.message ?? "Claude could not produce a situational context.",
+        details: parsed.error.details,
+        rawResponse: cleaned.slice(0, 4000),
+      });
+    }
+
+    if (!parsed.situationSummary || !parsed.partyData) {
+      throw new ClaudeContentError({
+        service: "buildSituationContext",
+        code: "incomplete_response",
+        message: "Claude returned a context that is missing required fields.",
+        rawResponse: cleaned.slice(0, 4000),
+      });
+    }
+
+    synthesized = {
+      situationSummary: parsed.situationSummary,
+      requiredForms: Array.isArray(parsed.requiredForms) ? parsed.requiredForms : [],
+      partyData: parsed.partyData,
+    };
   }
 
-  // Honour the explicit error shape: if Claude reports it could not produce a
-  // usable context, surface that as a typed error so the route layer can log
-  // it and respond with a meaningful status — never fall through to a partial
-  // save.
-  if (parsed.error && typeof parsed.error === "object") {
-    throw new ClaudeContentError({
-      service: "buildSituationContext",
-      code: parsed.error.code ?? "unspecified",
-      message: parsed.error.message ?? "Claude could not produce a situational context.",
-      details: parsed.error.details,
-      rawResponse: cleaned.slice(0, 4000),
-    });
-  }
-
-  if (!parsed.situationSummary || !parsed.partyData) {
-    // Defensive: model returned the success shape but it's not actually usable.
-    throw new ClaudeContentError({
-      service: "buildSituationContext",
-      code: "incomplete_response",
-      message: "Claude returned a context that is missing required fields.",
-      rawResponse: cleaned.slice(0, 4000),
-    });
-  }
-
-  // 5. Persist to MongoDB
+  // 3. Persist to MongoDB (same shape regardless of which path produced it)
   const data = {
     userId,
-    partyData: parsed.partyData ?? {},
+    partyData: synthesized.partyData,
     documents: parsedDocuments,
-    situationSummary: parsed.situationSummary ?? "",
-    requiredForms: Array.isArray(parsed.requiredForms) ? parsed.requiredForms : [],
+    situationSummary: synthesized.situationSummary,
+    requiredForms: synthesized.requiredForms,
     status: "ready" as const,
   };
 
@@ -481,7 +981,11 @@ if (require.main === module) {
       console.log(`\n✅ SituationalContext saved`);
       console.log(`   MongoDB _id    : ${(result as any)._id}`);
       console.log(`   userId         : ${result.userId}`);
-      console.log(`   Required forms : ${result.requiredForms.join(", ") || "(none)"}`);
+      const normalized = (await import("../types")).normalizeRequiredForms(result.requiredForms);
+      const formsLabel = normalized
+        .map((e) => (e.beneficiaryKey ? `${e.formId} (${e.beneficiaryKey})` : e.formId))
+        .join(", ");
+      console.log(`   Required forms : ${formsLabel || "(none)"}`);
       console.log(`   Summary        : ${result.situationSummary}`);
       console.log(`   Parties        : ${Object.keys(result.partyData).join(", ")}\n`);
     } catch (err) {

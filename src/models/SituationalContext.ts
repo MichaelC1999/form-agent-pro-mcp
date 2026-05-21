@@ -8,6 +8,7 @@ const ParsedDocumentSchema = new Schema<ParsedDocument>(
     originalName: { type: String, required: true },
     mimeCategory: { type: String, enum: ["pdf", "image", "text"], required: true },
     rawText: { type: String, default: "" },
+    extractedFacts: { type: Schema.Types.Mixed },
     uploadedAt: { type: Date, default: Date.now },
   },
   { _id: false }
@@ -26,7 +27,10 @@ const SituationalContextSchema = new Schema<SituationalContextDocument>(
     partyData: { type: Schema.Types.Mixed, required: true, default: {} },
     documents: { type: [ParsedDocumentSchema], default: [] },
     situationSummary: { type: String, default: "" },
-    requiredForms: { type: [String], default: [] },
+    // Mixed so both legacy `["i-485", "i-130"]` and the current
+    // `[{ formId: "i-485", beneficiaryKey: "Maria" }]` shape can be stored.
+    // Always read through `normalizeRequiredForms` from types/index.ts.
+    requiredForms: { type: Schema.Types.Mixed, default: [] },
   },
   { timestamps: false }
 );
