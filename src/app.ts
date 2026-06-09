@@ -12,6 +12,7 @@ import formFillRoutes from "./routes/formFill";
 import pipelineRoutes from "./routes/pipeline";
 import pdfRoutes from "./routes/pdf";
 import checkoutRoutes from "./routes/checkout";
+import step1InputRoutes from "./routes/step1Input";
 
 const app = express();
 
@@ -46,6 +47,9 @@ app.use("/api/pdf", pdfRoutes);                  // GET /api/pdf/form/:id, /merg
 //
 // Stripe Checkout (payment gate for /api/situation/build)
 app.use("/api/checkout", checkoutRoutes);
+//
+// Step 1 text-capture (debounced writes from the /fill first text input)
+app.use("/api/step1-input", step1InputRoutes);
 
 // ─── 404 fallback ────────────────────────────────────────────────────────────
 app.use((_req, res) => {
