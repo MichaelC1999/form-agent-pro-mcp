@@ -24,4 +24,7 @@ Marketing
 - new email
 - write more "how to" content and pages
 
+- Make a landing page popup ("email me an AoS checklist!")
+- Reddit ads
+
 
