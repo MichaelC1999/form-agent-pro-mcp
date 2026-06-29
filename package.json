@@ -10,7 +10,8 @@
     "build-map": "ts-node src/services/buildFormMap.ts",
     "fill-form": "ts-node src/services/fillForm.ts",
     "extract-pdf": "ts-node src/services/extractPdf.ts",
-    "load": "ts-node src/services/manualLoad.ts"
+    "load": "ts-node src/services/manualLoad.ts",
+    "verify-smtp": "ts-node src/scripts/verifySmtp.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
