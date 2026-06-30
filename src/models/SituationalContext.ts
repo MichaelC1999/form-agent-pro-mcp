@@ -52,6 +52,10 @@ const SituationalContextSchema = new Schema<SituationalContextDocument>(
     },
     // partyData: open-ended party/subject map — stored as Mixed
     partyData: { type: Schema.Types.Mixed, required: true, default: {} },
+    // Identifier of the form-filling process this context belongs to (e.g.
+    // "aos", "k1-fiance"). Set by buildSituationContext. Legacy docs may not
+    // have this field — readers fall back via resolveProcessId().
+    processId: { type: String, index: true },
     documents: { type: [ParsedDocumentSchema], default: [] },
     situationSummary: { type: String, default: "" },
     // Mixed so both legacy `["i-485", "i-130"]` and the current

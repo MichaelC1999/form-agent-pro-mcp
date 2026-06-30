@@ -2,7 +2,6 @@ import { Router, Request, Response } from "express";
 import multer from "multer";
 import * as os from "os";
 import * as fs from "fs";
-import * as path from "path";
 import { buildSituationContext } from "../services/buildSituationContext";
 import { fillFormMap } from "../services/fillFormMap";
 import { fillForm } from "../services/fillForm";
@@ -11,6 +10,7 @@ import { SituationalContext } from "../models/SituationalContext";
 import { requireAuth, authTag } from "../middleware/requireAuth";
 import { logAppError, ClaudeContentError, ClaudeParseError } from "../models/AppError";
 import { normalizeRequiredForms } from "../types";
+import { getBlankPdfPath, resolveProcessId } from "../lib/processes";
 import type { AppErrorType, AssumptionLevel, RequiredFormEntry } from "../types";
 
 const router = Router();
@@ -47,12 +47,6 @@ function serverError(
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const ASSETS_FORMS_DIR = path.resolve(__dirname, "../../assets/forms");
-
-function getBlankPdfPath(formId: string): string {
-  return path.join(ASSETS_FORMS_DIR, formId, "blank.pdf");
-}
 
 /** Accepts a JSON array string ("["i-130","i-485"]") or a comma-separated string. */
 function parseFormIds(raw: string): string[] {
@@ -207,8 +201,9 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
     }
 
     // Validate blank PDFs once per distinct formId before any AI calls
+    const processId = resolveProcessId((ctxForUserId as any)?.processId);
     const distinctFormIds = Array.from(new Set(resolvedEntries.map((e) => e.formId)));
-    const missingPdfs = distinctFormIds.filter((id) => !fs.existsSync(getBlankPdfPath(id)));
+    const missingPdfs = distinctFormIds.filter((id) => !fs.existsSync(getBlankPdfPath(processId, id)));
     if (missingPdfs.length > 0) {
       console.log(`[POST /api/pipeline/run] ${authTag(req)} | 400 — missing PDFs: ${missingPdfs.join(",")}`);
       res.status(400).json({ error: `Blank PDF not found for: ${missingPdfs.join(", ")}` });
@@ -245,7 +240,7 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
           formId,
           userId: resolvedUserId,
           filledFormMapId,
-          formPdfPath: getBlankPdfPath(formId),
+          formPdfPath: getBlankPdfPath(processId, formId),
         });
 
         formResults.push({ formId, beneficiaryKey, filledFormMapId, ...fillResult });

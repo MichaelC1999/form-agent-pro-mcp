@@ -9,14 +9,9 @@ import { SituationalContext } from "../models/SituationalContext";
 import { requireAuth, authTag } from "../middleware/requireAuth";
 import { logAppError } from "../models/AppError";
 import { normalizeRequiredForms } from "../types";
+import { getBlankPdfPath, resolveProcessId } from "../lib/processes";
 
 const router = Router();
-
-const ASSETS_FORMS_DIR = path.resolve(__dirname, "../../assets/forms");
-
-function getBlankPdfPath(formId: string): string {
-  return path.join(ASSETS_FORMS_DIR, formId, "blank.pdf");
-}
 
 function serverError(
   req: Request,
@@ -34,11 +29,12 @@ function serverError(
 async function generatePdf(
   filledFormMapId: string,
   formId: string,
-  userId: string
+  userId: string,
+  processId: string
 ): Promise<string> {
-  const blankPath = getBlankPdfPath(formId);
+  const blankPath = getBlankPdfPath(processId, formId);
   if (!fs.existsSync(blankPath)) {
-    throw new Error(`Blank PDF not found for form "${formId}".`);
+    throw new Error(`Blank PDF not found for form "${formId}" in process "${processId}".`);
   }
 
   const tmpDir = path.join(os.tmpdir(), `pdf-${filledFormMapId}-${Date.now()}`);
@@ -98,12 +94,14 @@ router.get("/form/:filledFormMapId", requireAuth, async (req: Request, res: Resp
     }
 
     const formId = (doc as any).formId as string;
+    const processId = resolveProcessId((doc as any).processId);
     console.log(`[GET /api/pdf/form] ${authTag(req)} | Generating PDF for ${formId}`);
 
     const outputPath = await generatePdf(
       req.params.filledFormMapId,
       formId,
-      req.auth!.sub
+      req.auth!.sub,
+      processId
     );
 
     console.log(`[GET /api/pdf/form] ${authTag(req)} | 200 — streaming ${formId}.pdf`);
@@ -167,13 +165,15 @@ router.get("/merged/:situationalContextId", requireAuth, async (req: Request, re
     console.log(`[GET /api/pdf/merged] ${authTag(req)} | Generating ${mapsToFill.length} PDFs`);
 
     // Generate individual PDFs
+    const ctxProcessId = resolveProcessId((ctx as any).processId);
     const pdfPaths: string[] = [];
     for (const m of mapsToFill) {
       try {
         const p = await generatePdf(
           String((m as any)._id),
           (m as any).formId,
-          req.auth!.sub
+          req.auth!.sub,
+          resolveProcessId((m as any).processId ?? ctxProcessId)
         );
         pdfPaths.push(p);
       } catch (err) {

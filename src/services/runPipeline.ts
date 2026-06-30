@@ -1,14 +1,8 @@
-import * as path from "path";
 import { SituationalContext } from "../models/SituationalContext";
 import { FilledFormMap } from "../models/FilledFormMap";
 import { fillForm } from "./fillForm";
 import { normalizeRequiredForms } from "../types";
-
-const ASSETS_FORMS_DIR = path.resolve(__dirname, "../../assets/forms");
-
-function getBlankPdfPath(formId: string): string {
-  return path.join(ASSETS_FORMS_DIR, formId, "blank.pdf");
-}
+import { getBlankPdfPath, resolveProcessId } from "../lib/processes";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -50,6 +44,7 @@ export async function runPipeline(situationalContextId: string): Promise<RunPipe
   }
 
   const userId = (ctxDoc as any).userId as string;
+  const processId = resolveProcessId((ctxDoc as any).processId);
   const requiredEntries = normalizeRequiredForms((ctxDoc as any).requiredForms);
 
   if (requiredEntries.length === 0) {
@@ -103,7 +98,7 @@ export async function runPipeline(situationalContextId: string): Promise<RunPipe
         formId,
         userId,
         filledFormMapId,
-        formPdfPath: getBlankPdfPath(formId),
+        formPdfPath: getBlankPdfPath(processId, formId),
       });
 
       console.log(

@@ -13,7 +13,7 @@
  * Prerequisites:
  *   • MONGODB_URI set in .env
  *   • fillFormMap has been run for each form in requiredForms
- *   • Blank PDFs exist at assets/forms/<formId>/blank.pdf
+ *   • Blank PDFs exist at assets/forms/<processId>/<formId>/blank.pdf
  *
  * Output:
  *   Filled PDFs are written to output/<formId>/  (one file per form)

@@ -8,6 +8,9 @@ const FormMetadataSchema = new Schema<FormMetadata>(
     purpose: { type: String, default: "" },
     situations: { type: String, default: "" },
     "use-cases": { type: String, default: "" },
+    // "per-beneficiary" | "household" — drives whether requiredForms entries
+    // for this form need a beneficiaryKey. Absent on legacy FormContexts.
+    scope: { type: String, enum: ["per-beneficiary", "household"] },
   },
   { strict: false } // allow extra keys in formMetadata
 );
@@ -28,10 +31,14 @@ const FormContextSchema = new Schema<FormContextDocument>(
     createdAt: { type: Date, default: Date.now },
     formMetadata: { type: FormMetadataSchema, default: {} },
     fields: { type: [FormFieldContextSchema], default: [] },
+    // Processes this form applies to (e.g. ["aos"]). A form can belong to
+    // multiple processes. Absent on legacy docs.
+    applicableProcesses: { type: [String], default: undefined, index: true },
   },
   { timestamps: false }
 );
 
 FormContextSchema.index({ formId: 1, createdAt: -1 });
+FormContextSchema.index({ formId: 1, applicableProcesses: 1, createdAt: -1 });
 
 export const FormContext = model<FormContextDocument>("FormContext", FormContextSchema);

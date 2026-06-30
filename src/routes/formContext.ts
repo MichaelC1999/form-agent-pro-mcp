@@ -25,7 +25,7 @@ function serverError(req: Request, res: Response, err: unknown, service: string,
 // ─── POST /api/form-context/build ────────────────────────────────────────────
 router.post("/build", upload.array("contextFiles", 10), async (req: Request, res: Response) => {
   try {
-    const { formId, formPdfPath } = req.body;
+    const { formId, formPdfPath, processId, candidateProcessIds } = req.body;
 
     if (!formId) {
       res.status(400).json({ error: "formId is required" });
@@ -36,16 +36,31 @@ router.post("/build", upload.array("contextFiles", 10), async (req: Request, res
       return;
     }
 
+    // Caller can pass a single processId or an array of candidates. Either way
+    // it flows through to the LLM as the candidate list.
+    let candidates: string[] | undefined;
+    if (Array.isArray(candidateProcessIds)) {
+      candidates = candidateProcessIds.map(String).filter(Boolean);
+    } else if (typeof processId === "string" && processId.trim() !== "") {
+      candidates = [processId.trim()];
+    }
+
     const uploadedContextFiles = (req.files as Express.Multer.File[] | undefined) ?? [];
     const contextFilePaths = uploadedContextFiles.map((f) => f.path);
 
-    const result = await buildFormContext({ formId, formPdfPath, contextFilePaths });
+    const result = await buildFormContext({
+      formId,
+      formPdfPath,
+      contextFilePaths,
+      ...(candidates ? { candidateProcessIds: candidates } : {}),
+    });
 
     res.status(201).json({
       formId: result.formId,
       createdAt: result.createdAt,
       fieldCount: result.fields.length,
       formMetadata: result.formMetadata,
+      applicableProcesses: result.applicableProcesses ?? [],
       fields: result.fields,
     });
   } catch (err) {

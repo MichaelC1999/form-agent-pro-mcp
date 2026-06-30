@@ -24,6 +24,9 @@ const FilledFormMapSchema = new Schema<FilledFormMapDocument>(
       enum: ["conservative", "moderate", "liberal"] as AssumptionLevel[],
       default: "liberal",
     },
+    // Process this fill was generated for. Inherited from the
+    // SituationalContext at fill time. Absent on legacy fills.
+    processId: { type: String, index: true },
     // fields: { "<fieldId>": "filled value" }
     fields:  { type: Schema.Types.Mixed, required: true, default: {} },
     // skipped: fields the LLM could not confidently fill, with reasons

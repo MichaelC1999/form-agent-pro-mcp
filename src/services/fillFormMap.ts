@@ -5,6 +5,7 @@ import { SituationalContext } from "../models/SituationalContext";
 import { FilledFormMap } from "../models/FilledFormMap";
 import { logAnthropicResponse } from "../models/AnthropicLog";
 import { ClaudeContentError, ClaudeParseError } from "../models/AppError";
+import { resolveProcessId, getProcessReadme } from "../lib/processes";
 import type {
   FillFormMapInput,
   IFilledFormMap,
@@ -48,7 +49,11 @@ const ASSUMPTION_INSTRUCTIONS: Record<AssumptionLevel, string> = {
  * staying anchored to relevancy — it will never hallucinate data that has no
  * basis in the situational context.
  */
-function buildSystemPrompt(assumptionLevel: AssumptionLevel, beneficiaryKey?: string): string {
+function buildSystemPrompt(
+  assumptionLevel: AssumptionLevel,
+  beneficiaryKey?: string,
+  processContext?: { processId: string; readme: string | null }
+): string {
   const beneficiaryScope = beneficiaryKey
     ? `
 
@@ -64,7 +69,19 @@ This form is being filled for the beneficiary identified by the key "${beneficia
 - If the situational context contains no data under partyData["${beneficiaryKey}"], or that party clearly does not match the form's intended beneficiary, follow the ERROR PATH below with code "missing_required_party".`
     : "";
 
-  return `You are an expert immigration form-filling agent. Your job is to match real applicant and situational data to the correct fields on a government immigration form.${beneficiaryScope}
+  const processBlock = processContext
+    ? `
+
+─────────────────────────────────────────────────────────────────────────────
+PROCESS CONTEXT
+─────────────────────────────────────────────────────────────────────────────
+
+This form is being filled as part of the "${processContext.processId}" process.${
+        processContext.readme ? `\n${processContext.readme.replace(/\n+/g, " ").trim()}` : ""
+      }`
+    : "";
+
+  return `You are an expert form-filling agent. Your job is to match real applicant and situational data to the correct fields on a government form.${processBlock}${beneficiaryScope}
 
 You will be given two inputs:
 1. FORM CONTEXT — A structured knowledge base describing every field on the form. For each field you will see: its exact field ID, a precise description of what it asks for, which party it belongs to (Applicant, Petitioner, Preparer, etc.), and notes on formatting, edge cases, and sources.
@@ -265,7 +282,20 @@ async function loadFormMap(formId: string): Promise<IFormMap> {
   return doc as unknown as IFormMap;
 }
 
-async function loadFormContext(formId: string): Promise<IFormContext> {
+async function loadFormContext(formId: string, processId?: string): Promise<IFormContext> {
+  // Prefer a FormContext that explicitly applies to this process. Fall back to
+  // the most recent FormContext for the form when no process-tagged version
+  // exists (covers legacy docs created before applicableProcesses was added).
+  if (processId) {
+    const tagged = await FormContext.findOne({
+      formId,
+      applicableProcesses: processId,
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+    if (tagged) return tagged as unknown as IFormContext;
+  }
+
   const doc = await FormContext.findOne({ formId }).sort({ createdAt: -1 }).lean();
   if (!doc) {
     throw new Error(`No FormContext found for formId "${formId}". Run buildFormContext first.`);
@@ -432,16 +462,18 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
     situationalContextId,
     assumptionLevel = "liberal",
     beneficiaryKey,
+    processId: processIdOverride,
   } = input;
 
-  // 1. Load form context + situational context for the prompt.
-  //    Form map is loaded separately after the LLM call — it is not sent to
-  //    the LLM. Its field IDs are already present inside the form context.
+  // 1. Load situational context first so we can resolve the processId.
   console.log(`[fillFormMap] Loading prerequisites for "${formId}" / user "${userId}"...`);
-  const [formContext, situationalContext] = await Promise.all([
-    loadFormContext(formId),
-    loadSituationalContext(situationalContextId),
-  ]);
+  const situationalContext = await loadSituationalContext(situationalContextId);
+  const processId = resolveProcessId(processIdOverride ?? situationalContext.processId);
+
+  // FormContext lookup is scoped to (formId, processId). Form map is loaded
+  // separately after the LLM call — it is not sent to the LLM. Its field IDs
+  // are already present inside the form context.
+  const formContext = await loadFormContext(formId, processId);
 
   // Field IDs are sourced from the context, not the map
   const fieldIds = formContext.fields.map((f) => f.field);
@@ -452,6 +484,7 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
   console.log(
     `[fillFormMap] Prerequisites loaded — ` +
     `${fieldIds.length} fields from context, ` +
+    `processId: "${processId}", ` +
     `assumptionLevel: "${assumptionLevel}"` +
     (beneficiaryKey ? `, beneficiaryKey: "${beneficiaryKey}"` : "")
   );
@@ -479,7 +512,10 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
   const compressedFormContext = remapFormContextKeys(formContext, keyMap.fullToShort);
 
   // 3. Build prompts using the compressed FormContext
-  const systemPrompt = buildSystemPrompt(assumptionLevel, beneficiaryKey);
+  const systemPrompt = buildSystemPrompt(assumptionLevel, beneficiaryKey, {
+    processId,
+    readme: getProcessReadme(processId),
+  });
   const userMessage = buildUserMessage({
     formContext: compressedFormContext,
     situationalContext,
@@ -547,6 +583,7 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
     userId,
     createdAt: new Date(),
     assumptionLevel,
+    processId,
     ...(beneficiaryKey ? { beneficiaryKey } : {}),
     fields: mergedFields,
     skipped: llmResult.skipped,
@@ -571,11 +608,19 @@ export async function getFillFormMapPromptText(
     situationalContextId?: string;
   },
 ): Promise<{ systemPrompt: string; userMessage: string }> {
-  const { formId, situationalContextId, assumptionLevel = "liberal", beneficiaryKey } = input;
+  const { formId, situationalContextId, assumptionLevel = "liberal", beneficiaryKey, processId: processIdOverride } = input;
 
   // Only the form context is needed to build the prompt — the form map is not
   // sent to the LLM, so it is not loaded here.
-  const formContext = await loadFormContext(formId);
+  let resolvedProcessId = processIdOverride ? resolveProcessId(processIdOverride) : undefined;
+  if (!resolvedProcessId && situationalContextId) {
+    const ctx = await loadSituationalContext(situationalContextId).catch(() => null);
+    resolvedProcessId = resolveProcessId(ctx?.processId);
+  }
+  if (!resolvedProcessId) {
+    resolvedProcessId = resolveProcessId(undefined);
+  }
+  const formContext = await loadFormContext(formId, resolvedProcessId);
 
   // Apply the same key compression used by the live service so this output
   // exactly mirrors what Anthropic actually receives.
@@ -611,7 +656,10 @@ export async function getFillFormMapPromptText(
   }
 
   return {
-    systemPrompt: buildSystemPrompt(assumptionLevel, beneficiaryKey),
+    systemPrompt: buildSystemPrompt(assumptionLevel, beneficiaryKey, {
+      processId: resolvedProcessId,
+      readme: getProcessReadme(resolvedProcessId),
+    }),
     userMessage: buildUserMessage({
       formContext: compressedFormContext,
       situationalContext,

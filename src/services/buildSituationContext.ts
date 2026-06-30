@@ -6,6 +6,7 @@ import { getAnthropicClient } from "../lib/anthropic";
 import { SituationalContext } from "../models/SituationalContext";
 import { logAnthropicResponse } from "../models/AnthropicLog";
 import { ClaudeContentError, ClaudeParseError } from "../models/AppError";
+import { summarizeProcesses, type ProcessSummary } from "../lib/processes";
 import type {
   BuildSituationContextInput,
   ISituationalContext,
@@ -48,36 +49,58 @@ export async function extractRawText(file: UploadedFile, category: DocumentMimeC
 
 // ─── Anthropic prompt ────────────────────────────────────────────────────────
 
-function buildSystemPrompt(): string {
-  return `You are an expert immigration document analyst with deep knowledge of US and international identity documents, employment records, and government forms.
+/**
+ * Renders the catalogue of supported processes (discovered from the
+ * filesystem) as a block the LLM can read to match the user's situation.
+ * Each block lists the process identifier, its README (when present), and
+ * the form IDs available for that process.
+ */
+function renderSupportedProcesses(processes: ProcessSummary[]): string {
+  if (processes.length === 0) {
+    return "(No pre-configured processes are available. You must invent a processId based on the user's situation.)";
+  }
+
+  const blocks = processes.map((p) => {
+    const lines: string[] = [];
+    lines.push(`- processId: "${p.processId}"`);
+    if (p.readme) {
+      lines.push(`  description: ${p.readme.replace(/\n+/g, " ").trim()}`);
+    }
+    lines.push(`  available forms: ${p.formIds.length > 0 ? p.formIds.join(", ") : "(none configured)"}`);
+    return lines.join("\n");
+  });
+
+  return blocks.join("\n\n");
+}
+
+function buildSystemPrompt(processes: ProcessSummary[]): string {
+  const supportedBlock = renderSupportedProcesses(processes);
+
+  return `You are an expert document analyst with deep knowledge of identity documents, employment records, and government forms across multiple jurisdictions.
 
 You will receive:
-1. Answers the user provided in a UI describing their situation and the immigration process they are pursuing.
-2. Raw text extracted from uploaded documents via OCR and PDF parsing (passports, visas, I-94s, employment records, marriage certificates, tax returns, driver's licenses, etc.).
+1. Answers the user provided in a UI describing their situation and the form-filing process they are pursuing.
+2. Raw text extracted from uploaded documents via OCR and PDF parsing.
 3. Attached images of those same documents for visual verification and supplementation of the extracted text.
 
-Your job is to do three things:
+Your job is to do four things:
 
 PART A — Situational Summary
-Write a 2-3 sentence summary in English describing: (a) who the parties are, (b) what immigration process they are trying to complete, and (c) what our service needs to do to help them.
+Write a 2-3 sentence summary in English describing: (a) who the parties are, (b) what process they are trying to complete, and (c) what our service needs to do to help them.
 
-PART B — Required Forms
-Based on the situation, produce an ordered list of USCIS forms that will need to be completed. Use the lowercase hyphenated format matching these examples:
-  i-485  (Application to Register Permanent Residence or Adjust Status)
-  i-130  (Petition for Alien Relative)
-  i-130a (Supplemental Information for Spouse Beneficiary)
-  i-864  (Affidavit of Support)
-  i-864a (Contract Between Sponsor and Household Member)
-  i-765  (Application for Employment Authorization)
-  i-131  (Application for Travel Document)
-  i-693  (Report of Immigration Medical Examination)
-  i-944  (Declaration of Self-Sufficiency)
-  i-751  (Petition to Remove Conditions on Residence)
-  n-400  (Application for Naturalization)
-  n-600  (Application for Certificate of Citizenship)
-  i-90   (Application to Replace Permanent Resident Card)
-  i-539  (Application to Extend/Change Nonimmigrant Status)
-  i-140  (Immigrant Petition for Alien Workers)
+PART B — Process Identification
+Identify the form-filing process this situation belongs to. The system supports the following processes (read from the filesystem at runtime):
+
+${supportedBlock}
+
+Output a single "processId" string:
+- If the user's situation clearly matches one of the supported processes above, set processId to that exact identifier.
+- If NO supported process applies, invent a short, general kebab-case identifier that describes the matter (e.g. "k1-fiance", "student-opt", "uk-skilled-worker"). Do not force-fit to an existing process. The form list you emit in PART C is then unconstrained — use whichever forms genuinely apply.
+
+PART C — Required Forms
+Produce an ordered list of forms that will need to be completed.
+
+When processId matches a supported process, draw form IDs from that process's "available forms" list above. When processId is one you invented, use whichever short lowercase-hyphenated form IDs are appropriate (e.g. "i-129f", "ds-160").
 
 Each entry MUST be an object of the shape:
   { "formId": "<form-id>", "beneficiaryKey": "<party name from partyData>" }
@@ -85,14 +108,15 @@ Each entry MUST be an object of the shape:
 The "beneficiaryKey" MUST match EXACTLY one of the top-level keys in your "partyData" object (e.g. "Maria Souza"). It identifies the beneficiary this form is being filed for.
 
 PER-BENEFICIARY vs. ONCE-PER-HOUSEHOLD FORMS — important:
-- For forms filed PER BENEFICIARY (one filing per beneficiary), emit one entry per (form × beneficiary) pair. These forms include: i-130, i-130a, i-485, i-765, i-131, i-693, i-751, n-600, i-90, i-539, i-140.
-  Example: if a single petitioner is sponsoring two children, requiredForms must contain:
-    { "formId": "i-130", "beneficiaryKey": "Child A" }, { "formId": "i-130", "beneficiaryKey": "Child B" }, { "formId": "i-485", "beneficiaryKey": "Child A" }, { "formId": "i-485", "beneficiaryKey": "Child B" }
-- For forms filed ONCE PER HOUSEHOLD (a single filing covers the whole sponsor unit), still emit a single entry but OMIT the beneficiaryKey field. These forms include: i-864, i-864a, n-400.
+- A form is PER-BENEFICIARY when each beneficiary requires their own filing (typical for applications and petitions specific to one person). Emit one entry per (form × beneficiary) pair, each with a beneficiaryKey.
+  Example: if a single petitioner is sponsoring two children, requiredForms must contain a separate entry for each child for every per-beneficiary form.
+- A form is HOUSEHOLD-SCOPE when a single filing covers the whole sponsor unit or applicant household (typical for affidavits, sponsor declarations, family-wide applications). Emit a single entry and OMIT the beneficiaryKey field.
 
-Include only forms genuinely required for this specific situation. Order entries in the sequence they should be filed (primary petition first, supporting forms after). When there is only one beneficiary in partyData, you still must produce object entries with the beneficiaryKey set to that beneficiary's party name.
+Use your knowledge of how each specific form is filed to decide its scope — do not guess. When there is only one beneficiary, still produce object entries with beneficiaryKey set to that beneficiary's party name for per-beneficiary forms.
 
-PART C — Structured Party Data
+Include only forms genuinely required for this specific situation. Order entries in the sequence they should be filed (primary petition first, supporting forms after).
+
+PART D — Structured Party Data
 Extract and organize every piece of information from the documents and UI answers into a structured JSON object.
 
 TRANSLATION RULES — strictly follow these:
@@ -149,6 +173,7 @@ If a value is not present anywhere in the provided materials, omit the key entir
 Return a single valid JSON object with this exact shape — no markdown fences, no explanation outside the JSON:
 {
   "situationSummary": "<2-3 sentence summary in English>",
+  "processId": "<exact processId from the supported list, OR a new kebab-case identifier you invented>",
   "requiredForms": [
     { "formId": "<form-id>", "beneficiaryKey": "<party name from partyData>" },
     { "formId": "<household-form-id>" }
@@ -498,20 +523,31 @@ async function mapWithConcurrency<T, R>(
 
 // ─── Synthesis (EXTRACTION_MODE=per_document) ────────────────────────────────
 
-function buildSynthesisSystemPrompt(): string {
-  return `You are an expert immigration document analyst. You are receiving pre-extracted, structured facts from a set of uploaded documents (the OCR step and per-document fact extraction have already been performed). Your job is to synthesize those facts together with the user's self-reported answers into a complete situational context for the immigration process they are pursuing.
+function buildSynthesisSystemPrompt(processes: ProcessSummary[]): string {
+  const supportedBlock = renderSupportedProcesses(processes);
+
+  return `You are an expert document analyst. You are receiving pre-extracted, structured facts from a set of uploaded documents (the OCR step and per-document fact extraction have already been performed). Your job is to synthesize those facts together with the user's self-reported answers into a complete situational context for the form-filing process they are pursuing.
 
 You will be given:
-1. The user's UI answers describing their situation and the immigration process they want to pursue.
+1. The user's UI answers describing their situation and the process they want to pursue.
 2. An array of per-document extraction results. Each entry has a documentName and either a "facts" object (successful extraction) or an "error" object (the document could not be extracted — note this and proceed without it).
 
-Your output is the same three-part artifact a single monolithic call would have produced:
+Your output is a four-part artifact:
 
 PART A — Situational Summary
-2-3 sentences in English describing (a) who the parties are, (b) what immigration process they are trying to complete, and (c) what our service needs to do to help them.
+2-3 sentences in English describing (a) who the parties are, (b) what process they are trying to complete, and (c) what our service needs to do to help them.
 
-PART B — Required Forms
-An ordered list of USCIS forms required for this situation. Use lowercase-hyphenated form IDs (e.g. "i-485", "i-130", "i-130a", "i-864", "i-864a", "i-765", "i-131", "i-693", "i-944", "i-751", "n-400", "n-600", "i-90", "i-539", "i-140"). Order them in the sequence they should be filed (primary petition first, supporting forms after). Include only forms genuinely required for this specific situation.
+PART B — Process Identification
+Identify the form-filing process this situation belongs to. The system supports the following processes (read from the filesystem at runtime):
+
+${supportedBlock}
+
+Output a single "processId" string:
+- If the user's situation clearly matches one of the supported processes above, set processId to that exact identifier.
+- If NO supported process applies, invent a short, general kebab-case identifier that describes the matter (e.g. "k1-fiance", "student-opt", "uk-skilled-worker"). Do not force-fit to an existing process.
+
+PART C — Required Forms
+An ordered list of forms required for this situation. When processId matches a supported process, draw form IDs from that process's "available forms" list above. When processId is one you invented, use whichever short lowercase-hyphenated form IDs are appropriate. Order them in the sequence they should be filed (primary petition first, supporting forms after). Include only forms genuinely required for this specific situation.
 
 Each entry MUST be an object of the shape:
   { "formId": "<form-id>", "beneficiaryKey": "<party name from partyData>" }
@@ -519,12 +555,11 @@ Each entry MUST be an object of the shape:
 The "beneficiaryKey" MUST match EXACTLY one of the top-level keys in your "partyData" object. It identifies the beneficiary this form is being filed for.
 
 PER-BENEFICIARY vs. ONCE-PER-HOUSEHOLD FORMS — important:
-- For forms filed PER BENEFICIARY (one filing per beneficiary), emit one entry per (form × beneficiary) pair. These forms include: i-130, i-130a, i-485, i-765, i-131, i-693, i-751, n-600, i-90, i-539, i-140.
-  Example: if a single petitioner is sponsoring two children, requiredForms must contain four entries — one i-130 per child and one i-485 per child.
-- For forms filed ONCE PER HOUSEHOLD (a single filing covers the whole sponsor unit), emit a single entry and OMIT the beneficiaryKey field. These forms include: i-864, i-864a, n-400.
-- When there is only one beneficiary in partyData, still produce object entries with beneficiaryKey set to that beneficiary's party name.
+- A form is PER-BENEFICIARY when each beneficiary requires their own filing. Emit one entry per (form × beneficiary) pair, each with a beneficiaryKey.
+- A form is HOUSEHOLD-SCOPE when a single filing covers the whole sponsor unit or applicant household. Emit a single entry and OMIT the beneficiaryKey field.
+Use your knowledge of how each specific form is filed to decide its scope — do not guess. When there is only one beneficiary, still produce object entries with beneficiaryKey set to that beneficiary's party name for per-beneficiary forms.
 
-PART C — Structured Party Data
+PART D — Structured Party Data
 A top-level JSON object whose keys are specific parties or situational subjects (e.g. "John Alexander Doe", "Jane Mary Doe", "Marriage (Brazil, 2024)", "US Immigration Context"). Merge facts about the same person from multiple documents under a single party key. Values are key-value pairs of sanitized, English-translated facts. Capture EVERY fact present across the extracted documents — redundancy across subjects is acceptable; omissions are not. Decompose addresses into separate keys (Street Number, Street Name, Apt/Unit, City, State/Province, Zip/Postal Code, Country).
 
 PHYSICAL & BIOGRAPHIC ATTRIBUTES — for every individual party, include the following when present in ANY extracted document:
@@ -535,6 +570,7 @@ Return a single valid JSON object with this exact shape — no markdown fences, 
 
 {
   "situationSummary": "<2-3 sentence summary in English>",
+  "processId": "<exact processId from the supported list, OR a new kebab-case identifier you invented>",
   "requiredForms": [
     { "formId": "<form-id>", "beneficiaryKey": "<party name from partyData>" },
     { "formId": "<household-form-id>" }
@@ -599,6 +635,7 @@ function buildSynthesisUserMessage(
 
 interface SynthesisOutput {
   situationSummary: string;
+  processId: string;
   requiredForms: RequiredFormsStored;
   partyData: PartyDataMap;
 }
@@ -609,11 +646,12 @@ async function synthesizeContext(
   ctx: { userId: string }
 ): Promise<SynthesisOutput> {
   const client = getAnthropicClient();
+  const processes = summarizeProcesses();
 
   const response = await client.messages.create({
     model: "claude-opus-4-7",
     max_tokens: 32000,
-    system: buildSynthesisSystemPrompt(),
+    system: buildSynthesisSystemPrompt(processes),
     messages: [
       {
         role: "user",
@@ -633,6 +671,7 @@ async function synthesizeContext(
 
   let parsed: {
     situationSummary?: string;
+    processId?: string;
     requiredForms?: RequiredFormsStored;
     partyData?: PartyDataMap;
     error?: { code?: string; message?: string; details?: string };
@@ -657,17 +696,18 @@ async function synthesizeContext(
     });
   }
 
-  if (!parsed.situationSummary || !parsed.partyData) {
+  if (!parsed.situationSummary || !parsed.partyData || !parsed.processId) {
     throw new ClaudeContentError({
       service: "buildSituationContext:synthesize",
       code: "incomplete_response",
-      message: "Synthesis returned a context that is missing required fields.",
+      message: "Synthesis returned a context that is missing required fields (situationSummary, processId, or partyData).",
       rawResponse: cleaned.slice(0, 4000),
     });
   }
 
   return {
     situationSummary: parsed.situationSummary,
+    processId: parsed.processId.trim(),
     requiredForms: Array.isArray(parsed.requiredForms) ? parsed.requiredForms : [],
     partyData: parsed.partyData,
   };
@@ -780,11 +820,12 @@ export async function buildSituationContext(
       parsedDocuments.map((d) => ({ originalName: d.originalName, rawText: d.rawText }))
     );
 
+    const processes = summarizeProcesses();
     const client = getAnthropicClient();
     const response = await client.messages.create({
       model: "claude-opus-4-7",
       max_tokens: 32000,
-      system: buildSystemPrompt(),
+      system: buildSystemPrompt(processes),
       messages: [
         {
           role: "user",
@@ -806,6 +847,7 @@ export async function buildSituationContext(
 
     let parsed: {
       situationSummary?: string;
+      processId?: string;
       requiredForms?: RequiredFormsStored;
       partyData?: PartyDataMap;
       error?: { code?: string; message?: string; details?: string };
@@ -830,17 +872,18 @@ export async function buildSituationContext(
       });
     }
 
-    if (!parsed.situationSummary || !parsed.partyData) {
+    if (!parsed.situationSummary || !parsed.partyData || !parsed.processId) {
       throw new ClaudeContentError({
         service: "buildSituationContext",
         code: "incomplete_response",
-        message: "Claude returned a context that is missing required fields.",
+        message: "Claude returned a context that is missing required fields (situationSummary, processId, or partyData).",
         rawResponse: cleaned.slice(0, 4000),
       });
     }
 
     synthesized = {
       situationSummary: parsed.situationSummary,
+      processId: parsed.processId.trim(),
       requiredForms: Array.isArray(parsed.requiredForms) ? parsed.requiredForms : [],
       partyData: parsed.partyData,
     };
@@ -852,9 +895,12 @@ export async function buildSituationContext(
     partyData: synthesized.partyData,
     documents: parsedDocuments,
     situationSummary: synthesized.situationSummary,
+    processId: synthesized.processId,
     requiredForms: synthesized.requiredForms,
     status: "ready" as const,
   };
+
+  console.log(`[buildSituationContext] processId="${synthesized.processId}" (${synthesized.requiredForms.length} required forms)`);
 
   let doc;
   if (existingContextId) {
@@ -951,7 +997,7 @@ if (require.main === module) {
         console.log(`[buildSituationContext] Processed document: ${uploadedFiles[i].originalname}`);
       }
 
-      const systemPrompt = buildSystemPrompt();
+      const systemPrompt = buildSystemPrompt(summarizeProcesses());
       const userMessage = buildUserMessage(
         { situationDescription, processDescription, additionalNotes },
         parsedDocs

@@ -5,12 +5,14 @@ import { getAnthropicClient } from "../lib/anthropic";
 import { FormMap } from "../models/FormMap";
 import { FormContext } from "../models/FormContext";
 import { logAnthropicResponse } from "../models/AnthropicLog";
+import { listProcesses, getProcessReadme } from "../lib/processes";
 import type {
   BuildFormContextInput,
   IFormContext,
   FormFieldContext,
   FormMetadata,
   FieldMap,
+  FormScope,
 } from "../types";
 
 // ─── PDF text extraction ──────────────────────────────────────────────────────
@@ -27,8 +29,24 @@ async function readContextFile(filePath: string): Promise<string> {
 
 // ─── Prompt builders ──────────────────────────────────────────────────────────
 
-export function buildFormContextSystemPrompt(): string {
-  return `You are a senior immigration paralegal and forms analyst with comprehensive knowledge of government form filing requirements across the US, EU, and other jurisdictions. You have deep familiarity with USCIS forms (I-series, G-series, N-series), DOS forms, CBP forms, Social Security Administration forms, and similar government documents from other countries.
+function renderCandidateProcesses(candidates: string[]): string {
+  if (candidates.length === 0) {
+    return "(No pre-configured processes are available. Use an empty applicableProcesses array unless you can confidently name a relevant identifier.)";
+  }
+  return candidates
+    .map((id) => {
+      const readme = getProcessReadme(id);
+      return readme
+        ? `- "${id}": ${readme.replace(/\n+/g, " ").trim()}`
+        : `- "${id}"`;
+    })
+    .join("\n");
+}
+
+export function buildFormContextSystemPrompt(candidateProcessIds: string[]): string {
+  const candidatesBlock = renderCandidateProcesses(candidateProcessIds);
+
+  return `You are a senior paralegal and forms analyst with comprehensive knowledge of government form filing requirements across the US, EU, and other jurisdictions. You have deep familiarity with immigration forms (USCIS I-series, G-series, N-series, DOS forms, CBP forms), tax forms, social services forms, and similar government documents from other countries.
 
 Your task is to produce a FormContext — a structured, detailed knowledge base for every field in a specific government form. A downstream AI agent will use this FormContext to automatically match real applicant data to the correct fields when filling the form. The quality and specificity of your output directly determines how accurately that agent can auto-fill the form without human review.
 
@@ -74,8 +92,29 @@ Output a "formMetadata" object with these keys:
 "parties-involved"
   Every distinct party role that appears on this form, with a one-sentence description of that role specific to this form's context.
 
+"scope"
+  Exactly one of:
+    "per-beneficiary" — this form is filed once per individual beneficiary (typical for applications and petitions specific to one person).
+    "household"       — a single filing covers the whole sponsor unit or applicant household (typical for affidavits, sponsor declarations, family-wide applications).
+  Use your knowledge of how this specific form is filed — do not guess.
+
 ─────────────────────────────────────────────────────────────────────────────
-PART B — FIELD ANNOTATIONS
+PART B — APPLICABLE PROCESSES
+─────────────────────────────────────────────────────────────────────────────
+
+Output an "applicableProcesses" array of process identifiers this form belongs to. A form may belong to more than one process.
+
+Candidate processes (filesystem-discovered):
+
+${candidatesBlock}
+
+Rules:
+- Include each candidate process identifier only if this form is genuinely used in that process.
+- If the form belongs to a process not listed above, include a short kebab-case identifier you invented (e.g. "k1-fiance").
+- If you cannot confidently associate the form with any process, return an empty array.
+
+─────────────────────────────────────────────────────────────────────────────
+PART C — FIELD ANNOTATIONS
 ─────────────────────────────────────────────────────────────────────────────
 
 For every field ID in the input list, produce one entry. Do not skip or merge fields.
@@ -129,8 +168,10 @@ Return a single valid JSON object. No markdown fences. No commentary outside the
     "situations": "...",
     "use-cases": "...",
     "filing-context": "...",
-    "parties-involved": "..."
+    "parties-involved": "...",
+    "scope": "per-beneficiary" | "household"
   },
+  "applicableProcesses": ["<processId>", "..."],
   "fields": [
     {
       "field": "<exact field ID>",
@@ -219,7 +260,11 @@ export async function getFormContextPromptText(input: BuildFormContextInput): Pr
   systemPrompt: string;
   userMessage: string;
 }> {
-  const { formId, formPdfPath, contextFilePaths = [] } = input;
+  const { formId, formPdfPath, contextFilePaths = [], candidateProcessIds } = input;
+  const resolvedCandidates =
+    candidateProcessIds && candidateProcessIds.length > 0
+      ? candidateProcessIds
+      : listProcesses();
 
   const formMapDoc = await FormMap.findOne({ formId }).sort({ createdAt: -1 });
   if (!formMapDoc) {
@@ -242,7 +287,7 @@ export async function getFormContextPromptText(input: BuildFormContextInput): Pr
   }
 
   return {
-    systemPrompt: buildFormContextSystemPrompt(),
+    systemPrompt: buildFormContextSystemPrompt(resolvedCandidates),
     userMessage: buildFormContextUserMessage({
       formId,
       formPdfText,
@@ -256,7 +301,11 @@ export async function getFormContextPromptText(input: BuildFormContextInput): Pr
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export async function buildFormContext(input: BuildFormContextInput): Promise<IFormContext> {
-  const { formId, formPdfPath, contextFilePaths = [] } = input;
+  const { formId, formPdfPath, contextFilePaths = [], candidateProcessIds } = input;
+  const resolvedCandidates =
+    candidateProcessIds && candidateProcessIds.length > 0
+      ? candidateProcessIds
+      : listProcesses();
 
   // 1. Load FormMap — field IDs used as fallback if pdftk unavailable
   const formMapDoc = await FormMap.findOne({ formId }).sort({ createdAt: -1 });
@@ -298,7 +347,7 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
   }
 
   // 6. Build prompts
-  const systemPrompt = buildFormContextSystemPrompt();
+  const systemPrompt = buildFormContextSystemPrompt(resolvedCandidates);
   const userTextBlock = buildFormContextUserMessage({
     formId,
     formPdfText,
@@ -353,11 +402,36 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
   const rawJson = rawBlock?.type === "text" ? rawBlock.text.trim() : "";
   const cleaned = rawJson.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
 
-  let parsed: { formMetadata: FormMetadata; fields: FormFieldContext[] };
+  let parsed: {
+    formMetadata: FormMetadata;
+    fields: FormFieldContext[];
+    applicableProcesses?: string[];
+  };
   try {
     parsed = JSON.parse(cleaned);
   } catch {
     throw new Error(`Failed to parse form context response for "${formId}".`);
+  }
+
+  // Normalize applicableProcesses: trim, drop empties, dedupe
+  const applicableProcesses = Array.isArray(parsed.applicableProcesses)
+    ? Array.from(
+        new Set(
+          parsed.applicableProcesses
+            .map((id) => (typeof id === "string" ? id.trim() : ""))
+            .filter((id) => id.length > 0)
+        )
+      )
+    : [];
+
+  // Normalize scope to the typed union; leave undefined when missing
+  const rawScope = (parsed.formMetadata as Record<string, unknown> | undefined)?.scope;
+  const scope: FormScope | undefined =
+    rawScope === "per-beneficiary" || rawScope === "household"
+      ? (rawScope as FormScope)
+      : undefined;
+  if (scope) {
+    (parsed.formMetadata as Record<string, unknown>).scope = scope;
   }
 
   // 11. Warn about any skipped field IDs
@@ -380,7 +454,13 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
     createdAt: new Date(),
     formMetadata: parsed.formMetadata ?? {},
     fields: parsed.fields ?? [],
+    ...(applicableProcesses.length > 0 ? { applicableProcesses } : {}),
   });
+
+  console.log(
+    `[buildFormContext] applicableProcesses=[${applicableProcesses.join(", ")}]` +
+    (scope ? `, scope=${scope}` : "")
+  );
 
   return doc.toObject() as IFormContext;
 }

@@ -23,11 +23,21 @@ export interface FormFieldContext {
   notes: string;
 }
 
+/**
+ * Where in the filing a form is filed. Drives whether requiredForms entries
+ * for this form need a beneficiaryKey or not.
+ *   "per-beneficiary" — one filing per beneficiary (e.g. I-485, I-130)
+ *   "household"       — one filing per sponsor unit (e.g. I-864, N-400)
+ */
+export type FormScope = "per-beneficiary" | "household";
+
 export interface FormMetadata {
   purpose: string;
   situations: string;
   "use-cases": string;
-  [key: string]: string;
+  /** See FormScope. Absent on legacy FormContexts — treat as "per-beneficiary". */
+  scope?: FormScope;
+  [key: string]: string | FormScope | undefined;
 }
 
 export interface IFormContext {
@@ -35,6 +45,12 @@ export interface IFormContext {
   createdAt: Date;
   formMetadata: FormMetadata;
   fields: FormFieldContext[];
+  /**
+   * Processes this form belongs to (e.g. ["aos"]). A form can apply to more
+   * than one process. Absent on legacy FormContexts — readers fall back to
+   * `[DEFAULT_PROCESS_ID]` when present is required.
+   */
+  applicableProcesses?: string[];
 }
 
 // ─── SituationalContext ──────────────────────────────────────────────────────
@@ -126,6 +142,13 @@ export interface ISituationalContext {
   /** Pipeline processing status */
   status: SituationalContextStatus;
   /**
+   * Identifier of the form-filling process this context belongs to (e.g.
+   * "aos", "k1-fiance"). Set by buildSituationContext. Read by every later
+   * stage to scope asset lookup and prompts. Legacy docs may not have this
+   * field — resolveProcessId() falls back to DEFAULT_PROCESS_ID.
+   */
+  processId?: string;
+  /**
    * Structured party/subject data extracted by the LLM from all documents
    * and UI inputs combined.
    */
@@ -200,6 +223,11 @@ export interface IFilledFormMap {
   createdAt: Date;
   assumptionLevel: AssumptionLevel;
   /**
+   * Identifier of the process this fill was generated for. Inherited from the
+   * SituationalContext at fill time. Absent on legacy fills.
+   */
+  processId?: string;
+  /**
    * Which beneficiary in the situational context this fill belongs to.
    * Absent for forms filed once per household (I-864, N-400, etc.) and for
    * legacy single-beneficiary records.
@@ -251,6 +279,12 @@ export interface BuildFormContextInput {
   formId: string;
   formPdfPath: string;
   contextFilePaths?: string[]; // supplemental markdown / docs
+  /**
+   * Process(es) the caller wants this form annotated for. The LLM picks the
+   * subset of these that genuinely apply. When omitted, the list of all known
+   * processes (from `listProcesses()`) is shown to the LLM.
+   */
+  candidateProcessIds?: string[];
 }
 
 export interface BuildFormMapInput {
@@ -270,6 +304,11 @@ export interface FillFormMapInput {
    * petitioner's where required) and ignore other beneficiaries.
    */
   beneficiaryKey?: string;
+  /**
+   * Optional override for the process this fill belongs to. When omitted, the
+   * service reads it from the loaded SituationalContext.
+   */
+  processId?: string;
 }
 
 /**
