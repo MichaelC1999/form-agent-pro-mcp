@@ -157,6 +157,10 @@ export async function loadSituationalContext(filePath: string): Promise<ISituati
       partyData: data.partyData,
       documents: data.documents ?? [],
       requiredForms: Array.isArray(data.requiredForms) ? data.requiredForms : [],
+      ...(typeof data.processId === "string" && data.processId.trim() !== ""
+        ? { processId: data.processId.trim() }
+        : {}),
+      ...(typeof (data as any).status === "string" ? { status: (data as any).status } : {}),
     },
     { upsert: true, new: true }
   );

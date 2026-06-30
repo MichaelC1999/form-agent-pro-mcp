@@ -2,7 +2,9 @@
 
 This guide explains how the pipeline models a "process" and how to add a new one (or build a custom workflow on top of an existing one) without changing any source code that branches on process identity.
 
-A **process** is a form-filing workflow — e.g. US Adjustment of Status (`aos`), K-1 fiancé petition (`k1-fiance`), Italian Type-D visa (`italian-type-d`). Each process has its own catalog of forms, its own description of when it applies, and (optionally) its own supplemental assets. The pipeline stages are universal; the process distinguishes itself entirely through assets on disk and metadata on MongoDB documents.
+A **process** is a form-filing workflow — e.g. US Adjustment of Status (`aos`), K-1 fiancé petition (`k1-fiance`), Italian Type-D visa (`italy-student-visa`). Each process has its own catalog of forms, its own description of when it applies, and (optionally) its own supplemental assets. The pipeline stages are universal; the process distinguishes itself entirely through assets on disk and metadata on MongoDB documents.
+
+Two processes are live as reference implementations: [`aos`](../assets/forms/aos/) (the original, ~13 USCIS forms) and [`italy-student-visa`](../assets/forms/italy-student-visa/) (Italian Type D student visa, 1 form + 5 affidavit templates). Skim both before adding a third.
 
 ---
 
@@ -54,26 +56,30 @@ The current `aos` process is the reference layout — see `assets/forms/aos/` fo
 
 ### Process-specific extras
 
-A process may need supplemental assets the AoS process doesn't (custom affidavits, process-specific templates, etc.). The convention is to put them under the process directory using a uniform name across processes:
+A process may need supplemental assets the AoS process doesn't. The pipeline ships with first-class support for **affidavits** — markdown templates with bracketed placeholders that get LLM-filled from situational context and rendered to PDF. Other asset types follow the same file-existence-gated convention.
 
 ```
 assets/forms/<processId>/
 ├── README.md
-├── forms/...            (kept under <processId>/<formId>/ today; could be promoted to a forms/ subdir later)
-├── affidavits/          (process-specific affidavit PDFs, if any)
-└── prompts/             (process-specific prompt fragments, if any)
+├── <formId>/blank.pdf   (one subdir per form in the process)
+├── affidavits/          (process-specific markdown affidavit templates, if any)
+│   ├── bank-sponsorship-affidavit.md
+│   └── ...
+└── (future) prompts/    (process-specific prompt fragments, if any)
 ```
 
-If any of these are added, the code that consumes them must check for *presence* on disk, not for the process name. Example pattern:
+Code that consumes new asset types must check for *presence* on disk, not for the process name. Example pattern:
 
 ```ts
-const affidavitsDir = path.join(getProcessDir(processId), "affidavits");
-if (fs.existsSync(affidavitsDir)) {
-  // process-specific affidavit logic
+import { getProcessDir } from "../lib/processes";
+
+const customDir = path.join(getProcessDir(processId), "prompts");
+if (fs.existsSync(customDir)) {
+  // process-specific logic
 }
 ```
 
-This keeps the cardinal rule intact: adding `assets/forms/k1-fiance/affidavits/` enables the behavior automatically; no code touches `processId === "k1-fiance"`.
+This keeps the cardinal rule intact: adding `assets/forms/k1-fiance/prompts/` enables the behavior automatically; no code touches `processId === "k1-fiance"`.
 
 ---
 
@@ -87,6 +93,89 @@ This keeps the cardinal rule intact: adding `assets/forms/k1-fiance/affidavits/`
 |  | `FilledFormMap` per (form × beneficiary), with `processId` |
 
 There is no separate "process config" file. The README is the only declarative artifact and it exists purely for the LLM in Stage 1.
+
+---
+
+## Affidavits (markdown templates rendered to PDF)
+
+Some processes need *supporting documents* alongside the main filled form — bank-sponsorship letters, parental-travel authorizations, health-insurance affidavits, host-school acceptance letters, etc. These typically aren't fillable PDF forms; they're free-form documents the applicant or a third party signs.
+
+The pipeline treats these as **affidavits**: markdown templates with `[BRACKETED_PLACEHOLDERS]` that get LLM-filled from the situational context and rendered to PDF via [`src/lib/markdownToPdf.ts`](../src/lib/markdownToPdf.ts).
+
+### Layout
+
+```
+assets/forms/<processId>/affidavits/
+├── bank-sponsorship-affidavit.md
+├── health-insurance-affidavit.md
+├── parental-travel-authorization.md
+└── ...
+```
+
+- Filenames (minus the `.md`) are the affidavit identifiers. Use lowercase-hyphenated names.
+- A process opts in simply by creating the `affidavits/` directory and dropping `.md` files in. Without that directory, the affidavit step is a no-op for that process — `hasAffidavits(processId)` returns `false`.
+
+### Template format
+
+A template is a regular markdown document with `[PLACEHOLDER_NAME]` slots. Example:
+
+```markdown
+# Notarized Affidavit of Financial Support
+
+**To:** Visa Office, Italian Consulate General of [CONSULATE_CITY]
+**Date:** [DATE]
+
+I, the undersigned, **[SPONSOR_FULL_LEGAL_NAME]**, residing at:
+
+> [SPONSOR_STREET_ADDRESS]
+> [SPONSOR_CITY], [SPONSOR_STATE] [SPONSOR_ZIP]
+
+... do hereby solemnly affirm that I am the **[RELATIONSHIP_TO_STUDENT]** of
+**[STUDENT_FULL_LEGAL_NAME]** ...
+```
+
+Placeholder names should be descriptive — the LLM uses them to look up the right value in `partyData`. Placeholders the LLM can't confidently fill are left as literal `[NAME]` strings so the user notices and hand-fills before signing.
+
+### Applicability gating
+
+Some affidavits don't apply to every applicant — parental-travel-authorization is only required for minors, bank-sponsorship is unnecessary when the applicant is self-funded, etc. The fill prompt explicitly asks the LLM to detect "this doesn't apply" and emit a skip JSON instead of filled markdown:
+
+```json
+{ "skip": true, "reason": "Applicant is 21; parental authorization only required for minors." }
+```
+
+The `FilledAffidavit` doc is still persisted (with `status: "skipped"`) for audit, but no PDF is rendered. This is how a single set of templates serves both minor and adult applicants without code branches.
+
+### Running the affidavit step
+
+```bash
+npx ts-node --transpile-only src/scripts/fill-affidavits.ts \
+  --contextId <situationalContextId> \
+  [--affidavit <name>] \
+  [--beneficiaryKey <party-name>] \
+  [--outputDir <dir>]
+```
+
+Without `--affidavit`, every template in the process's `affidavits/` directory is processed in turn. Filled PDFs land in `output/affidavits/<processId>/<name>.pdf`.
+
+### Data shape
+
+```ts
+// src/models/FilledAffidavit.ts
+{
+  processId: string;
+  affidavitName: string;               // file basename without .md
+  userId: string;
+  situationalContextId: string;
+  beneficiaryKey?: string;
+  status: "filled" | "skipped";
+  filledMarkdown: string;              // empty when skipped
+  reason?: string;                     // present when skipped
+  createdAt: Date;
+}
+```
+
+`FilledAffidavit` is an additive new model — it has no impact on the form-filling pipeline. Adding affidavits to a process never affects how its forms are filled.
 
 ---
 
@@ -142,6 +231,17 @@ For forms shared across processes — say I-130 lives in both `aos` and `k1-foll
 - **Manually broaden one FormContext.** Update `applicableProcesses` to `["aos", "k1-followup"]` on a single FormContext document. The `fillFormMap` lookup matches either process. Use when re-running setup would just produce semantically-identical annotations.
 
 The LLM is told which candidate processes to choose from (passed via `candidateProcessIds`); it will only include processes that genuinely apply. You don't need to pre-curate this.
+
+### 4b. (If your process has affidavits) Drop the markdown templates
+
+If the process needs supporting documents (sponsorship letters, parental authorizations, school letters, etc.), create the `affidavits/` directory and add `.md` templates:
+
+```bash
+mkdir -p immi-server/assets/forms/k1-fiance/affidavits
+$EDITOR immi-server/assets/forms/k1-fiance/affidavits/bona-fide-relationship-statement.md
+```
+
+See the [Affidavits section](#affidavits-markdown-templates-rendered-to-pdf) above for template format and applicability gating. **No `setup-form` equivalent is needed for affidavits** — they're read directly from disk at fill time.
 
 ### 5. (No code changes needed) Run the pipeline
 
@@ -303,8 +403,13 @@ Everything is exported from [`src/lib/processes.ts`](../src/lib/processes.ts).
 | `getProcessReadmePath(p)` | `string` | Just the path. |
 | `getProcessDir(p)` | `string` | Absolute path to the process directory. |
 | `processExists(p)` | `boolean` | True iff the directory exists (not necessarily that it has forms). |
-| `summarizeProcesses()` | `ProcessSummary[]` | One entry per discovered process, each `{ processId, readme, formIds }`. What the LLM sees in Stage 1. |
+| `summarizeProcesses()` | `ProcessSummary[]` | One entry per discovered process, each `{ processId, readme, formIds, affidavitNames }`. What the LLM sees in Stage 1. |
 | `resolveProcessId(stored)` | `string` | Trims, validates, and falls back to `DEFAULT_PROCESS_ID` for empty/missing input. Always returns a usable string. |
+| `hasAffidavits(p)` | `boolean` | True iff `assets/forms/<p>/affidavits/` exists. |
+| `listAffidavits(p)` | `string[]` | Affidavit identifiers (basename minus `.md`) under the process. Sorted. |
+| `getAffidavitsDir(p)` | `string` | Absolute path to the `affidavits/` directory. |
+| `getAffidavitPath(p, name)` | `string` | Absolute path to a specific affidavit template. |
+| `readAffidavitTemplate(p, name)` | `string` | Reads the markdown template into a string. |
 | `DEFAULT_PROCESS_ID` | `"aos"` | Legacy fallback only. Don't use it as a primary identifier in new code. |
 
 `listProcesses()` reads the filesystem on every call. That's fine — directory listings are fast and we want zero stale state when assets change.
@@ -355,6 +460,35 @@ npx ts-node --transpile-only src/scripts/validateRefactor.ts noise \
 ```
 
 This captures twice and diffs the two runs against each other. Use the resulting percentage as the "noise floor" — any later refactor should produce a diff that stays at or below this floor on the same context.
+
+---
+
+## Operational gotchas learned the hard way
+
+These are not pitfalls in your assets — they're papercuts in the tooling around them. Worth knowing before you start.
+
+- **Always `cd immi-server/` before running scripts.** All `ts-node` / `setup-form.ts` / `fill-affidavits.ts` invocations assume the working directory is `immi-server/`, not the repo root. Running from the repo root fails with `Cannot find module './foo.ts'` because ts-node resolves relative to cwd.
+
+- **Use `--transpile-only` for ad-hoc ts-node runs.** Some files (`src/models/AppError.ts`) rely on global Express `Request.auth` augmentation that only loads when `requireAuth.ts` is in the import graph. CLI scripts that don't import the router-side stack will fail typecheck. `npx ts-node --transpile-only src/scripts/foo.ts` skips the project-wide typecheck and runs cleanly; rely on `npx tsc --noEmit` separately for full type validation.
+
+- **`manualLoad.ts` only passes through fields it knows about.** When you add a new field to `SituationalContext` / `FormContext` / `FilledFormMap` (or load a fixture that depends on it), check that the corresponding `loadX` function in `src/services/manualLoad.ts` explicitly forwards it. Otherwise the fixture upserts a record with the new field silently stripped, and downstream stages fall back to defaults.
+
+- **Fixture upserts replace by `userId`, not `_id`.** Re-running `manualLoad situational-context foo.json` overwrites the existing doc for that user instead of creating a new one. Pick a distinctive `userId` (e.g. `user-italy-demo`) per fixture so demos don't trample each other.
+
+- **Affidavit applicability gating relies on `partyData` quality.** The skip JSON comes from the LLM reasoning about the situation — if the fixture has no DOB for the applicant, parental-travel-authorization won't be detected as skippable for an adult. Make sure `partyData` includes the facts the gate would need (DOB, sponsor presence, funding source, etc.).
+
+- **`scope` is decided at FormContext-build time, not at fill time.** If `buildFormContext` mis-classifies a form's scope, Stage 1 will keep emitting wrong `requiredForms` entries (per-beneficiary vs. household). The fix is to re-run `setup-form.ts` for that form, or hand-edit `formMetadata.scope` on the FormContext document. The pipeline never re-asks.
+
+---
+
+## Real-world expectations (from the `italy-student-visa` validation run)
+
+Calibration data from adding the Italian student visa process end-to-end:
+
+- **`setup-form` time.** `buildFormMap` is instant (filesystem extraction). `buildFormContext` is one Opus call with the full PDF attached — ~30s–3min depending on form size. The Italian D visa (43 fields, 367 KB PDF) took ~2 minutes.
+- **First-run fill rates with a realistic fixture.** Italian D visa: 41/43 fields (the 2 blanks were "no value yet" cases like Codice Fiscale, correctly flagged in the skip audit log). Affidavits: 4/5 filled, 1 correctly skipped by the applicability gate.
+- **Italian-style conventions get applied automatically.** The fill prompt picked up DD/MM/YYYY date formatting and "N/A" vs blank consulate conventions from the FormContext's field-level notes alone — no process-specific prompt was needed. This is evidence the universal prompts hold up across very different form styles.
+- **One Opus call per affidavit.** Five affidavits ≈ 5 calls. The applicability gate cost is the same as a fill (the LLM has to read the situation to decide), so a "skip" still bills tokens.
 
 ---
 

@@ -71,10 +71,47 @@ export function listFormsInProcess(processId: string): string[] {
     .sort();
 }
 
+// ─── Affidavits ─────────────────────────────────────────────────────────────
+//
+// Affidavits are markdown templates with bracketed placeholders (e.g.
+// `[STUDENT_FULL_LEGAL_NAME]`). They live under
+// `assets/forms/<processId>/affidavits/<name>.md` and a process opts into
+// them simply by creating the directory + dropping templates in. Code that
+// consumes them gates on directory presence, not on processId.
+
+export function getAffidavitsDir(processId: string): string {
+  return path.join(getProcessDir(processId), "affidavits");
+}
+
+export function hasAffidavits(processId: string): boolean {
+  return isDirectory(getAffidavitsDir(processId));
+}
+
+export function listAffidavits(processId: string): string[] {
+  const dir = getAffidavitsDir(processId);
+  if (!isDirectory(dir)) return [];
+  return fs
+    .readdirSync(dir)
+    .filter((name) => !name.startsWith("."))
+    .filter((name) => name.toLowerCase().endsWith(".md"))
+    .filter((name) => isFile(path.join(dir, name)))
+    .map((name) => name.replace(/\.md$/i, ""))
+    .sort();
+}
+
+export function getAffidavitPath(processId: string, affidavitName: string): string {
+  return path.join(getAffidavitsDir(processId), `${affidavitName}.md`);
+}
+
+export function readAffidavitTemplate(processId: string, affidavitName: string): string {
+  return fs.readFileSync(getAffidavitPath(processId, affidavitName), "utf-8");
+}
+
 export interface ProcessSummary {
   processId: string;
   readme: string | null;
   formIds: string[];
+  affidavitNames: string[];
 }
 
 export function summarizeProcesses(): ProcessSummary[] {
@@ -82,6 +119,7 @@ export function summarizeProcesses(): ProcessSummary[] {
     processId,
     readme: getProcessReadme(processId),
     formIds: listFormsInProcess(processId),
+    affidavitNames: listAffidavits(processId),
   }));
 }
 
