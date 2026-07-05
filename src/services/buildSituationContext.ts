@@ -6,7 +6,7 @@ import { getAnthropicClient } from "../lib/anthropic";
 import { SituationalContext } from "../models/SituationalContext";
 import { logAnthropicResponse } from "../models/AnthropicLog";
 import { ClaudeContentError, ClaudeParseError } from "../models/AppError";
-import { summarizeProcesses, type ProcessSummary } from "../lib/processes";
+import { summarizeProcesses, getProcessLanguagesTesseractString, type ProcessSummary } from "../lib/processes";
 import type {
   BuildSituationContextInput,
   ISituationalContext,
@@ -21,6 +21,9 @@ import type {
 
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff"]);
 
+/** Tesseract default when no process-language file applies. */
+const DEFAULT_OCR_LANGS = "eng";
+
 export function getMimeCategory(file: UploadedFile): DocumentMimeCategory {
   const ext = path.extname(file.originalname).toLowerCase();
   if (ext === ".pdf" || file.mimetype === "application/pdf") return "pdf";
@@ -28,7 +31,11 @@ export function getMimeCategory(file: UploadedFile): DocumentMimeCategory {
   return "text";
 }
 
-export async function extractRawText(file: UploadedFile, category: DocumentMimeCategory): Promise<string> {
+export async function extractRawText(
+  file: UploadedFile,
+  category: DocumentMimeCategory,
+  ocrLangs?: string,
+): Promise<string> {
   switch (category) {
     case "pdf": {
       const buffer = fs.readFileSync(file.path);
@@ -36,7 +43,7 @@ export async function extractRawText(file: UploadedFile, category: DocumentMimeC
       return result.text.trim();
     }
     case "image": {
-      const { data } = await Tesseract.recognize(file.path, "eng+por", {
+      const { data } = await Tesseract.recognize(file.path, ocrLangs ?? DEFAULT_OCR_LANGS, {
         // logger: (m) => console.log(m), // uncomment for OCR progress
       });
       return data.text.trim();
@@ -65,6 +72,9 @@ function renderSupportedProcesses(processes: ProcessSummary[]): string {
     lines.push(`- processId: "${p.processId}"`);
     if (p.readme) {
       lines.push(`  description: ${p.readme.replace(/\n+/g, " ").trim()}`);
+    }
+    if (p.languages && p.languages.length > 0) {
+      lines.push(`  expected document languages: ${p.languages.join(", ")}`);
     }
     lines.push(`  available forms: ${p.formIds.length > 0 ? p.formIds.join(", ") : "(none configured)"}`);
     return lines.join("\n");
@@ -120,18 +130,10 @@ PART D — Structured Party Data
 Extract and organize every piece of information from the documents and UI answers into a structured JSON object.
 
 TRANSLATION RULES — strictly follow these:
-- ALL output must be in English. Translate every field label, value, and narrative string from any source language (Portuguese, Spanish, French, etc.) into English.
-- Document labels and field names from foreign documents must be translated accurately. For example:
-  - "Data de Nascimento" → "Date of Birth"
-  - "Naturalidade" → "Place of Birth"
-  - "Validade" → "Expiration Date"
-  - "Filiação" → "Parents / Parentage"
-  - "Data de Expedição" → "Date of Issue"
-  - "Prazo Indeterminado" → "Indefinite Term"
-  - "Certidão de Casamento" → "Marriage Certificate"
-  - "Comunhão Parcial de Bens" → "Partial Community Property"
+- ALL output must be in English. Translate every field label, value, and narrative string from any non-English source language into English. English is the only assumed language; treat all others equally.
+- Document labels and field names from foreign documents must be translated accurately to their standard English equivalent (e.g. a date-of-birth label in any language becomes "Date of Birth", a place-of-birth label becomes "Place of Birth"). Use the conventional English form regardless of source language.
 - Proper nouns (personal names, city names, employer names) should be preserved as written in the original document — do not translate names.
-- When a foreign document uses an abbreviation or code (e.g. CBO occupation codes, CNPJ tax IDs), include both the original code and a translated label.
+- When a foreign document uses an abbreviation or code (e.g. national tax IDs, occupation codes), include both the original code and a translated label.
 
 DATA SANITIZATION RULES — apply these when writing values:
 - Strip incidental metadata or document-context artifacts from values. Store only the practical, usable piece of information the field label implies.
@@ -144,7 +146,7 @@ DATA SANITIZATION RULES — apply these when writing values:
 - Do not include parenthetical clarifications, source caveats, or document-type context inside a value. Those belong in the key name or a separate "Notes" field if truly needed.
 
 STRUCTURE RULES:
-- The top-level keys of the JSON are specific parties or situational subjects (e.g. "John Alexander Doe", "Jane Mary Doe", "Marriage (Brazil, 2024)", "US Immigration Context").
+- The top-level keys of the JSON are specific parties or situational subjects (e.g. "John Alexander Doe", "Jane Mary Doe", "Marriage (2024)", "US Immigration Context").
   Keep subjects specific — avoid vague keys like "Documents" or "Information".
 - Within each subject, use key-value pairs where:
   - Precise, discrete facts (a name, date, number, address) are stored with full precision: { "Passport Number": "AB1234567" }
@@ -356,16 +358,16 @@ function buildExtractionSystemPrompt(): string {
 Be exhaustive. Capture every field, label, number, date, name, address, signature line, stamp, watermark, photo description, or annotation you can identify on this single document. Do not invent or guess data that is not visibly present.
 
 TRANSLATION RULES:
-- Output keys and values in English. Translate foreign labels accurately (e.g. "Data de Nascimento" → "Date of Birth"; "Naturalidade" → "Place of Birth").
+- Output keys and values in English. Translate foreign labels accurately to their standard English equivalent regardless of source language (English is the only assumed language; treat all others equally).
 - Preserve proper nouns exactly as written — never translate personal names, city names, employer names, or street names.
-- For abbreviations or codes (CBO occupation codes, CNPJ tax IDs, MRZ lines), include both the original code and its translated meaning.
+- For abbreviations or codes (national tax IDs, occupation codes, MRZ lines), include both the original code and its translated meaning.
 
 DATA SANITIZATION RULES:
 - Normalize dates to ISO 8601 (YYYY-MM-DD) when unambiguous.
 - Strip incidental document-context artifacts. Examples:
   - "Sarasota, FL USA (Open To Relocation)" → "Sarasota, FL, USA"
-  - "R$ 1.948,17/month" → "R$ 1,948.17 / month"
-  - "DOE<<JANE<MARY" (MRZ) → "Jane Mary Doe"
+  - "P<USADOE<<JANE<MARY<..." (MRZ) → "Jane Mary Doe"
+  - "EUR 1.948,17/month" → "EUR 1,948.17 / month"
 - Always decompose addresses into separate keys: Street Number, Street Name, Apt/Unit, City, State/Province, Zip/Postal Code, Country.
 
 BIOGRAPHIC ATTRIBUTES — extract when visible on the document:
@@ -374,7 +376,7 @@ Height, Weight, Eye Color, Hair Color, Race/Ethnicity, Sex, Complexion/Skin Tone
 Return a single valid JSON object with this shape — no markdown fences, no prose outside the JSON:
 
 {
-  "documentType": "<short label, e.g. \\"US Passport\\", \\"Brazilian Marriage Certificate\\", \\"I-797 Receipt Notice\\", \\"Driver's License\\", \\"Tax Return\\">",
+  "documentType": "<short label, e.g. \\"Passport\\", \\"Marriage Certificate\\", \\"I-797 Receipt Notice\\", \\"Driver's License\\", \\"Tax Return\\">",
   "primaryParty": "<full name of the person this document is primarily about, if applicable — else omit>",
   "issuingAuthority": "<who issued the document, if applicable — else omit>",
   "facts": {
@@ -560,7 +562,7 @@ PER-BENEFICIARY vs. ONCE-PER-HOUSEHOLD FORMS — important:
 Use your knowledge of how each specific form is filed to decide its scope — do not guess. When there is only one beneficiary, still produce object entries with beneficiaryKey set to that beneficiary's party name for per-beneficiary forms.
 
 PART D — Structured Party Data
-A top-level JSON object whose keys are specific parties or situational subjects (e.g. "John Alexander Doe", "Jane Mary Doe", "Marriage (Brazil, 2024)", "US Immigration Context"). Merge facts about the same person from multiple documents under a single party key. Values are key-value pairs of sanitized, English-translated facts. Capture EVERY fact present across the extracted documents — redundancy across subjects is acceptable; omissions are not. Decompose addresses into separate keys (Street Number, Street Name, Apt/Unit, City, State/Province, Zip/Postal Code, Country).
+A top-level JSON object whose keys are specific parties or situational subjects (e.g. "John Alexander Doe", "Jane Mary Doe", "Marriage (2024)", "US Immigration Context"). Merge facts about the same person from multiple documents under a single party key. Values are key-value pairs of sanitized, English-translated facts. Capture EVERY fact present across the extracted documents — redundancy across subjects is acceptable; omissions are not. Decompose addresses into separate keys (Street Number, Street Name, Apt/Unit, City, State/Province, Zip/Postal Code, Country).
 
 PHYSICAL & BIOGRAPHIC ATTRIBUTES — for every individual party, include the following when present in ANY extracted document:
 Height, Weight, Eye Color, Hair Color, Race/Ethnicity, Sex, Complexion/Skin Tone, Place of Birth, Country of Birth, Country of Citizenship/Nationality.
@@ -766,9 +768,20 @@ export async function buildSituationContext(
   input: BuildSituationContextInput,
   existingContextId?: string
 ): Promise<ISituationalContext> {
-  const { userId, uiAnswers, uploadedFiles } = input;
+  const { userId, uiAnswers, uploadedFiles, processIdHint } = input;
   const mode = resolveExtractionMode();
-  console.log(`[buildSituationContext] EXTRACTION_MODE=${mode} | ${uploadedFiles.length} document(s)`);
+  // OCR language preference: if the caller hinted a processId AND that
+  // process ships a languages.txt, bias Tesseract accordingly. Otherwise
+  // fall back to the universal default ("eng"). English is the only
+  // language assumed without explicit input — anything else is opt-in via
+  // languages.txt or a manual override.
+  const ocrLangs = processIdHint
+    ? getProcessLanguagesTesseractString(processIdHint) ?? undefined
+    : undefined;
+  console.log(
+    `[buildSituationContext] EXTRACTION_MODE=${mode} | ${uploadedFiles.length} document(s)` +
+    (ocrLangs ? ` | OCR langs="${ocrLangs}" (from processIdHint="${processIdHint}")` : "")
+  );
 
   // 1. Categorise and pre-process each uploaded file (shared between modes)
   const categories = uploadedFiles.map(getMimeCategory);
@@ -777,7 +790,7 @@ export async function buildSituationContext(
   for (let i = 0; i < uploadedFiles.length; i++) {
     const file = uploadedFiles[i];
     const category = categories[i];
-    const rawText = await extractRawText(file, category);
+    const rawText = await extractRawText(file, category, ocrLangs);
     parsedDocuments.push({
       originalName: file.originalname,
       mimeCategory: category,

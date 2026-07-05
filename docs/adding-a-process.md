@@ -179,6 +179,62 @@ Without `--affidavit`, every template in the process's `affidavits/` directory i
 
 ---
 
+## Languages (optional `languages.txt`)
+
+**English is the default and only assumed language.** Without a process-level opt-in (or a per-request override), the pipeline treats every uploaded document as English. There is no implicit second language — any non-English bias must be declared explicitly via the mechanism below.
+
+A process MAY ship a `languages.txt` at its root that lists the Tesseract OCR language codes the user's documents are expected to be in. When present, the pipeline does two things:
+
+1. **OCR uses that language string.** When `buildSituationContext` is called with a `processIdHint`, Tesseract is invoked with the matching process's language list (e.g. `eng+ita+spa`) instead of the default `eng`.
+2. **Fill prompts include a light hint.** `fillFormMap` and `fillAffidavit` system prompts get one extra sentence: *"Documents in this filing are expected to be in: eng, ita, spa. Preserve names and proper nouns from the source language…"* — this tells Claude which language codes to expect when reading party data.
+
+When the file is absent (the AoS case), neither behavior triggers — OCR falls back to its universal default and the fill prompts skip the language hint. This is intentional for processes where the user could plausibly upload documents in any language and a per-document detection step matters more than a process-wide bias.
+
+### Layout
+
+```
+assets/forms/<processId>/languages.txt
+```
+
+### Format
+
+One Tesseract code per line. Comments with `#` and blank lines are ignored. Order doesn't matter for OCR but the first entry is shown first in the prompt — put the dominant language first.
+
+```text
+# Tesseract codes — https://tesseract-ocr.github.io/tessdoc/Data-Files-in-different-versions.html
+eng
+ita
+spa
+```
+
+Codes are Tesseract's 3-letter ISO 639-2 form (`eng`, `ita`, `spa`, `por`, `fra`, `deu`, …) — *not* the 2-letter ISO 639-1 form. If you need a code you don't have installed locally, `tesseract.js` will fetch the trained data on first use from <https://tessdata.projectnaptha.com/>.
+
+### The OCR chicken-and-egg
+
+OCR happens *before* the Stage 1 LLM determines the final `processId`. To make the language file useful at OCR time, the caller (frontend or CLI) needs to supply `processIdHint` on the request — typically derived from a "what are you applying for?" step the user filled out before uploading documents.
+
+If no hint is supplied, OCR uses the default `eng` regardless of which process Stage 1 ultimately picks. The `languages.txt` still kicks in downstream (fillFormMap, fillAffidavit) because by then `processId` is known and stored on the SituationalContext.
+
+**English is the default for a reason.** It's the lowest-assumption baseline — Tesseract's English data ships with the package, and English is the only language the system assumes without explicit input from the user or the process. Any other language is opt-in via `languages.txt` (process-wide bias) or, for one-off cases, a manual hint at intake time. Do not treat any specific second language as a "natural" default — that bias compounds across processes and hides real intake-quality problems.
+
+If your process needs language-correct OCR and your frontend doesn't surface a process-picker step, three options:
+
+1. Add the picker step (best long-term).
+2. Default to a broader Tesseract string that covers the languages your users typically upload.
+3. Add a two-pass OCR strategy (out of scope for this guide; see the README's notes on `osd.traineddata` + script-specific Latin/Cyrillic/etc. training data).
+
+### Helper API
+
+| Function | Returns | Notes |
+| --- | --- | --- |
+| `hasProcessLanguages(p)` | `boolean` | True iff `assets/forms/<p>/languages.txt` exists. |
+| `listProcessLanguages(p)` | `string[] \| null` | Parsed codes (one per line), or `null` when the file is absent. `null` is the "no preference" signal. |
+| `getProcessLanguagesTesseractString(p)` | `string \| null` | The `"eng+ita+spa"` form, ready to pass to `Tesseract.recognize`. `null` when the file is absent. |
+
+`null` (not `[]`) is the explicit "no preference" sentinel. Don't conflate them — `[]` would mean "the user opted in but left it empty," which is treated the same as `null` today but might diverge later (e.g. error if empty after opt-in).
+
+---
+
 ## Step-by-step: add a new process
 
 The example below adds `k1-fiance`. Substitute your own identifier and forms.
@@ -232,6 +288,20 @@ For forms shared across processes — say I-130 lives in both `aos` and `k1-foll
 
 The LLM is told which candidate processes to choose from (passed via `candidateProcessIds`); it will only include processes that genuinely apply. You don't need to pre-curate this.
 
+### 4a. (Optional) Add a `languages.txt`
+
+If you know the language(s) the user's source documents will be in, drop a `languages.txt` at the process root listing Tesseract codes (one per line, `#` comments ok):
+
+```bash
+cat > immi-server/assets/forms/k1-fiance/languages.txt <<'EOF'
+# Expected source-document languages.
+eng
+spa
+EOF
+```
+
+See the [Languages section](#languages-optional-languagestxt) for the OCR chicken-and-egg and how `processIdHint` makes this useful at OCR time. Skip this step if your process accepts documents in arbitrary languages (e.g. AoS).
+
 ### 4b. (If your process has affidavits) Drop the markdown templates
 
 If the process needs supporting documents (sponsorship letters, parental authorizations, school letters, etc.), create the `affidavits/` directory and add `.md` templates:
@@ -271,7 +341,7 @@ The cheapest end-to-end check is to ask the Stage 1 prompt for a description tha
 
 ```bash
 PRINT_PROMPT=1 npx ts-node --transpile-only src/services/buildSituationContext.ts \
-  --situation "I'm a US citizen petitioning my fiancée from Brazil" \
+  --situation "I'm a US citizen petitioning a foreign fiancé to join me in the US" \
   --process "K-1 fiancé visa"
 ```
 
@@ -403,13 +473,16 @@ Everything is exported from [`src/lib/processes.ts`](../src/lib/processes.ts).
 | `getProcessReadmePath(p)` | `string` | Just the path. |
 | `getProcessDir(p)` | `string` | Absolute path to the process directory. |
 | `processExists(p)` | `boolean` | True iff the directory exists (not necessarily that it has forms). |
-| `summarizeProcesses()` | `ProcessSummary[]` | One entry per discovered process, each `{ processId, readme, formIds, affidavitNames }`. What the LLM sees in Stage 1. |
+| `summarizeProcesses()` | `ProcessSummary[]` | One entry per discovered process, each `{ processId, readme, formIds, affidavitNames, languages }`. What the LLM sees in Stage 1. |
 | `resolveProcessId(stored)` | `string` | Trims, validates, and falls back to `DEFAULT_PROCESS_ID` for empty/missing input. Always returns a usable string. |
 | `hasAffidavits(p)` | `boolean` | True iff `assets/forms/<p>/affidavits/` exists. |
 | `listAffidavits(p)` | `string[]` | Affidavit identifiers (basename minus `.md`) under the process. Sorted. |
 | `getAffidavitsDir(p)` | `string` | Absolute path to the `affidavits/` directory. |
 | `getAffidavitPath(p, name)` | `string` | Absolute path to a specific affidavit template. |
 | `readAffidavitTemplate(p, name)` | `string` | Reads the markdown template into a string. |
+| `hasProcessLanguages(p)` | `boolean` | True iff `assets/forms/<p>/languages.txt` exists. |
+| `listProcessLanguages(p)` | `string[] \| null` | Parsed Tesseract codes from `languages.txt`. `null` when the file is absent. |
+| `getProcessLanguagesTesseractString(p)` | `string \| null` | Tesseract-formatted (`"eng+ita+spa"`). `null` when absent. |
 | `DEFAULT_PROCESS_ID` | `"aos"` | Legacy fallback only. Don't use it as a primary identifier in new code. |
 
 `listProcesses()` reads the filesystem on every call. That's fine — directory listings are fast and we want zero stale state when assets change.

@@ -107,11 +107,61 @@ export function readAffidavitTemplate(processId: string, affidavitName: string):
   return fs.readFileSync(getAffidavitPath(processId, affidavitName), "utf-8");
 }
 
+// ─── Language bias (optional) ────────────────────────────────────────────────
+//
+// A process MAY ship a `languages.txt` listing Tesseract language codes the
+// user is expected to provide documents in (e.g. "eng", "ita", "spa"). When
+// present, OCR uses those languages and the fill prompts include a light hint
+// about expected document languages. When absent, the pipeline falls back to
+// its default behavior — appropriate for processes (like AoS) where the user
+// may upload anything.
+
+export function getProcessLanguagesPath(processId: string): string {
+  return path.join(getProcessDir(processId), "languages.txt");
+}
+
+export function hasProcessLanguages(processId: string): boolean {
+  return isFile(getProcessLanguagesPath(processId));
+}
+
+/**
+ * Returns the parsed Tesseract language codes for a process, or `null` when
+ * the process has no `languages.txt`. Format: one code per line, blank lines
+ * and `#` comments ignored, whitespace trimmed.
+ */
+export function listProcessLanguages(processId: string): string[] | null {
+  const p = getProcessLanguagesPath(processId);
+  if (!isFile(p)) return null;
+  try {
+    const raw = fs.readFileSync(p, "utf-8");
+    const codes = raw
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !line.startsWith("#"));
+    return codes;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Returns the Tesseract-formatted language string for a process
+ * (e.g. "eng+ita+spa"), or `null` when the process has no `languages.txt`.
+ * Pass this directly to `Tesseract.recognize`.
+ */
+export function getProcessLanguagesTesseractString(processId: string): string | null {
+  const codes = listProcessLanguages(processId);
+  if (!codes || codes.length === 0) return null;
+  return codes.join("+");
+}
+
 export interface ProcessSummary {
   processId: string;
   readme: string | null;
   formIds: string[];
   affidavitNames: string[];
+  /** Tesseract language codes the process expects. `null` when not opted in. */
+  languages: string[] | null;
 }
 
 export function summarizeProcesses(): ProcessSummary[] {
@@ -120,6 +170,7 @@ export function summarizeProcesses(): ProcessSummary[] {
     readme: getProcessReadme(processId),
     formIds: listFormsInProcess(processId),
     affidavitNames: listAffidavits(processId),
+    languages: listProcessLanguages(processId),
   }));
 }
 

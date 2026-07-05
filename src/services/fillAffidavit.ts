@@ -11,6 +11,7 @@ import {
   readAffidavitTemplate,
   hasAffidavits,
   listAffidavits,
+  listProcessLanguages,
 } from "../lib/processes";
 import { markdownToPdf } from "../lib/markdownToPdf";
 import type { ISituationalContext } from "../types";
@@ -19,12 +20,17 @@ import type { ISituationalContext } from "../types";
 
 function buildSystemPrompt(processId: string): string {
   const processReadme = getProcessReadme(processId);
+  const languages = listProcessLanguages(processId);
+  const langLine =
+    languages && languages.length > 0
+      ? `\n\nDocuments in this filing are expected to be in: ${languages.join(", ")}. Preserve names and proper nouns from the source language unless the affidavit clearly calls for an English-language rendering.`
+      : "";
   return `You are an expert paralegal filling out a supporting-document template (an "affidavit") that accompanies a government application package.
 
 You will be given:
 1. A markdown TEMPLATE with bracketed placeholders (e.g. [STUDENT_FULL_LEGAL_NAME], [DATE], [SPONSOR_CITY]). Placeholders are descriptive — the bracket text names what should go there.
 2. A SITUATIONAL CONTEXT describing the parties, documents, and circumstances of the user's situation as a structured JSON object.
-3. The PROCESS this affidavit is filed under.${processReadme ? `\n\nProcess context:\n${processReadme.replace(/\n+/g, " ").trim()}` : ""}
+3. The PROCESS this affidavit is filed under.${processReadme ? `\n\nProcess context:\n${processReadme.replace(/\n+/g, " ").trim()}` : ""}${langLine}
 
 Your job:
 - For every [PLACEHOLDER] in the template, substitute the appropriate value from the situational context.

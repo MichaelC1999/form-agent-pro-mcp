@@ -5,7 +5,7 @@ import { SituationalContext } from "../models/SituationalContext";
 import { FilledFormMap } from "../models/FilledFormMap";
 import { logAnthropicResponse } from "../models/AnthropicLog";
 import { ClaudeContentError, ClaudeParseError } from "../models/AppError";
-import { resolveProcessId, getProcessReadme } from "../lib/processes";
+import { resolveProcessId, getProcessReadme, listProcessLanguages } from "../lib/processes";
 import type {
   FillFormMapInput,
   IFilledFormMap,
@@ -52,7 +52,7 @@ const ASSUMPTION_INSTRUCTIONS: Record<AssumptionLevel, string> = {
 function buildSystemPrompt(
   assumptionLevel: AssumptionLevel,
   beneficiaryKey?: string,
-  processContext?: { processId: string; readme: string | null }
+  processContext?: { processId: string; readme: string | null; languages: string[] | null }
 ): string {
   const beneficiaryScope = beneficiaryKey
     ? `
@@ -78,6 +78,10 @@ PROCESS CONTEXT
 
 This form is being filled as part of the "${processContext.processId}" process.${
         processContext.readme ? `\n${processContext.readme.replace(/\n+/g, " ").trim()}` : ""
+      }${
+        processContext.languages && processContext.languages.length > 0
+          ? `\nDocuments in this filing are expected to be in: ${processContext.languages.join(", ")}. Names and proper nouns from the source documents may appear in any of these languages — preserve original spelling unless a field's notes explicitly require translation.`
+          : ""
       }`
     : "";
 
@@ -117,7 +121,7 @@ FORMATTING RULES
 - Checkboxes: Use exactly "1" for checked/yes and "0" for unchecked/no. Determine the correct value from the field's description and the applicant's situation.
 - Numbers and IDs: Reproduce exactly as they appear in the source — preserve leading zeros, dashes, and spacing.
 - "N/A" vs blank: Use "N/A" only when the field's notes explicitly say to write N/A for inapplicable entries. Otherwise use "".
-- Country names: Use the full English country name (e.g. "Brazil", not "BRA").
+- Country names: Use the full English country name (e.g. "Germany", not "DEU"; "Philippines", not "PHL").
 - State abbreviations: Use the standard two-letter postal abbreviation (e.g. "FL", "CA").
 - All-caps fields: If the field's notes specify all caps, convert the value to uppercase.
 
@@ -515,6 +519,7 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
   const systemPrompt = buildSystemPrompt(assumptionLevel, beneficiaryKey, {
     processId,
     readme: getProcessReadme(processId),
+    languages: listProcessLanguages(processId),
   });
   const userMessage = buildUserMessage({
     formContext: compressedFormContext,
@@ -659,6 +664,7 @@ export async function getFillFormMapPromptText(
     systemPrompt: buildSystemPrompt(assumptionLevel, beneficiaryKey, {
       processId: resolvedProcessId,
       readme: getProcessReadme(resolvedProcessId),
+      languages: listProcessLanguages(resolvedProcessId),
     }),
     userMessage: buildUserMessage({
       formContext: compressedFormContext,

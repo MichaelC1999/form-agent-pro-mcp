@@ -76,7 +76,7 @@ export interface ParsedDocument {
 /**
  * Open-ended party/subject map returned by the Anthropic call.
  * Top-level keys are party names or situational subjects
- * (e.g. "Jane Mary Doe", "Marriage (Brazil, 2024)").
+ * (e.g. an applicant's full name, "Marriage (2024)", "US Immigration Context").
  * Values are free-form key→value bags of extracted facts.
  * Mirrors the shape of context/party-situational.json.
  */
@@ -273,6 +273,14 @@ export interface BuildSituationContextInput {
   userId: string;
   uiAnswers: UIAnswers;
   uploadedFiles: UploadedFile[];
+  /**
+   * Optional pre-flight hint at which process this submission belongs to —
+   * typically supplied by the frontend's "what are you applying for?" step.
+   * The Stage 1 LLM is still the authority on the final processId; the hint
+   * is used only to pick OCR languages from the matching process's
+   * `languages.txt` (when present). Without a hint, OCR uses its default.
+   */
+  processIdHint?: string;
 }
 
 export interface BuildFormContextInput {

@@ -117,6 +117,7 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
       additionalNotes,
       formIds: formIdsRaw,
       assumptionLevel: assumptionLevelRaw,
+      processIdHint,
     } = req.body as Record<string, string | undefined>;
 
     // ── formIds — optional; defaults to requiredForms on the SituationalContext ─
@@ -172,6 +173,7 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
           originalname: f.originalname,
           mimetype: f.mimetype,
         })),
+        ...(processIdHint && processIdHint.trim() !== "" ? { processIdHint: processIdHint.trim() } : {}),
       });
 
       situationalContextId = String((situationalContextDoc as unknown as Record<string, unknown>)._id);

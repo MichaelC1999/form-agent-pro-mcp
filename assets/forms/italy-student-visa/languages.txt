@@ -1,0 +1,9 @@
+# Tesseract language codes the user is expected to provide documents in.
+# https://tesseract-ocr.github.io/tessdoc/Data-Files-in-different-versions.html
+#
+# OCR uses these when buildSituationContext receives a processIdHint matching
+# this process. The fill prompts also receive a light hint listing these
+# languages so Claude knows what to expect when reading party data.
+eng
+ita
+spa

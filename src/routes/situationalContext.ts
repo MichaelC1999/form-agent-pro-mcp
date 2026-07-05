@@ -64,6 +64,7 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
       stripeSessionId,
       beneficiaryCount: beneficiaryCountRaw,
       beneficiaryNames: beneficiaryNamesRaw,
+      processIdHint,
     } = req.body as {
       situationDescription?: string;
       processDescription?: string;
@@ -71,6 +72,7 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
       stripeSessionId?: string;
       beneficiaryCount?: string;
       beneficiaryNames?: string;
+      processIdHint?: string;
     };
 
     // Parse multi-beneficiary signal (optional — single-beneficiary submissions
@@ -155,6 +157,9 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
               originalname: f.originalname,
               mimetype: f.mimetype,
             })),
+            ...(processIdHint && processIdHint.trim() !== ""
+              ? { processIdHint: processIdHint.trim() }
+              : {}),
           },
           stub._id.toString()
         );
