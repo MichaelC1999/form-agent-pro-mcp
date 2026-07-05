@@ -95,9 +95,9 @@ Values are sanitized to reflect only the practical, usable piece of information 
 
 | Raw value | Stored as |
 |---|---|
-| `"Sarasota, FL USA (Open To Relocation)"` | `"Sarasota, FL, USA"` |
-| `"R$ 1.948,17/month"` | `"R$ 1,948.17 / month"` |
-| `"19 MAI/MAY 1999"` | `"1999-05-19"` |
+| `"Springfield, IL USA (Open To Relocation)"` | `"Springfield, IL, USA"` |
+| `"R$ 1.000,00/month"` | `"R$ 1,000.00 / month"` |
+| `"01 JAN/JAN 1990"` | `"1990-01-01"` |
 | `"DOE<<JANE<MARY"` (MRZ) | `"Jane Mary Doe"` |
 
 Dates are normalized to ISO 8601 (`YYYY-MM-DD`) wherever the original is unambiguous. Parenthetical clarifications do not belong inside a value — they belong in the key name or a separate `"Notes"` field if truly needed.

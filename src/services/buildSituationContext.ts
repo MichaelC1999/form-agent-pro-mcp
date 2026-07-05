@@ -138,9 +138,9 @@ TRANSLATION RULES — strictly follow these:
 DATA SANITIZATION RULES — apply these when writing values:
 - Strip incidental metadata or document-context artifacts from values. Store only the practical, usable piece of information the field label implies.
   Examples:
-  - "Sarasota, FL USA (Open To Relocation)" → store as "Sarasota, FL, USA" under "Current Location"
-  - "R$ 1.948,17/month" → store as "R$ 1,948.17 / month"
-  - "19 MAI/MAY 1999" → store as "1999-05-19"
+  - "Springfield, IL USA (Open To Relocation)" → store as "Springfield, IL, USA" under "Current Location"
+  - "R$ 1.000,00/month" → store as "R$ 1,000.00 / month"
+  - "01 JAN/JAN 1990" → store as "1990-01-01"
   - "DOE<<JANE<MARY" (MRZ format) → store as "Jane Mary Doe" under "Name (MRZ)"
 - Normalize dates to ISO 8601 (YYYY-MM-DD) wherever the original value is unambiguous.
 - Do not include parenthetical clarifications, source caveats, or document-type context inside a value. Those belong in the key name or a separate "Notes" field if truly needed.
@@ -365,9 +365,9 @@ TRANSLATION RULES:
 DATA SANITIZATION RULES:
 - Normalize dates to ISO 8601 (YYYY-MM-DD) when unambiguous.
 - Strip incidental document-context artifacts. Examples:
-  - "Sarasota, FL USA (Open To Relocation)" → "Sarasota, FL, USA"
+  - "Springfield, IL USA (Open To Relocation)" → "Springfield, IL, USA"
   - "P<USADOE<<JANE<MARY<..." (MRZ) → "Jane Mary Doe"
-  - "EUR 1.948,17/month" → "EUR 1,948.17 / month"
+  - "EUR 1.000,00/month" → "EUR 1,000.00 / month"
 - Always decompose addresses into separate keys: Street Number, Street Name, Apt/Unit, City, State/Province, Zip/Postal Code, Country.
 
 BIOGRAPHIC ATTRIBUTES — extract when visible on the document:
