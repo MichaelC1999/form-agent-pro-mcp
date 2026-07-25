@@ -368,9 +368,12 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
     `${contextFileContents.length} supplemental file(s). May take several minutes...`
   );
 
-  const response = await client.messages.create({
+  // Streaming is required here — max_tokens (128000) exceeds the SDK's
+  // non-streaming timeout threshold (~21333 tokens), and a non-streaming
+  // call above that throws AnthropicError before any request is sent.
+  const stream = client.messages.stream({
     model: "claude-opus-4-7",
-    max_tokens: 32000,
+    max_tokens: 128000,
     system: systemPrompt,
     messages: [
       {
@@ -393,6 +396,7 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
       },
     ],
   });
+  const response = await stream.finalMessage();
 
   // 9. Log full response payload to MongoDB (non-blocking)
   logAnthropicResponse(response, { service: "buildFormContext", formId });

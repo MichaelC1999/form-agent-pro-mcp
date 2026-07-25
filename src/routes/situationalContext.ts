@@ -94,12 +94,15 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
       }
     }
 
-    const paid = await assertSessionPaid(stripeSessionId, userId);
-    if (!paid.ok) {
-      console.log(`[POST /api/situation/build] ${authTag(req)} | ${paid.status} — ${paid.error}`);
-      res.status(paid.status).json({ error: paid.error });
-      return;
-    }
+    // DEMO: Stripe payment gate disabled to allow full workflow demo without checkout.
+    // TODO: restore by uncommenting the block below.
+    // const paid = await assertSessionPaid(stripeSessionId, userId);
+    // if (!paid.ok) {
+    //   console.log(`[POST /api/situation/build] ${authTag(req)} | ${paid.status} — ${paid.error}`);
+    //   res.status(paid.status).json({ error: paid.error });
+    //   return;
+    // }
+    void stripeSessionId;
 
     if (!situationDescription) {
       console.log(`[POST /api/situation/build] ${authTag(req)} | 400 — missing situationDescription`);

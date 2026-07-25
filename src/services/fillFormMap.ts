@@ -36,8 +36,8 @@ const ASSUMPTION_INSTRUCTIONS: Record<AssumptionLevel, string> = {
 - Avoid pure speculation. If multiple plausible values exist, choose the one that most directly satisfies the field's description and notes.`,
 
   liberal: `ASSUMPTION LEVEL: LIBERAL
-- Populate as many fields as possible, using explicit data, reasonable inference, and contextually supported derivation.
-- Derive values when the source material strongly implies them — e.g. "No middle name" for an empty middle-name slot, a state derived from a city, or an alien number inferred from a receipt notice.
+- Populate as many fields as possible, using data, reasonable inference, and contextually supported derivation.
+- Derive values when the source material implies them — e.g. "No middle name" for an empty middle-name slot, a state derived from a city, or an alien number inferred from a receipt notice.
 - Cross-reference multiple parties and sources when a single source is insufficient.
 - Only leave a field blank if absolutely no supporting information exists anywhere in the situational context.
 - Prioritize completeness. Note any derived or inferred values in the "skipped" array with a brief reason.`,
@@ -100,9 +100,9 @@ For every field ID present in the FORM CONTEXT, determine whether the situationa
 Your output is a JSON object whose keys are every single field ID listed in the FORM CONTEXT — no more, no less. Every field ID must appear as a key. There are no optional keys.
 
 RELEVANCY IS THE HIGHEST PRIORITY
-- Always ask: "Does the situational context actually contain something that answers this field?"
-- A field should only be filled if the data is relevant to BOTH the field's meaning AND this applicant's specific situation.
-- Fields that belong to a party not present in this situation must be left blank (e.g. a "Petitioner" section when only an applicant is filing).
+- Always ask: "Does the situational context contain something that answers this field?"
+- A field should be filled if the data is relevant to BOTH the field's meaning AND this applicant's specific situation.
+- Fields that belong to a party not present in this situation must be left blank
 - Do not invent, hallucinate, or guess data that is not represented anywhere in the situational context.
 
 FLEXIBILITY WITHIN RELEVANCY
@@ -457,6 +457,70 @@ function expandLLMResult(
   return { fields: expandedFields, skipped: expandedSkipped };
 }
 
+// ─── Structured output schema ─────────────────────────────────────────────────
+//
+// Constrains the response to exactly the two shapes the prompt describes —
+// the normal fill ({fields, skipped}) or the mandatory error path ({error}) —
+// via output_config.format. This removes the free-text-JSON failure mode
+// (markdown fences, truncated/malformed JSON, omitted field keys) entirely:
+// the API guarantees "fields" contains every short field key before the
+// response is returned. Built per-call from the same short keys used to
+// compress the prompt, so the schema and the field IDs never drift apart.
+
+function buildResponseSchema(shortFieldIds: string[]): Record<string, unknown> {
+  const fieldProperties: Record<string, unknown> = {};
+  for (const id of shortFieldIds) {
+    fieldProperties[id] = { type: "string" };
+  }
+
+  return {
+    anyOf: [
+      {
+        type: "object",
+        properties: {
+          fields: {
+            type: "object",
+            properties: fieldProperties,
+            required: shortFieldIds,
+            additionalProperties: false,
+          },
+          skipped: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                fieldId: { type: "string" },
+                reason: { type: "string" },
+              },
+              required: ["fieldId", "reason"],
+              additionalProperties: false,
+            },
+          },
+        },
+        required: ["fields", "skipped"],
+        additionalProperties: false,
+      },
+      {
+        type: "object",
+        properties: {
+          error: {
+            type: "object",
+            properties: {
+              code: { type: "string" },
+              message: { type: "string" },
+              details: { type: "string" },
+            },
+            required: ["code", "message"],
+            additionalProperties: false,
+          },
+        },
+        required: ["error"],
+        additionalProperties: false,
+      },
+    ],
+  };
+}
+
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormMap> {
@@ -527,16 +591,26 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
     beneficiaryKey,
   });
 
-  // 4. Anthropic call — claude-opus-4-5 for strong multi-document reasoning
+  // 4. Anthropic call — claude-opus-4-8 with adaptive thinking for the
+  //    cross-referential reasoning this task requires (hundreds of fields to
+  //    reconcile against one situational-context blob), structured outputs to
+  //    guarantee a schema-conformant response, and streaming since max_tokens
+  //    exceeds the ~16k non-streaming timeout-risk threshold.
   const client = getAnthropicClient();
+  const responseSchema = buildResponseSchema(shortFieldIds);
   console.log(
-    `[fillFormMap] Calling claude-opus-4-5 for "${formId}" — ` +
+    `[fillFormMap] Calling claude-opus-4-8 (adaptive thinking, effort: high) for "${formId}" — ` +
     `this may take a minute for large forms...`
   );
 
-  const response = await client.messages.create({
-    model: "claude-opus-4-7",
-    max_tokens: 32000,
+  const stream = client.messages.stream({
+    model: "claude-opus-4-8",
+    max_tokens: 128000,
+    thinking: { type: "adaptive", display: "summarized" },
+    output_config: {
+      effort: "high",
+      format: { type: "json_schema", schema: responseSchema },
+    },
     system: systemPrompt,
     messages: [
       {
@@ -545,6 +619,7 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
       },
     ],
   });
+  const response = await stream.finalMessage();
 
   // 5. Log full response payload to MongoDB (non-blocking)
   logAnthropicResponse(response, { service: "fillFormMap", formId, userId, situationalContextId });

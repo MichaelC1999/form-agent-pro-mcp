@@ -14,7 +14,7 @@
     "verify-smtp": "ts-node src/scripts/verifySmtp.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.36.3",
+    "@anthropic-ai/sdk": "^0.111.0",
     "@types/nodemailer": "^8.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

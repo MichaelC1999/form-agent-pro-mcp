@@ -21,8 +21,26 @@ import type {
 
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff"]);
 
-/** Tesseract default when no process-language file applies. */
-const DEFAULT_OCR_LANGS = "eng";
+/**
+ * Tesseract default when no process-language file applies.
+ *
+ * Covers the common Latin-script source languages we see on immigration
+ * material (US, Portuguese, Spanish, French, Italian, German). Processes that
+ * need a different mix opt in via `languages.txt` — e.g. italy-student-visa
+ * ships `eng+ita+spa`, and a future China process could ship `eng+chi_sim`.
+ *
+ * tesseract.js auto-downloads missing `<lang>.traineddata` from its CDN on
+ * first use (cached to the working directory thereafter — see the checked-in
+ * `eng.traineddata` / `por.traineddata` in the immi-server root). No manual
+ * pre-provisioning is required for the languages listed here; the first OCR
+ * call after deploy will pay a one-time fetch cost per new language.
+ *
+ * Non-Latin scripts (Chinese, Arabic, Cyrillic, Hindi, Thai, Japanese, etc.)
+ * are NOT in the default because they degrade Latin-script recognition when
+ * mixed in one Tesseract call. Add them via a per-process `languages.txt`
+ * when the process is known to receive those documents.
+ */
+const DEFAULT_OCR_LANGS = "eng+por+spa+fra+ita+deu";
 
 export function getMimeCategory(file: UploadedFile): DocumentMimeCategory {
   const ext = path.extname(file.originalname).toLowerCase();
@@ -650,9 +668,12 @@ async function synthesizeContext(
   const client = getAnthropicClient();
   const processes = summarizeProcesses();
 
-  const response = await client.messages.create({
+  // Streaming is required here — max_tokens (128000) exceeds the SDK's
+  // non-streaming timeout threshold (~21333 tokens), and a non-streaming
+  // call above that throws AnthropicError before any request is sent.
+  const stream = client.messages.stream({
     model: "claude-opus-4-7",
-    max_tokens: 32000,
+    max_tokens: 128000,
     system: buildSynthesisSystemPrompt(processes),
     messages: [
       {
@@ -661,6 +682,7 @@ async function synthesizeContext(
       },
     ],
   });
+  const response = await stream.finalMessage();
 
   logAnthropicResponse(response, {
     service: "buildSituationContext:synthesize",
@@ -835,9 +857,12 @@ export async function buildSituationContext(
 
     const processes = summarizeProcesses();
     const client = getAnthropicClient();
-    const response = await client.messages.create({
+    // Streaming is required here — max_tokens (128000) exceeds the SDK's
+    // non-streaming timeout threshold (~21333 tokens), and a non-streaming
+    // call above that throws AnthropicError before any request is sent.
+    const stream = client.messages.stream({
       model: "claude-opus-4-7",
-      max_tokens: 32000,
+      max_tokens: 128000,
       system: buildSystemPrompt(processes),
       messages: [
         {
@@ -851,6 +876,7 @@ export async function buildSituationContext(
         },
       ],
     });
+    const response = await stream.finalMessage();
 
     logAnthropicResponse(response, { service: "buildSituationContext", userId });
 
