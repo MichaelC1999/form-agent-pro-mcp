@@ -462,17 +462,17 @@ function expandLLMResult(
 // Constrains the response to exactly the two shapes the prompt describes —
 // the normal fill ({fields, skipped}) or the mandatory error path ({error}) —
 // via output_config.format. This removes the free-text-JSON failure mode
-// (markdown fences, truncated/malformed JSON, omitted field keys) entirely:
-// the API guarantees "fields" contains every short field key before the
-// response is returned. Built per-call from the same short keys used to
-// compress the prompt, so the schema and the field IDs never drift apart.
+// (markdown fences, truncated/malformed JSON) entirely.
+//
+// "fields" is left as a generic string-valued map rather than enumerating a
+// property + required entry per field: on large forms (700+ fields) that
+// per-field enumeration compiles into a constrained-decoding grammar too
+// large for the API ("The compiled grammar is too large" 400). The
+// every-key-present guarantee this used to buy is cheap to re-derive
+// downstream — parseLLMResponse already backfills any field the model
+// omits, so nothing relies on the schema enforcing it.
 
-function buildResponseSchema(shortFieldIds: string[]): Record<string, unknown> {
-  const fieldProperties: Record<string, unknown> = {};
-  for (const id of shortFieldIds) {
-    fieldProperties[id] = { type: "string" };
-  }
-
+function buildResponseSchema(): Record<string, unknown> {
   return {
     anyOf: [
       {
@@ -480,9 +480,7 @@ function buildResponseSchema(shortFieldIds: string[]): Record<string, unknown> {
         properties: {
           fields: {
             type: "object",
-            properties: fieldProperties,
-            required: shortFieldIds,
-            additionalProperties: false,
+            additionalProperties: { type: "string" },
           },
           skipped: {
             type: "array",
@@ -597,7 +595,7 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
   //    guarantee a schema-conformant response, and streaming since max_tokens
   //    exceeds the ~16k non-streaming timeout-risk threshold.
   const client = getAnthropicClient();
-  const responseSchema = buildResponseSchema(shortFieldIds);
+  const responseSchema = buildResponseSchema();
   console.log(
     `[fillFormMap] Calling claude-opus-4-8 (adaptive thinking, effort: high) for "${formId}" — ` +
     `this may take a minute for large forms...`
