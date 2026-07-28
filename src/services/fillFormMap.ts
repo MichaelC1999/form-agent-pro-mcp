@@ -97,7 +97,7 @@ CORE OBJECTIVE
 
 For every field ID present in the FORM CONTEXT, determine whether the situational context contains information that satisfies what that field is asking for. If it does, extract and format the value precisely. If it does not, the value must be an empty string ("").
 
-Your output is a JSON object whose keys are every single field ID listed in the FORM CONTEXT — no more, no less. Every field ID must appear as a key. There are no optional keys.
+Your output "fields" array must contain one entry for every single field ID listed in the FORM CONTEXT — no more, no less. Every field ID must appear exactly once. There are no optional entries.
 
 RELEVANCY IS THE HIGHEST PRIORITY
 - Always ask: "Does the situational context contain something that answers this field?"
@@ -132,9 +132,9 @@ OUTPUT FORMAT
 Return a single valid JSON object with this exact shape — no markdown fences, no text outside the JSON:
 
 {
-  "fields": {
-    "<fieldId>": "<value or empty string>"
-  },
+  "fields": [
+    { "fieldId": "<fieldId>", "value": "<value or empty string>" }
+  ],
   "skipped": [
     {
       "fieldId": "<fieldId>",
@@ -143,7 +143,7 @@ Return a single valid JSON object with this exact shape — no markdown fences, 
   ]
 }
 
-- "fields" must contain every field ID from the FORM CONTEXT — every single one, including those left blank.
+- "fields" must contain one entry for every field ID from the FORM CONTEXT — every single one, including those left blank.
 - "skipped" should include any field where you were uncertain, found conflicting data, or applied an inference that may need human review. This is an audit log, not a penalty.
 
 ─────────────────────────────────────────────────────────────────────────────
@@ -269,7 +269,7 @@ function buildUserMessage(params: {
     `  2. Determine whether the SITUATIONAL CONTEXT contains a relevant value.\n` +
     `  3. If yes — extract, format, and insert it. If no — set it to "".\n` +
     `  4. Record any uncertain or inferred fills in the "skipped" audit log.\n\n` +
-    `Your output "fields" object must contain every one of the ${formContext.fields.length} field IDs above — no additions, no omissions.\n\n` +
+    `Your output "fields" array must contain one entry for every one of the ${formContext.fields.length} field IDs above — no additions, no omissions.\n\n` +
     `Return the JSON object now.`
   );
 
@@ -323,7 +323,7 @@ interface LLMResponse {
 }
 
 interface LLMRawResponse {
-  fields?: Record<string, string>;
+  fields?: Array<{ fieldId: string; value: string }>;
   skipped?: Array<{ fieldId: string; reason: string }>;
   error?: { code?: string; message?: string; details?: string };
 }
@@ -354,19 +354,29 @@ function parseLLMResponse(raw: string, expectedFieldIds: string[]): LLMResponse 
     });
   }
 
-  if (!parsed.fields || typeof parsed.fields !== "object") {
+  if (!Array.isArray(parsed.fields)) {
     throw new ClaudeContentError({
       service: "fillFormMap",
       code: "missing_fields_object",
-      message: 'Claude response is missing the "fields" object and did not return an error.',
+      message: 'Claude response is missing the "fields" array and did not return an error.',
       rawResponse: cleaned.slice(0, 4000),
     });
+  }
+
+  // Fold the {fieldId, value} pairs into the Record<string,string> shape the
+  // rest of the service expects. Duplicate fieldIds (shouldn't happen) — last
+  // one wins.
+  const fields: Record<string, string> = {};
+  for (const entry of parsed.fields) {
+    if (entry && typeof entry.fieldId === "string") {
+      fields[entry.fieldId] = entry.value ?? "";
+    }
   }
 
   // Ensure every expected field is present in the output — fill blanks for any
   // the LLM omitted so the FieldMap shape is always complete.
   const expectedSet = new Set(expectedFieldIds);
-  const returnedSet = new Set(Object.keys(parsed.fields));
+  const returnedSet = new Set(Object.keys(fields));
 
   const missing = [...expectedSet].filter((id) => !returnedSet.has(id));
   if (missing.length > 0) {
@@ -376,13 +386,13 @@ function parseLLMResponse(raw: string, expectedFieldIds: string[]): LLMResponse 
       missing.length > 10 ? `...and ${missing.length - 10} more` : ""
     );
     for (const id of missing) {
-      parsed.fields[id] = "";
+      fields[id] = "";
     }
   }
 
   const skipped = Array.isArray(parsed.skipped) ? parsed.skipped : [];
 
-  return { fields: parsed.fields, skipped };
+  return { fields, skipped };
 }
 
 // ─── Key compression ──────────────────────────────────────────────────────────
@@ -464,12 +474,18 @@ function expandLLMResult(
 // via output_config.format. This removes the free-text-JSON failure mode
 // (markdown fences, truncated/malformed JSON) entirely.
 //
-// "fields" is left as a generic string-valued map rather than enumerating a
-// property + required entry per field: on large forms (700+ fields) that
-// per-field enumeration compiles into a constrained-decoding grammar too
-// large for the API ("The compiled grammar is too large" 400). The
-// every-key-present guarantee this used to buy is cheap to re-derive
-// downstream — parseLLMResponse already backfills any field the model
+// "fields" is an array of {fieldId, value} pairs rather than an object keyed
+// by field ID. output_config.format.schema requires every object to be
+// closed (additionalProperties: false — a literal false, not a schema), so
+// there is no way to express "an object with arbitrary keys" at all: an
+// object must always fully enumerate its properties. Enumerating one
+// property per field is what produced "The compiled grammar is too large"
+// on big forms (700+ fields) — the schema's size scaled with field count.
+// An array's `items` schema is defined once and stays constant-size
+// regardless of how many fields exist, while still satisfying the
+// closed-object requirement (a fixed 2-property {fieldId, value} shape).
+// The every-key-present guarantee this used to buy via `required` is cheap
+// to re-derive downstream — parseLLMResponse backfills any field the model
 // omits, so nothing relies on the schema enforcing it.
 
 function buildResponseSchema(): Record<string, unknown> {
@@ -479,8 +495,16 @@ function buildResponseSchema(): Record<string, unknown> {
         type: "object",
         properties: {
           fields: {
-            type: "object",
-            additionalProperties: { type: "string" },
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                fieldId: { type: "string" },
+                value: { type: "string" },
+              },
+              required: ["fieldId", "value"],
+              additionalProperties: false,
+            },
           },
           skipped: {
             type: "array",
