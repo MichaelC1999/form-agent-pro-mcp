@@ -1,0 +1,10 @@
+node_modules
+dist
+output
+.env
+.git
+*.md
+.DS_Store
+assets/manual-loads/*
+!assets/manual-loads/example-*.json
+assets/test-situational
