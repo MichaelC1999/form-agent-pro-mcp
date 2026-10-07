@@ -2,7 +2,10 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { execSync, spawnSync } from "child_process";
-import { PDFDocument, PDFName, PDFArray, PDFRef, PDFDict, PDFString } from "pdf-lib";
+import {
+  PDFDocument, PDFName, PDFArray, PDFRef, PDFDict, PDFString, PDFHexString,
+  type PDFContext, type PDFObject,
+} from "pdf-lib";
 import { FormMap } from "../models/FormMap";
 import type { BuildFormMapInput, IFormMap, FieldMap } from "../types";
 
@@ -52,7 +55,8 @@ function extractWithPdftk(pdfPath: string): { fields: FieldMap; raw: string } | 
  * Strategy 2 — pdf-lib page annotation walk
  *
  * Walks every page's /Annots array and collects Widget annotations that carry
- * a /T (field name) value. This catches "orphaned widgets" — form fields that
+ * a /T (field name) value, recording each under its fully-qualified name (see
+ * getQualifiedFieldName). This catches "orphaned widgets" — form fields that
  * exist as page annotations but are NOT registered in the AcroForm /Fields
  * hierarchy. Several current USCIS forms (e.g. I-485) use this pattern:
  * pdftk dump_data_fields sees only the ~13 AcroForm-registered entries while
@@ -85,6 +89,44 @@ function decodePdfString(raw: string): string {
     return decoded;
   }
   return raw;
+}
+
+/** Decodes one /T value (a single segment of a field name) to a plain string. */
+function readPartialName(tVal: PDFObject): string {
+  if (tVal instanceof PDFHexString) return tVal.decodeText();
+  const raw = tVal instanceof PDFString
+    ? tVal.asString()
+    : tVal.toString().replace(/^\(|\)$/g, "");
+  return decodePdfString(raw);
+}
+
+/**
+ * Builds a widget's fully-qualified field name by walking its /Parent chain
+ * and joining each /T segment with "." — the same name pdftk, pdf-lib, and
+ * the PDF filler use (e.g. "form1[0].Page1[0].Line1a_FamilyName[0]").
+ *
+ * A widget's own /T is only the last segment of that name. Current USCIS
+ * editions nest every field under form1[0] → PageN[0], so reading the widget's
+ * /T alone yields "Line1a_FamilyName[0]" — a name no other strategy reports
+ * and nothing downstream can fill.
+ */
+function getQualifiedFieldName(widget: PDFDict, context: PDFContext): string {
+  const parts: string[] = [];
+  const seen = new Set<PDFDict>();
+  let node: PDFDict | undefined = widget;
+
+  while (node && !seen.has(node)) {
+    seen.add(node);
+    const tVal = node.get(PDFName.of("T"));
+    if (tVal) parts.unshift(readPartialName(tVal));
+
+    const parentVal: PDFObject | undefined = node.get(PDFName.of("Parent"));
+    const parent: PDFObject | undefined =
+      parentVal instanceof PDFRef ? context.lookup(parentVal) : parentVal;
+    node = parent instanceof PDFDict ? parent : undefined;
+  }
+
+  return parts.join(".");
 }
 
 async function extractWithPageAnnotations(pdfPath: string): Promise<FieldMap | null> {
@@ -125,14 +167,11 @@ async function extractWithPageAnnotations(pdfPath: string): Promise<FieldMap | n
         const subtype = annotDict.get(PDFName.of("Subtype"));
         if (!subtype || subtype.toString() !== "/Widget") continue;
 
-        // /T holds the field name
-        const tVal = annotDict.get(PDFName.of("T"));
-        if (!tVal) continue;
+        // /T holds the widget's own name segment; the full name comes from
+        // its /Parent chain
+        if (!annotDict.get(PDFName.of("T"))) continue;
 
-        const raw = tVal instanceof PDFString
-          ? tVal.asString()
-          : tVal.toString().replace(/^\(|\)$/g, "");
-        const name = decodePdfString(raw);
+        const name = getQualifiedFieldName(annotDict, context);
 
         if (name && !BARCODE_RE.test(name)) {
           fields[name] = "";
