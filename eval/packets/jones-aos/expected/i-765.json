@@ -1,0 +1,353 @@
+{
+  "formId": "i-765",
+  "pdf": "assets/forms/aos/i-765/blank.pdf",
+  "notes": "Edition 08/21/25 (this edition dropped the parents' names and the Social Security card questions). Applicant = Maria, eligibility category (c)(9) — pending adjustment of status. The category boxes have printed parentheses, so (c)(9) is entered as 'c' / '9' / blank (verified on the rendered page).",
+  "fields": [
+    {
+      "id": "form1[0].Page1[0].Line1a_FamilyName[0]",
+      "label": "Part 2. Information About You. Your Full Legal Name. 1. A. Enter Family Name, Last Name.",
+      "expect": "Jones",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page1[0].Line1b_GivenName[0]",
+      "label": "Part 2. Information About You. Your Full Legal Name. 1.B. Enter Given Name, First Name.",
+      "expect": [
+        "Maria",
+        "Maria Elena"
+      ],
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page1[0].Line1c_MiddleName[0]",
+      "label": "Part 2. Information About You. Your Full Legal Name. 1.C. Enter Middle Name.",
+      "expect": [
+        "Elena",
+        ""
+      ],
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page1[0].Part1_Checkbox[0]",
+      "label": "Part 1. Reason for Applying. I am applying for (select only one box). 1. A. Select Initial Permission to accept employment.",
+      "expect": true,
+      "category": "filing",
+      "source": "process description: first work permit"
+    },
+    {
+      "id": "form1[0].Page1[0].Part1_Checkbox[2]",
+      "label": "Part 1. Reason for Applying. I am applying for (select only one box). 1.C. Select Renewal of my permission to accept employment. (Attach a copy of your previous employment authorization document.)",
+      "expect": false,
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].Page1[0].Line2a_FamilyName[0]",
+      "label": "Part 2. Information About You. Other Names Used. Provide all other names you have ever used, including aliases, maiden name, and nicknames. If you need extra space to complete this section, use the space provided in Part 6. Additional Information. 2. A. Enter Family Name, Last Name.",
+      "expect": "Garcia Lopez",
+      "category": "identity",
+      "source": "birth_certificate_maria_jones.pdf: name at birth"
+    },
+    {
+      "id": "form1[0].Page1[0].Line2b_GivenName[0]",
+      "label": "Part 2. Information About You. Other Names Used. Provide all other names you have ever used, including aliases, maiden name, and nicknames. If you need extra space to complete this section, use the space provided in Part 6. Additional Information. 2.B. Enter Given Name, First Name.",
+      "expect": [
+        "Maria",
+        "Maria Elena"
+      ],
+      "category": "identity",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page1[0].Line2c_MiddleName[0]",
+      "label": "Part 2. Information About You. Other Names Used. Provide all other names you have ever used, including aliases, maiden name, and nicknames. If you need extra space to complete this section, use the space provided in Part 6. Additional Information. 2.C. Enter Middle Name.",
+      "expect": [
+        "Elena",
+        ""
+      ],
+      "category": "identity",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page1[0].Line3a_FamilyName[1]",
+      "label": "Part 2. Information About You. Other Names Used. Provide all other names you have ever used, including aliases, maiden name, and nicknames. If you need extra space to complete this section, use the space provided in Part 6. Additional Information. 3. A. Enter Family Name, Last Name.",
+      "expect": "",
+      "unknown": true,
+      "category": "identity",
+      "source": "no other names in the packet"
+    },
+    {
+      "id": "form1[0].Page2[0].Part2Line5_Checkbox[0]",
+      "label": "Part 2. Information About You. Your U.S. Mailing Address. 6. Is your current mailing address the same as your physical address? Select No. NOTE: If you answered “No” to Item Number 6., provide your physical address below.",
+      "expect": false,
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].Page2[0].Part2Line5_Checkbox[1]",
+      "label": "Part 2. Information About You. Your U.S. Mailing Address. 6. Is your current mailing address the same as your physical address? Select Yes.",
+      "expect": true,
+      "category": "address",
+      "source": "situation description: mailing = physical ([1] is Yes on this PDF)"
+    },
+    {
+      "id": "form1[0].Page2[0].Pt2Line7_StreetNumberName[0]",
+      "label": "Part 2. Information About You. U.S. Physical Address. 7. A. Enter Street Number and Name.",
+      "expect": [
+        "",
+        "482 Placeholder"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "physical address only required when it differs"
+    },
+    {
+      "id": "form1[0].Page2[0].Line17b_CountryOfBirth[0]",
+      "label": "Part 2. Information About You. Your Country or Countries of Citizenship or Nationality. List all countries where you are currently a citizen or national. If you need extra space to complete this item, use the space provided in Part 6. Additional Information. 14. B. Enter the Country.",
+      "expect": "",
+      "unknown": true,
+      "category": "identity",
+      "source": "no second citizenship in the packet"
+    },
+    {
+      "id": "form1[0].Page2[0].Line17a_CountryOfBirth[0]",
+      "label": "Part 2. Information About You. Your Country or Countries of Citizenship or Nationality. List all countries where you are currently a citizen or national. If you need extra space to complete this item, use the space provided in Part 6. Additional Information. 14. A. Enter the Country.",
+      "expect": "Mexico",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf (this field is country of citizenship)"
+    },
+    {
+      "id": "form1[0].Page2[0].Line12b_SSN[0]",
+      "label": "Part 2. Information About You. Other Information. 13. Provide your Social Security Number (S S N) (if known). Enter 9 digit number.",
+      "expect": "",
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].Page2[0].Pt2Line5_Unit[0]",
+      "label": "Part 2. Information About You. Your U.S. Mailing Address. 5. C. Select Suite.",
+      "expect": false,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page2[0].Pt2Line5_AptSteFlrNumber[0]",
+      "label": "Part 2. Information About You. Your U.S. Mailing Address. 5. C. Enter Apartment, Suite or Floor Number.",
+      "expect": "2B",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page2[0].Pt2Line5_Unit[2]",
+      "label": "Part 2. Information About You. Your U.S. Mailing Address. 5. C. Select Apartment.",
+      "expect": true,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf ([2] is Apartment on this PDF)"
+    },
+    {
+      "id": "form1[0].Page2[0].Pt2Line5_CityOrTown[0]",
+      "label": "Part 2. Information About You. Your U.S. Mailing Address. 5. D. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page2[0].Pt2Line5_State[0]",
+      "label": "Part 2. Information About You. Your U.S. Mailing Address. 5. E Select state from list of states.",
+      "expect": "OH",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page2[0].Pt2Line5_ZipCode[0]",
+      "label": "Part 2. Information About You. Your U.S. Mailing Address. 5. F. Enter Zip Code.",
+      "expect": "43004",
+      "match": "digits",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page2[0].Line4b_StreetNumberName[0]",
+      "label": "Part 2. Information About You. Your U.S. Mailing Address. 5. B. Enter Street Number and Name.",
+      "expect": [
+        "482 Placeholder"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page2[0].Line7_AlienNumber[0]",
+      "label": "Part 2. Information About You. Other Information. 8. Enter Alien Registration Number (A. number(, if any. Enter 9 digit number.",
+      "expect": "",
+      "category": "identity",
+      "source": "additional notes: no A-Number"
+    },
+    {
+      "id": "form1[0].Page2[0].Line9_Checkbox[0]",
+      "label": "Part 2. Information About You. Other Information. 10. Sex. Select Female.",
+      "expect": true,
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf: SEX F ([0] is Female on this PDF)"
+    },
+    {
+      "id": "form1[0].Page2[0].Line9_Checkbox[1]",
+      "label": "Part 2. Information About You. Other Information. 10. Sex. Select Male.",
+      "expect": false,
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page2[0].Line10_Checkbox[2]",
+      "label": "Part 2. Information About You. Other Information. 11. Marital Status. Select Single.",
+      "expect": false,
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page2[0].Line10_Checkbox[3]",
+      "label": "Part 2. Information About You. Other Information. 11. Marital Status. Select Married.",
+      "expect": true,
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page2[0].Line19_Checkbox[0]",
+      "label": "Part 2. Information About You. Other Information. 12. Have you previously filed Form I - 7 65? Select No.",
+      "expect": true,
+      "category": "immigration",
+      "source": "additional notes: never applied for an immigration benefit ([0] is No)"
+    },
+    {
+      "id": "form1[0].Page2[0].Line19_Checkbox[1]",
+      "label": "Part 2. Information About You. Other Information. 12. Have you previously filed Form I - 7 65? Select Yes.",
+      "expect": false,
+      "category": "immigration",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].Page3[0].Line20c_TravelDoc[0]",
+      "label": "Part 2. Information About You. Information About Your Last Arrival in the United States. 19. Enter your Travel Document Number (if any).",
+      "expect": "",
+      "category": "immigration",
+      "source": "entered on a passport"
+    },
+    {
+      "id": "form1[0].Page3[0].Line21_DateOfLastEntry[0]",
+      "label": "Part 2. Information About You. Information About Your Last Arrival in the United States. 22. Enter the Date of your Last Entry into the U.S. Enter the 2-digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "02/20/2026",
+      "match": "date",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page3[0].Line20e_ExpDate[0]",
+      "label": "Part 2. Information About You. Information About Your Last Arrival in the United States. 21. Enter the Expiration Date for your Passport or Travel Document. Enter the 2-digit month, 2 digit-Day and 4-digit Year.",
+      "expect": "01/09/2033",
+      "match": "date",
+      "category": "immigration",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page3[0].Line20d_CountryOfIssuance[0]",
+      "label": "Part 2. Information About You. Information About Your Last Arrival in the United States. 20. Enter Country That Issued Your Passport or Travel Document.",
+      "expect": "Mexico",
+      "category": "immigration",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page3[0].Line20b_Passport[0]",
+      "label": "Part 2. Information About You. Information About Your Last Arrival in the United States. 18. Enter Passport Number of Your Most Recently Issued Passport.",
+      "expect": "X99887766",
+      "category": "immigration",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page3[0].Line23_StatusLastEntry[0]",
+      "label": "Part 2. Information About You. Information About Your Last Arrival in the United States. 24. Enter Immigration Status at Your Last Arrival (B - 2 visitor, F - 1 student or no status).",
+      "expect": [
+        "B2",
+        "B-2"
+      ],
+      "match": "contains",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page3[0].Line20a_I94Number[0]",
+      "label": "Part 2. Information About You. Information About Your Last Arrival in the United States. 17. Enter Form I - 94 Arrival-Departure Record Number, if any. Enter 11 digit number.",
+      "expect": "99887766544",
+      "match": "digits",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page3[0].Line19_DOB[0]",
+      "label": "Part 2. Information About You. Place of Birth. List the city / town / village, state / province, and country where you were born. 16. Date of Birth . Enter the 2- digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "08/22/1994",
+      "match": "date",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page3[0].Line18c_CountryOfBirth[0]",
+      "label": "Part 2. Information About You. Place of Birth . List the city / town / village, state / province, and country where you were born. 15. C. Enter Country of your Birth.",
+      "expect": "Mexico",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page3[0].Line18a_CityTownOfBirth[0]",
+      "label": "Part 2. Information About You. Place of Birth. List the city / town / village, state / province, and country where you were born. 15. A. Enter City / Town / Village of Birth.",
+      "expect": [
+        "Guadalajara"
+      ],
+      "match": "contains",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].Page3[0].Line18b_CityTownOfBirth[0]",
+      "label": "Part 2. Information About You. Place of Birth. List the city / town / village, state / province, and country where you were born. 15. B. Enter State / Province of Birth.",
+      "expect": "Jalisco",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf (this field is state/province of birth)"
+    },
+    {
+      "id": "form1[0].Page3[0].#area[1].section_1[0]",
+      "label": "Part 2. Information About You. Information About Your Eligibility Category. 27. Eligibility Category. Refer to the Who May File Form I - 7 65 section of the Form I - 7 65 Instructions to determine the appropriate eligibility category for this application. Enter the appropriate letter and number for your eligibility category below (for example, (A.)(8), (c)(17)(i i i )). Enter first four characters.",
+      "expect": "c",
+      "category": "filing",
+      "source": "(c)(9): pending adjustment of status"
+    },
+    {
+      "id": "form1[0].Page3[0].#area[1].section_2[0]",
+      "label": "Part 2. Information About You. Information About Your Eligibility Category. 27. Eligibility Category. Refer to the Who May File Form I - 7 65 section of the Form I - 7 65 Instructions to determine the appropriate eligibility category for this application. Enter the appropriate letter and number for your eligibility category below (for example, (A.)(8), (c)(17)(i i i )). Enter middle three characters.",
+      "expect": "9",
+      "category": "filing",
+      "source": "(c)(9)"
+    },
+    {
+      "id": "form1[0].Page3[0].#area[1].section_3[0]",
+      "label": "Part 2. Information About You. Information About Your Eligibility Category. 27. Eligibility Category. Refer to the Who May File Form I - 7 65 section of the Form I - 7 65 Instructions to determine the appropriate eligibility category for this application. Enter the appropriate letter and number for your eligibility category below (for example, (A.)(8), (c)(17)(i i i )). Enter Last three characters.",
+      "expect": "",
+      "category": "filing",
+      "source": "(c)(9) has no third part"
+    },
+    {
+      "id": "form1[0].Page3[0].place_entry[0]",
+      "label": "Part 2. Information About You. Information About Your Last Arrival in the United States. 23. Enter Place of Last Arrival into the United States.",
+      "expect": [
+        "Dallas",
+        "DFW",
+        "Fort Worth"
+      ],
+      "match": "contains",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf: port of entry DFW"
+    }
+  ]
+}

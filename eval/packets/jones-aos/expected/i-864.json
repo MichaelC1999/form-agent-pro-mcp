@@ -1,0 +1,486 @@
+{
+  "formId": "i-864",
+  "pdf": "assets/forms/aos/i-864/blank.pdf",
+  "notes": "Edition 08/24/26. Sponsor = Bill (the petitioner); principal immigrant = Maria. Household size is 2: Maria counts in Item 1 (sponsored), so Item 3 (spouse) must be 0.",
+  "fields": [
+    {
+      "id": "form1[0].#subform[0].P1_Line1a-f_CB[0]",
+      "label": "Part 1. Basis For Filing Affidavit of Support. Select 1. A. I am the petitioner. I filed or am filing for the immigration of my relative.",
+      "expect": true,
+      "category": "filing",
+      "source": "process description: Bill is the petitioner"
+    },
+    {
+      "id": "form1[0].#subform[0].P1_Line1a-f_CB[3]",
+      "label": "Part 1. Basis For Filing Affidavit of Support. Select 1. D. I am the only joint sponsor.",
+      "expect": false,
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[0].P1_Line1a-f_CB[4]",
+      "label": "Part 1. Basis For Filing Affidavit of Support. Select 1. E. I am the first or second of two joint sponsors.",
+      "expect": false,
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[0].P4_Line1a_FamilyName[0]",
+      "label": "Part 2. Information About You (Sponsor) 1. Sponsor's Full Legal Name (Do not provide a nickname). Enter Family Name, Last Name.",
+      "expect": "Jones",
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].P4_Line1b_GivenName[0]",
+      "label": "Part 2. Information About You (Sponsor) 1. Sponsor's Full Legal Name (Do not provide a nickname). Enter Given Name, First Name.",
+      "expect": "William",
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].P4_Line1c_MiddleName[0]",
+      "label": "Part 2. Information About You (Sponsor) 1. Sponsor's Full Legal Name (Do not provide a nickname). Enter Middle Name, if applicable.",
+      "expect": "Robert",
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line2b_StreetNumberName[0]",
+      "label": "Part 2. Information About You (Sponsor) 2. Sponsor's Current Mailing Address. Enter Street Number and Name.",
+      "expect": [
+        "482 Placeholder"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line2c_Unit[0]",
+      "label": "Part 2. Information About You (Sponsor) 2. Sponsor's Current Mailing Address. Select Apartment.",
+      "expect": true,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line2c_Unit[1]",
+      "label": "Part 2. Information About You (Sponsor) 2. Sponsor's Current Mailing Address. Select Suite.",
+      "expect": false,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line2d_AptSteFlrNumber[0]",
+      "label": "Part 2. Information About You (Sponsor) 2. Sponsor's Current Mailing Address. Enter Apartment, Suite or Floor Number.",
+      "expect": "2B",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line2e_CityOrTown[0]",
+      "label": "Part 2. Information About You (Sponsor) 2. Sponsor's Current Mailing Address. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line2f_State[0]",
+      "label": "Part 2. Information About You (Sponsor) 2. Sponsor's Current Mailing Address. Select State from List of States.",
+      "expect": "OH",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line2g_ZipCode[0]",
+      "label": "Part 2. Information About You (Sponsor) 2. Sponsor's Current Mailing Address. Enter ZIP Code.",
+      "expect": "43004",
+      "match": "digits",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line2j_Country[0]",
+      "label": "Part 2. Information About You (Sponsor) 2. Sponsor's Current Mailing Address. Enter Country.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].P1_Line3_Checkbox[0]",
+      "label": "Part 2. Information About You (Sponsor) 3. Is your current mailing address the same as your physical address? Select Yes.",
+      "expect": true,
+      "category": "address",
+      "source": "situation description: mailing address is where they live"
+    },
+    {
+      "id": "form1[0].#subform[1].P1_Line3_Checkbox[1]",
+      "label": "Part 2. Information About You (Sponsor) 3. Is your current mailing address the same as your physical address? Select No. If you answered \"No\" to Item Number 3., provide your physical address in Item Number 4.",
+      "expect": false,
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line5_CountryOfDomicile[0]",
+      "label": "Part 2. Information About You (Sponsor) Other Information. 5. Enter Country of Domicile.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "identity",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line6_DateOfBirth[0]",
+      "label": "Part 2. Information About You (Sponsor) Other Information. 6. Enter Date of Birth. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "03/14/1992",
+      "match": "date",
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line7_CityofBirth[0]",
+      "label": "Part 2. Information About You (Sponsor) Other Information. 7. Enter Country of Birth.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf (this field is the country of birth)"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line10_SocialSecurityNumber[0]",
+      "label": "Part 2. Information About You (Sponsor) Other Information 8. Enter U.S. Social Security Number (Required).",
+      "expect": "123456789",
+      "match": "digits",
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line11a_Checkbox[0]",
+      "label": "Part 2. Information About You (Sponsor) Other Information. 9. Immigration Status. Select I am a U.S. citizen.",
+      "expect": true,
+      "category": "immigration",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].P4_Line11c_Checkbox[0]",
+      "label": "Part 2. Information About You (Sponsor) Other Information. 9. Immigration Status. Select I am a lawful permanent resident.",
+      "expect": false,
+      "category": "immigration",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].#area[1].P4_Line12_AlienNumber[0]",
+      "label": "Part 1. Information About You (Sponsor). Other Information. E. Enter Alien Registration Number (A. Number), if any.",
+      "expect": "",
+      "category": "identity",
+      "source": "U.S. citizen by birth: no A-Number"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line1a_FamilyName[0]",
+      "label": "Part 3. Information About Principal Immigrant. 1. Principal Immigrant's Full Legal Name (Do not provide a nickname). Enter Family Name, Last Name.",
+      "expect": "Jones",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line1b_GivenName[0]",
+      "label": "Part 3. Information About Principal Immigrant. 1. Principal Immigrant's Full Legal Name (Do not provide a nickname). Enter Given Name, First Name.",
+      "expect": [
+        "Maria",
+        "Maria Elena"
+      ],
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line1c_MiddleName[0]",
+      "label": "Part 3. Information About Principal Immigrant. 1. Principal Immigrant's Full Legal Name (Do not provide a nickname). Enter Middle Name, if applicable.",
+      "expect": [
+        "Elena",
+        ""
+      ],
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line2_StreetNumberName[0]",
+      "label": "Part 3. Information About the Principal Immigrant. 2. Current Mailing Address. Enter Street Number and Name.",
+      "expect": [
+        "482 Placeholder"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line2_Unit[0]",
+      "label": "Part 3. Information About the Principal Immigrant. 2. Current Mailing Address. Select Apartment.",
+      "expect": true,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line2_AptSteFlrNumber[0]",
+      "label": "Part 3. Information About the Principal Immigrant. 2. Current Mailing Address. Enter Apartment, Suite or Floor Number.",
+      "expect": "2B",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line2_CityOrTown[0]",
+      "label": "Part 3. Information About the Principal Immigrant. 2. Current Mailing Address. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line2_State[0]",
+      "label": "Part 3. Information About the Principal Immigrant. 2. Current Mailing Address. Select State from List of States.",
+      "expect": "OH",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line2_ZipCode[0]",
+      "label": "Part 3. Information About the Principal Immigrant. 2. Current Mailing Address. Enter ZIP Code.",
+      "expect": "43004",
+      "match": "digits",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line2_Country[0]",
+      "label": "Part 3. Information About the Principal Immigrant. 2. Current Mailing Address. Enter Country.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line3_CountryCitizenship[0]",
+      "label": "Part 3. Information About the Principal Immigrant. Other Information. 3. Enter Country of Citizenship or Nationality.",
+      "expect": "Mexico",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line4_DateOfBirth[0]",
+      "label": "Part 3. Information About the Principal Immigrant. Other Information. 4. Enter Date of Birth. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "08/22/1994",
+      "match": "date",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].#area[2].P2_Line5_AlienNumber[0]",
+      "label": "Part 3. Information About the Principal Immigrant. Other Information. 5. Enter Alien Registration Number (A. Number), if any.",
+      "expect": "",
+      "category": "identity",
+      "source": "additional notes: no A-Number"
+    },
+    {
+      "id": "form1[0].#subform[2].P2_Line7_DaytimePhoneNumber[0]",
+      "label": "Part 3. Information About the Principal Immigrant. Other Information. 7. Enter Daytime Telephone Number. Enter 10 digit number.",
+      "expect": "6145550177",
+      "match": "digits",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].P3_Line1_Checkbox[0]",
+      "label": "Part 4. Information About the Immigrants You Are Sponsoring. 1. I am sponsoring the principal immigrant named in Part 3. Select Yes.",
+      "expect": true,
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[2].P3_Line3a_FamilyName[0]",
+      "label": "Part 4. Information About the Immigrants You Are Sponsoring. 4. Family Member 1. Enter Family Name (Last Name)",
+      "expect": "",
+      "category": "filing",
+      "source": "situation description: no other family members immigrating"
+    },
+    {
+      "id": "form1[0].#subform[4].P3_Line28_TotalNumberofImmigrants[0]",
+      "label": "Part 5. Sponsor's Household Size. NOTE: Do not count any member of your household more than once. Persons you are sponsoring in this affidavit. Enter the total number of immigrants you are sponsoring on this affidavit which includes the principal immigrant listed in Part 3., any immigrants listed in Part 4., Item Numbers 4. - 7. and, any additional sponsored immigrants you listed in Part 11. Additional Information. Do not count the principal immigrant if you are only sponsoring family members entering more than six months after the principal immigrant.",
+      "expect": "1",
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[4].P5_Line2_Yourself[0]",
+      "label": "Part 5. Sponsor's Household Size. Persons NOT sponsored in this affidavit. 2. Yourself. The number one is entered in this space for you.",
+      "expect": [
+        "1",
+        ""
+      ],
+      "category": "family",
+      "source": "form pre-states 1 for the sponsor"
+    },
+    {
+      "id": "form1[0].#subform[4].P5_Line3_Married[0]",
+      "label": "Part 5. Sponsor's Household Size. Persons NOT sponsored in this affidavit. 3. If you are currently married, enter the number 1 for your spouse. (NOTE: Enter “0” if you already counted your spouse in Item Number 1.)",
+      "expect": "0",
+      "category": "family",
+      "source": "spouse already counted as the sponsored immigrant (form note: enter 0)"
+    },
+    {
+      "id": "form1[0].#subform[4].P5_Line4_DependentChildren[0]",
+      "label": "Part 5. Sponsor's Household Size. Persons NOT sponsored in this affidavit. 4. If you have dependent children, enter the number here. (NOTE: Enter “0” if you already counted your dependent children in Item Number 1.)",
+      "expect": [
+        "0",
+        ""
+      ],
+      "category": "family",
+      "source": "additional notes: no children"
+    },
+    {
+      "id": "form1[0].#subform[4].P5_Line5_OtherDependents[0]",
+      "label": "Part 5. Sponsor's Household Size. Persons NOT sponsored in this affidavit. 5. If you have any other dependents, enter the number here. (NOTE: Enter “0” if you already counted your other dependents in Item Number 1.)",
+      "expect": [
+        "0",
+        ""
+      ],
+      "category": "family",
+      "source": "additional notes: no other dependents"
+    },
+    {
+      "id": "form1[0].#subform[4].P5_Line6_Sponsors[0]",
+      "label": "Part 5. Sponsor's Household Size. Persons NOT sponsored in this affidavit. 6. If you have sponsored any other persons on Form I - 8 64 or Form I - 8 64 E Z who are now lawful permanent residents and you are still obligated to support, enter the number here. (NOTE: Enter “0” if you already counted these persons in Item Number 1.)",
+      "expect": [
+        "0",
+        ""
+      ],
+      "category": "family",
+      "source": "additional notes: never sponsored anyone"
+    },
+    {
+      "id": "form1[0].#subform[4].P5_Line7_SameResidence[0]",
+      "label": "Part 5. Sponsor's Household Size. Persons NOT sponsored in this affidavit. 7. If you have siblings, parents, or adult children with the same principal residence who are combining their income with yours by submitting Form I - 8 64. A., enter the number here. (NOTE: Enter “0” if you already counted these persons in Item Number 1.)",
+      "expect": [
+        "0",
+        ""
+      ],
+      "category": "family",
+      "source": "additional notes: household is just Bill and Maria"
+    },
+    {
+      "id": "form1[0].#subform[4].Override[0]",
+      "label": "Part 5. Sponsor's Household Size. Persons NOT sponsored in this affidavit. 8. Add together Part 5., Item Numbers 1. through 7. and enter the number here. Household Size.",
+      "expect": "2",
+      "category": "family",
+      "source": "household size: Maria (1) + Bill (1)"
+    },
+    {
+      "id": "form1[0].#subform[4].P6_Line1_Checkbox[0]",
+      "label": "Part 6. Sponsor's Employment and Income. I am currently. 1. Select Employed.",
+      "expect": true,
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].P6_Line1a_NameofEmployer[0]",
+      "label": "Part 6. Sponsor's Employment and Income. I am currently. 1. Enter what your are employed as.",
+      "expect": [
+        "Senior Operations Analyst"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf (this field is the job title)"
+    },
+    {
+      "id": "form1[0].#subform[4].P6_Line1a1_NameofEmployer[0]",
+      "label": "Part 6. Sponsor's Employment and Income. 2. Enter Name of Employer 1.",
+      "expect": [
+        "Buckeye Widgetworks"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].P6_Line6_Checkbox[0]",
+      "label": "Part 6. Sponsor's Employment and Income. I am currently. 6. Select Unemployed.",
+      "expect": false,
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].P6_Line2_TotalIncome[0]",
+      "label": "Part 6. Sponsor's Employment and Income. 7. My current individual annual income is. Enter your current individual annual income.",
+      "expect": "84500",
+      "match": "number",
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf: $84,500.00 per year"
+    },
+    {
+      "id": "form1[0].#subform[5].P6_Line3_Name[0]",
+      "label": "Part 6. Sponsor's Employment and Income. Income you are using from any other person who was counted in your household size, including, in certain conditions, the intending immigrant. (See Form I - 8 64 Instructions.) Please indicate name, relationship, and income. 8. Person 1. Enter Name.",
+      "expect": "",
+      "category": "employment",
+      "source": "additional notes: no other household income"
+    },
+    {
+      "id": "form1[0].#subform[5].P6_Line15_TotalHouseholdIncome[0]",
+      "label": "Part 6. Sponsor's Employment and Income. Remarks. 12. Enter Current Annual Household Income (Total all lines from Part 6. Item Numbers 7. - 11.; the total will be compared to Federal Poverty Guidelines on Form I-864P.)",
+      "expect": "84500",
+      "match": "number",
+      "category": "employment",
+      "source": "additional notes: Maria has no income"
+    },
+    {
+      "id": "form1[0].#subform[5].P6_Line18a_Checkbox[0]",
+      "label": "Part 6. Sponsor's Employment and Income. 15. Have you filed a Federal income tax return for each of the three most recent tax years? Select Yes.",
+      "expect": false,
+      "unknown": true,
+      "category": "employment",
+      "source": "tax filing history is not in the packet"
+    },
+    {
+      "id": "form1[0].#subform[5].P6_Line18a_Checkbox[1]",
+      "label": "Part 6. Sponsor's Employment and Income. 15. Have you filed a Federal income tax return for each of the three most recent tax years? Select No.",
+      "expect": false,
+      "unknown": true,
+      "category": "employment",
+      "source": "tax filing history is not in the packet"
+    },
+    {
+      "id": "form1[0].#subform[6].P6_Line19a_TaxYear[0]",
+      "label": "Part 6. Sponsor's Employment and Income. My total income (adjusted gross income on IRS Form 1040EZ) as reported on my Federal income tax returns for the most recent three years was. 16.a. Enter Most Recent Tax Year.",
+      "expect": "",
+      "unknown": true,
+      "category": "employment",
+      "source": "tax returns are not in the packet"
+    },
+    {
+      "id": "form1[0].#subform[6].P6_Line19a_TotalIncome[0]",
+      "label": "Part 6. Sponsor's Employment and Income. My total income (adjusted gross income on IRS Form 1040EZ) as reported on my Federal income tax returns for the most recent three years was. 16.a. Enter Most Recent Total Income.",
+      "expect": "",
+      "unknown": true,
+      "category": "employment",
+      "source": "tax returns are not in the packet"
+    }
+  ]
+}

@@ -1,0 +1,499 @@
+{
+  "formId": "i-130a",
+  "pdf": "assets/forms/aos/i-130a/blank.pdf",
+  "notes": "Filled by Maria. Parent order is not fixed by the form, so each parent slot accepts either parent. Note Pt1Line14_CountryofBirth is the parent's city of residence (per the PDF tooltip).",
+  "fields": [
+    {
+      "id": "form1[0].#subform[0].Pt1Line1_AlienNumber[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). 1. Enter Alien Registration Number. (A. Number) (if any).",
+      "expect": "",
+      "category": "identity",
+      "source": "additional notes: no A-Number"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line4a_StreetNumberName[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Provide your physical addresses for the last five years, whether inside or outside the United States. Provide your current address first. If you need extra space to complete this section, use the space provided in Part 7. Additional Information. Physical Address 1. 4. A. Enter Street Number and Name.",
+      "expect": [
+        "482 Placeholder"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf: current address"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line4b_Unit[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 1. 4. B. Select this Box for Apartment.",
+      "expect": true,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line4b_Unit[1]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 1. 4. B. Select this Box for Suite.",
+      "expect": false,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line4b_Unit[2]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 1. 4. B. Select this Box for Floor.",
+      "expect": false,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line4b_AptSteFlrNumber[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 1. 4. B. Enter Apartment, Suite or Floor Number.",
+      "expect": "2B",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line4c_CityOrTown[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 1. 4. C. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line4d_State[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 1. 4. D. Select State from List of States.",
+      "expect": "OH",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line4e_ZipCode[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 1. 4. E. Enter Zip Code.",
+      "expect": "43004",
+      "match": "digits",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line4h_Country[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 1. 4. H. Enter Country.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line6a_StreetNumberName[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 2. 6. A. Enter Street Number and Name.",
+      "expect": [
+        "Simulada 1234"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "situation description: prior address"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line6c_CityOrTown[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 2. 6. C. Enter City or Town.",
+      "expect": "Guadalajara",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line6d_State[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 2. 6. D. Select State from List of States.",
+      "expect": "",
+      "category": "address",
+      "source": "foreign address: no U.S. state"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line6f_Province[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 2. 6. F. Enter Province.",
+      "expect": "Jalisco",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line6h_Country[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 2. 6. H. Enter Country.",
+      "expect": "Mexico",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line6g_PostalCode[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 2. 6. G. Enter Postal Code.",
+      "expect": "44100",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line7a_DateFrom[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 2. 7. A. Enter Date From. Enter as 2-digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "06/01/2015",
+      "match": "date",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line7b_DateTo[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 2. 7. B. Enter Date To. Enter as 2-digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "08/25/2024",
+      "match": "date",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line3a_FamilyName[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Your Full Name. 3. A. Enter Family Name (Last Name).",
+      "expect": "Jones",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line3b_GivenName[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Your Full Name. 3. B. Enter Given Name (First Name).",
+      "expect": [
+        "Maria",
+        "Maria Elena"
+      ],
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line3c_MiddleName[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Your Full Name. 3. C. Enter Middle Name.",
+      "expect": [
+        "Elena",
+        ""
+      ],
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line5a_DateFrom[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Physical Address 1. 5. A. Enter Date From. Enter as 2-digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "09/01/2024",
+      "match": "date",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf, situation description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line8e_PostalCode[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Last Physical Address Outside the United States. 8. E. Enter Postal Code.",
+      "expect": "44100",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line8f_Country[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Last Physical Address Outside the United States. 8. F. Enter Country.",
+      "expect": "Mexico",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line8d_Province[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Last Physical Address Outside the United States. 8. D. Enter Province.",
+      "expect": "Jalisco",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line8c_CityOrTown[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Last Physical Address Outside the United States. 8. C. Enter City or Town.",
+      "expect": "Guadalajara",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line8a_StreetNumberName[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Last Physical Address Outside the United States. Provide your last address outside the United States of more than one year (even if listed above). 8. A. Enter Street Number and Name.",
+      "expect": [
+        "Simulada 1234"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "situation description: last address abroad (>1 year)"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line9b_DateTo[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Last Physical Address Outside the United States. 9. B. Enter Date To. Enter as 2-digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "08/25/2024",
+      "match": "date",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line9a_DateFrom[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Address History. Last Physical Address Outside the United States. 9. A. Enter Date From. Enter as 2-digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "06/01/2015",
+      "match": "date",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line10_GivenName[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 1. Full Name of Parent 1. 10. B. Enter Given Name (First Name).",
+      "expect": [
+        "Elena",
+        "Elena Sofia",
+        "Carlos",
+        "Carlos Alberto"
+      ],
+      "category": "family",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line10_MiddleName[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 1. Full Name of Parent 1. 10. C. Enter Middle Name.",
+      "expect": [
+        "Sofia",
+        "Alberto",
+        ""
+      ],
+      "category": "family",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line12CityTownOfBirth[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 1. 13. Enter City / Town / Village of Birth.",
+      "expect": "",
+      "unknown": true,
+      "category": "family",
+      "source": "parents' cities of birth are not in the packet"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line14_CountryofBirth[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 1. 15. Enter City / Town / Village of Residence.",
+      "expect": [
+        "Guadalajara"
+      ],
+      "match": "contains",
+      "category": "family",
+      "source": "additional notes: parents live in Guadalajara (this field is the city of residence)"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line15_CountryofResidence[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 1. 16. Enter Country of Residence.",
+      "expect": "Mexico",
+      "category": "family",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line13_CountryofBirth[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 1. 14. Enter Country of Birth.",
+      "expect": "Mexico",
+      "category": "family",
+      "source": "additional notes: both born in Mexico"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line11_DateofBirth[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 1. 11. Enter Date of Birth. Enter as 2-digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "",
+      "unknown": true,
+      "category": "family",
+      "source": "parents' dates of birth are not in the packet"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line10_FamilyName[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 1. Full Name of Parent 1. 10. A. Enter Family Name (Maiden Name).",
+      "expect": [
+        "Lopez Ramirez",
+        "Garcia Mendez"
+      ],
+      "category": "family",
+      "source": "birth_certificate_maria_jones.pdf: parents Elena Sofia Lopez Ramirez / Carlos Alberto Garcia Mendez"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line1_EmployerOrCompName[0]",
+      "label": "Part 2. Information About Your Employment. Provide your employment history for the last five years, whether inside or outside the United States. Provide your current employment first. If you are currently unemployed, type or print \"Unemployed\" in Item Number 1. below. If you need extra space to complete this section, use the space provided in Part 7. Additional Information. Employment History. Employer 1. 1. Enter Name of Employer / Company.",
+      "expect": [
+        "Unemployed"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "additional notes + form instruction: current employer is Unemployed"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line17_DateofBirth[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 2. 18. Enter Date of Birth. Enter as 2-digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "",
+      "unknown": true,
+      "category": "family",
+      "source": "parents' dates of birth are not in the packet"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line19_CountryofBirth[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 2. 21. Enter Country of Birth.",
+      "expect": "Mexico",
+      "category": "family",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line21_CountryofResidence[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 2. 23. Enter Country of Residence.",
+      "expect": "Mexico",
+      "category": "family",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line20_CityTownVillageofRes[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 2. 22. Enter City / Town / Village of Residence.",
+      "expect": [
+        "Guadalajara"
+      ],
+      "match": "contains",
+      "category": "family",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line18_CityTownOfBirth[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 2. 20. Enter City / Town / Village of Birth.",
+      "expect": "",
+      "unknown": true,
+      "category": "family",
+      "source": "parents' cities of birth are not in the packet"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line16_MiddleName[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 2. Full Name of Parent 2. 17. C. Enter Middle Name.",
+      "expect": [
+        "Sofia",
+        "Alberto",
+        ""
+      ],
+      "category": "family",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line16_GivenName[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 2. Full Name of Parent 2. 17. B. Enter Given Name (First Name).",
+      "expect": [
+        "Elena",
+        "Elena Sofia",
+        "Carlos",
+        "Carlos Alberto"
+      ],
+      "category": "family",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line16_FamilyName[0]",
+      "label": "Part 1. Information About You (Spouse Beneficiary). Information About Parent 2. Full Name of Parent 2. 17. A. Enter Family Name (Last Name).",
+      "expect": [
+        "Lopez Ramirez",
+        "Garcia Mendez"
+      ],
+      "category": "family",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line6_StreetNumberName[0]",
+      "label": "Part 2. Information About Your Employment. Employment History. Employer 2. 6. A. Enter Street Number and Name.",
+      "expect": [
+        "Ficticia 55"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line6_CityOrTown[0]",
+      "label": "Part 2. Information About Your Employment. Employment History. Employer 2. 6. C. Enter City or Town.",
+      "expect": "Guadalajara",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line6_Province[0]",
+      "label": "Part 2. Information About Your Employment. Employment History. Employer 2. 6. F. Enter Province.",
+      "expect": "Jalisco",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line6_PostalCode[0]",
+      "label": "Part 2. Information About Your Employment. Employment History. Employer 2. 6. G. Enter Postal Code.",
+      "expect": "44160",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line6_Country[0]",
+      "label": "Part 2. Information About Your Employment. Employment History. Employer 2. 6. H. Enter Country.",
+      "expect": "Mexico",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line5_EmployerOrCompName[0]",
+      "label": "Part 2. Information About Your Employment. Employment History. Employer 2. 5. Enter Name of Employer / Company.",
+      "expect": [
+        "Contables Simulados"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line7_Occupation[0]",
+      "label": "Part 2. Information About Your Employment. Employment History. Employer 2. 7. Enter Your Occupation.",
+      "expect": [
+        "Accountant"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line8a_DateFrom[0]",
+      "label": "Part 2. Information About Your Employment. Employment History. Employer 2. 8. A. Enter Date From. Enter as 2-digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "03/01/2017",
+      "match": "date",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line8b_DateTo[0]",
+      "label": "Part 2. Information About Your Employment. Employment History. Employer 2. 8. B. Enter Date To. Enter as 2-digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "07/31/2024",
+      "match": "date",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt4Line3_DaytimePhoneNumber1[0]",
+      "label": "Part 4. Spouse Beneficiary's Statement, Contact Information, Certification, and Signature. Spouse Beneficiary's Contact Information. 3. Enter Spouse Beneficiary's Daytime Telephone Number.",
+      "expect": "6145550177",
+      "match": "digits",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt4Line5_Email[0]",
+      "label": "Part 4. Spouse Beneficiary's Statement, Contact Information, Certification, and Signature. Spouse Beneficiary's Contact Information. 5. Enter Spouse Beneficiary's E-Mail Address (if any).",
+      "expect": "maria.jones@example.com",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt4Line4_MobileNumber1[0]",
+      "label": "Part 4. Spouse Beneficiary's Statement, Contact Information, Certification, and Signature. Spouse Beneficiary's Contact Information. 4. Enter Spouse Beneficiary's Mobile Telephone Number (if any).",
+      "expect": "6145550177",
+      "match": "digits",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt4Line6b_DateofSignature[0]",
+      "label": "Part 4. Spouse Beneficiary's Statement, Contact Information, Certification, and Signature. Spouse Beneficiary's Signature. 6. B. Enter Date of Signature. Enter as 2-digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "",
+      "unknown": true,
+      "category": "filing",
+      "source": "signature date is written when the beneficiary signs"
+    }
+  ]
+}

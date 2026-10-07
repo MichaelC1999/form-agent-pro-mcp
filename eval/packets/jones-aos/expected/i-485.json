@@ -1,0 +1,1188 @@
+{
+  "formId": "i-485",
+  "pdf": "assets/forms/aos/i-485/blank.pdf",
+  "notes": "Edition 09/18/26. Applicant = Maria. Several tooltips on this PDF are wrong (Pt2Line11_CB[*] all say 'Cuban Adjustment Act'; Pt1Line3_YN[1] says 'Yes'); those fields were checked against the rendered pages. In this edition Pt1Line4_AlienNumber[0] is the page-1 header and [2] is the Item 4 answer. Part 9 sworn questions are expected unanswered unless the packet states the answer.",
+  "fields": [
+    {
+      "id": "form1[0].#subform[0].Pt1Line4_AlienNumber[0]",
+      "label": "Enter Alien Registration Number (A. Number).",
+      "expect": "",
+      "category": "identity",
+      "source": "additional notes: no A-Number (page-1 header box)"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line1_FamilyName[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence} 1. Your Current Legal Name (Do not provide a nickname). Enter Family Name, Last Name.",
+      "expect": "Jones",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line1_GivenName[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence} 1. Your Current Legal Name (Do not provide a nickname). Enter Given Name (First Name).",
+      "expect": [
+        "Maria",
+        "Maria Elena"
+      ],
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line1_MiddleName[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence} 1. Your Current Legal Name (Do not provide a nickname). Enter Middle Name.",
+      "expect": [
+        "Elena",
+        ""
+      ],
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line2_FamilyName[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 2. Other Names You Have Used Since Birth (if applicable) Provide all other names you have ever used, including your family name at birth, other legal names, nicknames, aliases, and assumed names. Enter Family Name, Last Name.",
+      "expect": "Garcia Lopez",
+      "category": "identity",
+      "source": "birth_certificate_maria_jones.pdf: family name at birth"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line2_GivenName[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 2. Other Names You Have Used Since Birth (if applicable) Provide all other names you have ever used, including your family name at birth, other legal names, nicknames, aliases, and assumed names. Enter Given Name, First Name.",
+      "expect": [
+        "Maria",
+        "Maria Elena"
+      ],
+      "category": "identity",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line2_MiddleName[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 2. Other Names You Have Used Since Birth (if applicable) Provide all other names you have ever used, including your family name at birth, other legal names, nicknames, aliases, and assumed names. Enter Middle Name (if applicable)",
+      "expect": [
+        "Elena",
+        ""
+      ],
+      "category": "identity",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line2a_FamilyName[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 2. Other Names You Have Used Since Birth (if applicable) Provide all other names you have ever used, including your family name at birth, other legal names, nicknames, aliases, and assumed names. Enter Family Name, Last Name.",
+      "expect": "",
+      "unknown": true,
+      "category": "identity",
+      "source": "no other names in the packet"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line3_DOB[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 3. Date of Birth. Enter the 2- digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "08/22/1994",
+      "match": "date",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line6_CB_Sex[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 6. Sex. Select Female.",
+      "expect": true,
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf: SEX F ([0] is Female on this PDF)"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line6_CB_Sex[1]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 6. Sex. Select Male.",
+      "expect": false,
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line7_CityTownOfBirth[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 7. Place of Birth. Enter the city / town of birth",
+      "expect": [
+        "Guadalajara"
+      ],
+      "match": "contains",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line7_CountryOfBirth[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 7. Place of Birth. Enter the country of birth.",
+      "expect": "Mexico",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line8_CountryofCitizenshipNationality[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 8. Enter Country of Citizenship or Nationality.",
+      "expect": "Mexico",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line10_PassportNum[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). Recent Immigration History.If you last entered the United States using a passport or travel document, provide the following information. Enter Passport or Travel Document Number Used at Last Arrival.",
+      "expect": "X99887766",
+      "category": "immigration",
+      "source": "mexican_passport_maria_jones.pdf, i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line10_ExpDate[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). Recent Immigration History. 10. Enter Expiration Date of this Passport or Travel Document. Enter as 2-digit Month, 2-digit Day, and 4-digit Year.",
+      "expect": "01/09/2033",
+      "match": "date",
+      "category": "immigration",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line10_Passport[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). Recent Immigration History. 10. Enter Country that Issued this Passport or Travel Document.",
+      "expect": "Mexico",
+      "category": "immigration",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line10_CityTown[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). Recent Immigration History. Place and Date of Last Arrival into the United States. Enter City or Town.",
+      "expect": [
+        "Dallas",
+        "DFW",
+        "Fort Worth"
+      ],
+      "match": "contains",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf: port of entry DFW"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line10_State[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). Recent Immigration History. Place and Date of Last Arrival into the United States. State. This is a drop-down list and you will select a state from a list of States.",
+      "expect": "TX",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line10_DateofArrival[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). Recent Immigration History. Place and Date of Last Arrival into the United States. Enter Date of Last Arrival.Enter as 2-digit Month, 2-digit Day, and 4-digit Year.",
+      "expect": "02/20/2026",
+      "match": "date",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line10_NonImmDate[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). Recent Immigration History. 10. Enter Date Nonimmigrant Visa was Issued. Enter as 2-digit Month, 2-digit Day, and 4-digit Year.",
+      "expect": "11/15/2025",
+      "match": "date",
+      "category": "immigration",
+      "source": "b2_visa_maria_jones.pdf: issue date"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line4_AlienNumber[2]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). Enter Alien Registration Number (A. number), if any. Enter 9 digit number.",
+      "expect": "",
+      "category": "identity",
+      "source": "additional notes (Item 4 answer box)"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line4_YN[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 4. Do you have a Alien Registration Number? Select Yes.",
+      "expect": false,
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line4_YN[1]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 4. Do you have a Alien Registration Number? Select No.",
+      "expect": true,
+      "category": "identity",
+      "source": "additional notes: no A-Number (box [1] = No)"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line5_YN[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 5. Have you ever used, or been assigned, any other A-Number? Select Yes.",
+      "expect": false,
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line5_YN[1]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 5. Have you ever used, or been assigned, any other A-Number? Select No.",
+      "expect": true,
+      "category": "identity",
+      "source": "additional notes: no A-Number of any kind"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line11_CB[0]",
+      "label": "Part 1. Application Type or Filing Category. I am applying to register lawful permanent residence or adjust status to that of a lawful permanent resident based on the following immigrant category (select only one box). (See the Form I - 4 85 Instructions for more information, including any Additional Instructions that relate to the immigrant category you select.). 1. F. Special Programs Based on Certain Public Laws. Select The Cuban Adjustment Act.",
+      "expect": true,
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf: inspected and admitted (box verified on the rendered page)"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line11_CB[1]",
+      "label": "Part 2. Application Type or Filing Category. I am applying to register lawful permanent residence or adjust status to that of a lawful permanent resident based on the following immigrant category (select only one box). (See the Form I - 4 85 Instructions for more information, including any Additional Instructions that relate to the immigrant category you select.). 1. F. Special Programs Based on Certain Public Laws. Select The Cuban Adjustment Act.",
+      "expect": false,
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line11_CB[2]",
+      "label": "Part 2. Application Type or Filing Category. I am applying to register lawful permanent residence or adjust status to that of a lawful permanent resident based on the following immigrant category (select only one box). (See the Form I - 4 85 Instructions for more information, including any Additional Instructions that relate to the immigrant category you select.). 1. F. Special Programs Based on Certain Public Laws. Select The Cuban Adjustment Act.",
+      "expect": false,
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line11_CB[3]",
+      "label": "Part 2. Application Type or Filing Category. I am applying to register lawful permanent residence or adjust status to that of a lawful permanent resident based on the following immigrant category (select only one box). (See the Form I - 4 85 Instructions for more information, including any Additional Instructions that relate to the immigrant category you select.). 1. F. Special Programs Based on Certain Public Laws. Select The Cuban Adjustment Act.",
+      "expect": false,
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt1Line11_Admitted[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). Recent Immigration History. When I last arrived in the United States, I. 25. D. Enter Other.",
+      "expect": [
+        "B2",
+        "B-2"
+      ],
+      "match": "contains",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf: class of admission B2"
+    },
+    {
+      "id": "form1[0].#subform[2].P1Line12_FamilyName[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 12. If you were issued a Form I-94 Arrival/Departure Record, provide the information from your most recent Form I-94 below:. Enter Family Name (Last Name)",
+      "expect": "Jones",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P1Line13_GivenName[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 12. If you were issued a Form I-94 Arrival/Departure Record, provide the information from your most recent Form I-94 below:. Enter Given Name (First Name)",
+      "expect": [
+        "Maria Elena",
+        "Maria"
+      ],
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line12_Date[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 12. Enter Expiration Date of Authorized Stay Shown on Form I - 94. Enter as 2-digit Month, 2-digit Day, and 4-digit Year. or Type or print \"D/S\" for Duration of Status.",
+      "expect": "08/19/2026",
+      "match": "date",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf: admit until date"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line12_Status[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 12. Enter Immigration Status on Form I - 94 (for example, class of admission, or paroled, if paroled).",
+      "expect": [
+        "B2",
+        "B-2"
+      ],
+      "match": "contains",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].P1Line12_I94[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). Recent Immigration History. If you were issued a Form I-94 Arrival-Departure Record Number. 26. A. Enter Form I - 94 Arrival-Departure Record Number.",
+      "expect": "99887766544",
+      "match": "digits",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line13_YN[0]",
+      "label": "Part 1. Information About You (individual applying for lawful permanent residence). 13. Was your last arrival the first time you were physically present in the United States? Select Yes.",
+      "expect": false,
+      "category": "immigration",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line13_YN[1]",
+      "label": "Part 1. Information About You (individual applying for lawful permanent residence). 13. Was your last arrival the first time you were physically present in the United States? Select No.",
+      "expect": true,
+      "category": "immigration",
+      "source": "situation description: she first came in 2024 (box [1] = No)"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line15_Date[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 15. Enter Expiration Date of Current Immigration Status (mm/dd/yyyy) or Type or Print \"D/S\" for Duration of Status",
+      "expect": "08/19/2026",
+      "match": "date",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line16_YN[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 16. Have you ever been issued an \"alien crewman\" visa? Select Yes.",
+      "expect": false,
+      "unknown": true,
+      "category": "attestation",
+      "source": "not stated anywhere in the packet"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line17_YN[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 17.0Did you last arrive in the United States to join a vessel as a seaman or crewman, or while serving in any capacity aboard a vessel or aircraft? Select No.",
+      "expect": true,
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf: admitted as a B-2 visitor at DFW (box [0] = No)"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line17_YN[1]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 17.0Did you last arrive in the United States to join a vessel as a seaman or crewman, or while serving in any capacity aboard a vessel or aircraft? Select Yes.",
+      "expect": false,
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line16_YN[1]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 16. Have you ever been issued an \"alien crewman\" visa? Select No.",
+      "expect": false,
+      "unknown": true,
+      "category": "attestation",
+      "source": "not stated anywhere in the packet"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line18US_Unit[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 18. Select Suite.",
+      "expect": false,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line18US_Unit[1]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 18. Select Floor.",
+      "expect": false,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line18US_AptSteFlrNumber[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 18. If Apartment, Suite or Floor is Checked, Enter Apartment, Suite or Floor Number.",
+      "expect": "2B",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line18US_Unit[2]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Select Apartment.",
+      "expect": true,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf: Apt ([2] is Apartment on this PDF)"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line18_CityOrTown[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 18. Enter city or town.",
+      "expect": "Columbus",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line18_State[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 18. State. This is a drop-down list and you will select a state from a list of States.",
+      "expect": "OH",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line18_ZipCode[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 18. Enter 5-digit Zip Code",
+      "expect": "43004",
+      "match": "digits",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line18_StreetNumberName[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Enter Street Number and Name.",
+      "expect": [
+        "482 Placeholder"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line18_Date[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence) 18. Enter Date you First Resided at This Address. Enter as 2-digit Month, 2-digit Day, and 4-digit Year.",
+      "expect": "09/01/2024",
+      "match": "date",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf, situation description"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line18_YN[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Is this your current mailing address? Select Yes.",
+      "expect": true,
+      "category": "address",
+      "source": "situation description: it is also her mailing address"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt1Line18_YN[1]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Is this your current mailing address? Select No. If you answered \"No,\" provide your current mailing address.",
+      "expect": false,
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line18_last5yrs_YN[0]",
+      "label": "Part 1. Information About You (individual applying for lawful permanent residence). 18. Have you resided at your current address for at least 5 years? Select Yes.",
+      "expect": false,
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line18_last5yrs_YN[1]",
+      "label": "Part 1. Information About You (individual applying for lawful permanent residence). 18. Have you resided at your current address for at least 5 years? Select No. If you answered \"No,\" provide your prior address(es) for the last 5 years. Use the space provided in Part 14. Additional Information, if necessary.",
+      "expect": true,
+      "category": "address",
+      "source": "situation description: lived there since 09/2024"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line18_PriorStreetName[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Prior Address. Enter Street Number and Name.",
+      "expect": [
+        "Simulada 1234"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line18_PriorCity[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Prior Address. Enter City or Town.",
+      "expect": "Guadalajara",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line18_PriorState[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Prior Address. State. This is a drop-down list and you will select a state from a list of States.",
+      "expect": "",
+      "category": "address",
+      "source": "foreign address: no U.S. state"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line18_PriorProvince[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Prior Address. Enter Province.",
+      "expect": "Jalisco",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line18_PriorPostalCode[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Prior Address. Enter Postal Code.",
+      "expect": "44100",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line18_PriorCountry[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Prior Address. Enter Country.",
+      "expect": "Mexico",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line18_PriorDateFrom[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Prior Address. Dates of Residence. Enter Date From. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "06/01/2015",
+      "match": "date",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line18PriorDateTo[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Prior Address. Dates of Residence. Enter Date To. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "08/25/2024",
+      "match": "date",
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line18_RecentStreetName[0]",
+      "label": "Part 1. Information About You (Person applying for lawful permanent residence). 18. Most Recent Address Outside the United States. Provide your most recent physical address outside the United States where you lived for more than one year (if not already listed above). Enter Street Number and Name.",
+      "expect": [
+        "",
+        "Simulada 1234"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "already listed as the prior address; repeating it is acceptable"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line19_YN[0]",
+      "label": "Part 1. Information About You (individual applying for lawful permanent residence). 19. Social Security Card. Has the Social Security Administration (SSA) ever officially issued a Social Security card to you? Select No.",
+      "expect": true,
+      "category": "identity",
+      "source": "additional notes: never issued an SSN (box [0] = No)"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line19_YN[1]",
+      "label": "Part 1. Information About You (individual applying for lawful permanent residence). 19. Social Security Card. Has the Social Security Administration (SSA) ever officially issued a Social Security card to you? Select Yes.",
+      "expect": false,
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt1Line19_SSN[0]",
+      "label": "Part 1. Information About You (individual applying for lawful permanent residence). 19. Social Security Card. Provide your U.S. Social Security Number (SSN). Enter 9 digit social security number.",
+      "expect": "",
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt2Line1_YN[0]",
+      "label": "Part 2. Application Type or Filing Category. 1. Are you filing for adjustment of status with the Executive Office for Immigration Review (EOIR) while in removal, exclusion, rescission, or deportation proceedings? Select Yes.",
+      "expect": false,
+      "category": "immigration",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt2Line1_YN[1]",
+      "label": "Part 2. Application Type or Filing Category. 1. Are you filing for adjustment of status with the Executive Office for Immigration Review (EOIR) while in removal, exclusion, rescission, or deportation proceedings? Select No.",
+      "expect": true,
+      "category": "immigration",
+      "source": "additional notes: never in removal proceedings (box [1] = No)"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt2Line2_Receipt[0]",
+      "label": "Part 2. Application Type or Filing Category. 2. Enter Receipt Number of Underlying Petition, if any.",
+      "expect": "",
+      "category": "filing",
+      "source": "process description: I-130 filed together with the I-485"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt2Line2_Date[0]",
+      "label": "Part 2. Application Type or Filing Category. 2. Enter Priority Date from Underlying Petition, if any. Enter as 2-digit Month, 2-digit Day, and 4-digit Year.",
+      "expect": "",
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt2Line2_CB[0]",
+      "label": "Part 2. Application Type or Filing Category. 2. I am filing this Form I- 4 8 5 as a (select only one box). Select Principal Applicant.",
+      "expect": true,
+      "category": "filing",
+      "source": "process description: principal applicant"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt2Line2_CB[1]",
+      "label": "Part 2. Application Type or Filing Category. 2. Select Derivative Applicant (Provide the following information about the principal applicant.)",
+      "expect": false,
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt2Line3a_CB[0]",
+      "label": "Part 2. Application Type or Filing Category. I am applying based on the following category (You must select ONLY ONE category. If you are filing as a derivative applicant, select the appropriate box based on the category under which the principal applicant is applying or has applied. See the Form I-485 Instructions for more information, including any Additional Instructions that relate to the immigrant category you select.): 3.a Family-based. Immediate relative of a U.S. citizen, Form I-130, I-129F, or I-360 (select your specific category below): Select Spouse of a U.S. Citizen.",
+      "expect": true,
+      "category": "filing",
+      "source": "process description: spouse of a U.S. citizen"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt2Line3a_CB[3]",
+      "label": "3.b. Immediate relative of a U.S. citizen, Form I-130, I-129F, or I-360 (select your specific category below): Select Person admitted to the United States as a fiancé(e) or child of a fiancé(e) of a U.S. citizen (K-1/K-2 Nonimmigrant).",
+      "expect": false,
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt2Line3a_CB[9]",
+      "label": "3.a. Family-based. Relative of a lawful permanent resident under the family-based preference categories, Form I-130 (select your specific category below): Select Spouse of a lawful permanent resident.",
+      "expect": false,
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line1_YN[0]",
+      "label": "Part 4. Additional Information About You. 1. Have you ever applied for an immigrant visa to obtain permanent resident status at a U.S. Embassy or U.S. Consulate abroad? Select No.",
+      "expect": true,
+      "category": "immigration",
+      "source": "additional notes: never applied for an immigration benefit (box [0] = No)"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line1_YN[1]",
+      "label": "Part 4. Additional Information About You. 1. Have you ever applied for an immigrant visa to obtain permanent resident status at a U.S. Embassy or U.S. Consulate abroad? Select Yes.",
+      "expect": false,
+      "category": "immigration",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line5_YN[0]",
+      "label": "Part 4. Additional Information About You. 5. Have you previously applied for permanent residence while in the United States? Select No.",
+      "expect": true,
+      "category": "immigration",
+      "source": "additional notes (box [0] = No)"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line5_YN[1]",
+      "label": "Part 4. Additional Information About You. 5. Have you previously applied for permanent residence while in the United States? Select Yes.",
+      "expect": false,
+      "category": "immigration",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line7_EmployerName[1]",
+      "label": "Part 4. Additional Information About You. Employment and Educational History. 7. Provide ALL of your employment and educational history for the last 5 years as indicated in the Instructions. Provide your current employment or school attended first. Include periods of self-employment, unemployment, or retirement. For each period of unemployment or retirement, list source of financial support. If you have additional employment or educational history, use the space provided in Part 14. Additional Information. Enter Your Occupation (if unemployed or retired, so state)",
+      "expect": [
+        "Unemployed"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "additional notes: not working since 07/2024"
+    },
+    {
+      "id": "form1[0].#subform[8].Pt4Line8_Occupation[0]",
+      "label": "Part 4. Additional Information About You. 8. Provide your most recent employer or school outside of the United States (if not already listed above). Enter Your Occupation (if unemployed or retired, so state)",
+      "expect": [
+        "Accountant"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[8].Pt4Line8_EmployerName[0]",
+      "label": "Part 4. Additional Information About You. 8. Provide your most recent employer or school outside of the United States (if not already listed above). Enter Name of Employer, Company, or School.",
+      "expect": [
+        "Contables Simulados"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "additional notes: most recent employer abroad"
+    },
+    {
+      "id": "form1[0].#subform[8].P4Line8_City[0]",
+      "label": "Part 4. Additional Information About You. 8. Provide your most recent employer or school outside of the United States (if not already listed above). Address of Employer, Company or School. City or Town. Enter City or Town.",
+      "expect": "Guadalajara",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[8].P4Line8_Country[0]",
+      "label": "Part 4. Additional Information About You. 8. Provide your most recent employer or school outside of the United States (if not already listed above). Address of Employer, Company or School. Country. Enter Country.",
+      "expect": "Mexico",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[8].Pt4Line8_DateFrom[0]",
+      "label": "Part 4. Additional Information About You. 8. Provide your most recent employer or school outside of the United States (if not already listed above). Dates of Employment, Unemployment, Retirement, or School Attendance. Enter Date From. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "03/01/2017",
+      "match": "date",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[8].Pt4Line8_DateTo[0]",
+      "label": "Part 4. Additional Information About You. 8. Provide your most recent employer or school outside of the United States (if not already listed above). Dates of Employment, Unemployment, Retirement, or School Attendance. Enter Date To. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "07/31/2024",
+      "match": "date",
+      "category": "employment",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[8].Pt5Line1_FamilyName[0]",
+      "label": "Part 5. Information About Your Parents. Information About Your Parent 1. 1. Parent 1's Legal Name. Enter Family Name, Last Name.",
+      "expect": [
+        "Lopez Ramirez",
+        "Garcia Mendez"
+      ],
+      "category": "family",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[8].Pt5Line1_GivenName[0]",
+      "label": "Part 5. Information About Your Parents. Information About Your Parent 1. 1. Parent 1's Legal Name. Enter Given Name, First Name.",
+      "expect": [
+        "Elena",
+        "Elena Sofia",
+        "Carlos",
+        "Carlos Alberto"
+      ],
+      "category": "family",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[8].Pt5Line1_MiddleName[0]",
+      "label": "Part 5. Information About Your Parents. Information About Your Parent 1. 1. Parent 1's Legal Name. Enter Middle Name, if applicable.",
+      "expect": [
+        "Sofia",
+        "Alberto",
+        ""
+      ],
+      "category": "family",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[8].Pt5Line3_DateofBirth[0]",
+      "label": "Part 5. Information About Your Parents. Information About Your Parent 1. 3. Enter Date of Birth. Enter as 2-digit Month, 2-digit Day, and 4-digit Year.",
+      "expect": "",
+      "unknown": true,
+      "category": "family",
+      "source": "parents' dates of birth are not in the packet"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt5Line5_CityTownOfBirth[0]",
+      "label": "Part 5. Information About Your Parents. Information About Your Parent 1. 4. Enter Country of Birth.",
+      "expect": "Mexico",
+      "category": "family",
+      "source": "additional notes (this field is the parent's country of birth)"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt5Line6_FamilyName[0]",
+      "label": "Part 5. Information About Your Parents. Information About Your Parent 2. 5. Parent 2's Legal Name. Enter Family Name, Last Name.",
+      "expect": [
+        "Lopez Ramirez",
+        "Garcia Mendez"
+      ],
+      "category": "family",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt5Line6_GivenName[0]",
+      "label": "Part 5. Information About Your Parents. Information About Your Parent 2. 5. Parent 2's Legal Name. Enter Given Name, First Name.",
+      "expect": [
+        "Elena",
+        "Elena Sofia",
+        "Carlos",
+        "Carlos Alberto"
+      ],
+      "category": "family",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt5Line6_MiddleName[0]",
+      "label": "Part 5. Information About Your Parents. Information About Your Parent 2. 5. Parent 2's Legal Name. Enter Middle Name, if applicable.",
+      "expect": [
+        "Sofia",
+        "Alberto",
+        ""
+      ],
+      "category": "family",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt5Line8_DateofBirth[0]",
+      "label": "Part 5. Information About Your Parents. Information About Your Parent 2. 7. Enter Date of Birth. Enter as 2-digit Month, 2-digit Day, and 4-digit Year.",
+      "expect": "",
+      "unknown": true,
+      "category": "family",
+      "source": "parents' dates of birth are not in the packet"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt5Line10_CityTownOfBirth[0]",
+      "label": "Part 5. Information About Your Parents. Information About Your Parent 2. 8. Enter Country of Birth.",
+      "expect": "Mexico",
+      "category": "family",
+      "source": "additional notes (this field is the parent's country of birth)"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt6Line1_MaritalStatus[1]",
+      "label": "Part 6. Information About Your Marital History. 1. What is your current marital status? Select Single, Never Married.",
+      "expect": false,
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt6Line1_MaritalStatus[3]",
+      "label": "Part 6. Information About Your Marital History. 1. What is your current marital status? Select Married.",
+      "expect": true,
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf ([3] is Married on this PDF)"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt6Line3_TimesMarried[0]",
+      "label": "Part 5. Information About Your Marital History. 3. How many times have you been married (including your current marriage, marriages abroad, annulled marriages and marriages to the same person)? Enter Number.",
+      "expect": "1",
+      "category": "family",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt6Line4_FamilyName[0]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated) 4. Current Spouse's Legal Name. Enter Family Name, Last Name.",
+      "expect": "Jones",
+      "category": "family",
+      "source": "us_passport_bill_jones.pdf: current spouse"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt6Line4_GivenName[0]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated) 4. Current Spouse's Legal Name. Enter Given Name, First Name.",
+      "expect": "William",
+      "category": "family",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt6Line4_MiddleName[0]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated) 4. Current Spouse's Legal Name. Enter Middle Name, if applicable.",
+      "expect": "Robert",
+      "category": "family",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt5Line8_DateofBirth[1]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated) 6. Enter Current Spouse's Date of Birth. Enter as 2-digit Month, 2-digit Day, and 4-digit Year.",
+      "expect": "03/14/1992",
+      "match": "date",
+      "category": "family",
+      "source": "us_passport_bill_jones.pdf: spouse's date of birth"
+    },
+    {
+      "id": "form1[0].#subform[9].Pt6Line7_Country[0]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated) 7. Enter Current Spouse's Country of Birth.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "family",
+      "source": "us_passport_bill_jones.pdf: spouse's country of birth"
+    },
+    {
+      "id": "form1[0].#subform[9].P6Line8_Country[0]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated). 8. Current Spouse's Current Physical Address. Country. Enter Country.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "family",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[9].P6Line8_City[0]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated) 8. Current Spouse's Current Physical Address. City or Town. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "family",
+      "source": "joint_rental_lease_jones.pdf: spouse's current address"
+    },
+    {
+      "id": "form1[0].#subform[10].Pt6Line10_CityTownOfBirth[0]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated). 9. Place of Marriage to Current Spouse. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf: place of marriage (verified on the rendered page)"
+    },
+    {
+      "id": "form1[0].#subform[10].Pt6Line10_State[0]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated). 9. Place of Marriage to Current Spouse. Enter State or Province.",
+      "expect": [
+        "Ohio",
+        "OH"
+      ],
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[10].Pt6Line10_Country[0]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated). 9. Place of Marriage to Current Spouse. Enter Country.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[10].Pt5Line8_DateofBirth[2]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated). 9. Place of Marriage to Current Spouse. Date of Marriage to Current Spouse. Enter Date of Birth. Enter as 2-digit Month, 2-digit Day, and 4-digit Year.",
+      "expect": "07/12/2024",
+      "match": "date",
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf: this field is the date of marriage (verified on the rendered page)"
+    },
+    {
+      "id": "form1[0].#subform[10].Pt6Line11_YN[0]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated). 10. Is your current spouse applying with you? 10. Is your current spouse applying with you? Select No.",
+      "expect": true,
+      "category": "family",
+      "source": "spouse is a U.S. citizen, not applying (box [0] = No)"
+    },
+    {
+      "id": "form1[0].#subform[10].Pt6Line11_YN[1]",
+      "label": "Part 6. Information About Your Marital History. Information About Your Current Marriage (including if you are legally separated). 10. Is your current spouse applying with you? Select Yes.",
+      "expect": false,
+      "category": "family",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[10].Pt6Line12_FamilyName[0]",
+      "label": "Part 6. Information About Your Marital History. Information About Prior Marriages (if any). 11. Prior Spouse's Legal Name (provide family name before marriage) Enter Family Name, Last Name.",
+      "expect": "",
+      "category": "family",
+      "source": "situation description: no prior marriages"
+    },
+    {
+      "id": "form1[0].#subform[11].Pt6Line1_TotalChildren[0]",
+      "label": "Part 7. Information About Your Children. 1. Indicate the total number of ALL living children anywhere in the world (including adult sons and daughters) that you have. NOTE: The term \"children\" includes all biological or legally adopted children, as well as current stepchildren, of any age, whether born in the United States or other countries, married or unmarried, living with you or elsewhere and includes any missing children and those born to you outside of marriage. Enter Number.",
+      "expect": "0",
+      "category": "family",
+      "source": "situation description: no children"
+    },
+    {
+      "id": "form1[0].#subform[11].Pt7Line2_FamilyName[0]",
+      "label": "Part 7. Information About Your Children. Provide the following information for each of your children. If you have more than two children, use the space provided in Part 14. Additional Information. 2. Child 1. Current Legal Name. Enter Family Name, Last Name.",
+      "expect": "",
+      "category": "family",
+      "source": "situation description: no children"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line1_Ethnicity[0]",
+      "label": "Part 8. Biographic Information. 1. Ethnicity (Select only one box). Select Hispanic or Latino.",
+      "expect": true,
+      "category": "identity",
+      "source": "additional notes: Maria is Hispanic or Latino"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line1_Ethnicity[1]",
+      "label": "Part 8. Biographic Information. 1. Ethnicity (Select only one box). Select Not Hispanic or Latino.",
+      "expect": false,
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line2_Race[0]",
+      "label": "Part 8. Biographic Information. 2. Race (Select all applicable boxes). Select Asian.",
+      "expect": false,
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line2_Race[1]",
+      "label": "Part 8. Biographic Information. 2. Race (Select all applicable boxes). Select White.",
+      "expect": true,
+      "category": "identity",
+      "source": "additional notes: race White"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line3_HeightFeet[0]",
+      "label": "Part 8. Biographic Information. 3. Height. Feet. This is a drop-down. Select Number of Feet from a list of numbers.",
+      "expect": "5",
+      "category": "identity",
+      "source": "additional notes: 5 ft 4 in"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line3_HeightInches[0]",
+      "label": "Part 8. Biographic Information. 3. Height. Inches. This is a drop-down. Select Number of Inches from a list of numbers.",
+      "expect": "4",
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line4_Weight1[0]",
+      "label": "Part 8. Biographic Information. 4. Weight. Pounds. Enter first digit of Weight in Pounds.",
+      "expect": "1",
+      "category": "identity",
+      "source": "additional notes: 130 lbs"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line4_Weight2[0]",
+      "label": "Part 8. Biographic Information. 4. Weight. Pounds. Enter second digit of Weight in Pounds.",
+      "expect": "3",
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line4_Weight3[0]",
+      "label": "Part 8. Biographic Information. 4. Weight. Pounds. Enter third digit of Weight in Pounds.",
+      "expect": "0",
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line5_Eyecolor[0]",
+      "label": "Part 8. Biographic Information. 5. Eye Color (Select only one box). Select Blue.",
+      "expect": false,
+      "category": "identity",
+      "source": "additional notes: blue is Bill's eye color"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line5_Eyecolor[2]",
+      "label": "Part 8. Biographic Information. 5. Eye Color (Select only one box). Select Brown.",
+      "expect": true,
+      "category": "identity",
+      "source": "additional notes: brown eyes"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line6_Haircolor[1]",
+      "label": "Part 8. Biographic Information. 6. Hair Color (Select only one box). Select Black.",
+      "expect": true,
+      "category": "identity",
+      "source": "additional notes: black hair"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt7Line6_Haircolor[3]",
+      "label": "Part 8. Biographic Information. 6. Hair Color (Select only one box). Select Brown.",
+      "expect": false,
+      "category": "identity",
+      "source": "additional notes: brown is Bill's hair color"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt8Line1_YesNo[0]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. Choose the answer that you think is correct in Part 9. If you answer \"Yes\" to any questions (or if you answer \"No,\" but are unsure of your answer), provide an explanation of the events and circumstances in the space provided in Part 14. Additional Information. 1. Have you EVER been a member of, involved in, or in any way associated with any organization, association, fund, foundation, party, club, society, or similar group in the United States or in any other location in the world? Select No.",
+      "expect": false,
+      "unknown": true,
+      "category": "attestation",
+      "source": "not stated anywhere in the packet"
+    },
+    {
+      "id": "form1[0].#subform[12].Pt8Line1_YesNo[1]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. Choose the answer that you think is correct in Part 9. If you answer \"Yes\" to any questions (or if you answer \"No,\" but are unsure of your answer), provide an explanation of the events and circumstances in the space provided in Part 14. Additional Information. 1. Have you EVER been a member of, involved in, or in any way associated with any organization, association, fund, foundation, party, club, society, or similar group in the United States or in any other location in the world? Select Yes. If you answered \"Yes\" to Item Number 1., complete Item Numbers 2. - 9. If you were a member of more than two organizations, use the space provided in Part 14. Additional Information.",
+      "expect": false,
+      "unknown": true,
+      "category": "attestation",
+      "source": "not stated anywhere in the packet"
+    },
+    {
+      "id": "form1[0].#subform[13].Pt9Line10_YesNo[0]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. 10. Have you EVER been denied admission to the United States? Select No.",
+      "expect": false,
+      "unknown": true,
+      "category": "attestation",
+      "source": "not stated anywhere in the packet"
+    },
+    {
+      "id": "form1[0].#subform[13].Pt9Line10_YesNo[1]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. 10. Have you EVER been denied admission to the United States? Select Yes.",
+      "expect": false,
+      "unknown": true,
+      "category": "attestation",
+      "source": "not stated anywhere in the packet"
+    },
+    {
+      "id": "form1[0].#subform[13].Pt9Line11_YesNo[0]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. 11. Have you EVER been denied a visa to the United States? Select Yes.",
+      "expect": false,
+      "unknown": true,
+      "category": "attestation",
+      "source": "not stated anywhere in the packet"
+    },
+    {
+      "id": "form1[0].#subform[13].Pt9Line11_YesNo[1]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. 11. Have you EVER been denied a visa to the United States? Select No.",
+      "expect": false,
+      "unknown": true,
+      "category": "attestation",
+      "source": "not stated anywhere in the packet"
+    },
+    {
+      "id": "form1[0].#subform[13].Pt8Line18_YesNo[0]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. 14. Are you presently or have you EVER been in removal, exclusion, rescission, or deportation proceedings, including expedited removal proceedings? Select Yes.",
+      "expect": false,
+      "category": "attestation",
+      "source": "additional notes states the answer"
+    },
+    {
+      "id": "form1[0].#subform[13].Pt8Line18_YesNo[1]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. 14. Are you presently or have you EVER been in removal, exclusion, rescission, or deportation proceedings, including expedited removal proceedings? Select No.",
+      "expect": true,
+      "category": "attestation",
+      "source": "additional notes states the answer: never in removal proceedings"
+    },
+    {
+      "id": "form1[0].#subform[13].Pt9Line12_YesNo[0]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. 12. Have you EVER worked in the United States without authorization? Select Yes.",
+      "expect": false,
+      "category": "attestation",
+      "source": "additional notes states the answer"
+    },
+    {
+      "id": "form1[0].#subform[13].Pt9Line12_YesNo[1]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. 12. Have you EVER worked in the United States without authorization? Select No.",
+      "expect": true,
+      "category": "attestation",
+      "source": "additional notes states the answer: never worked in the U.S."
+    },
+    {
+      "id": "form1[0].#subform[13].Pt8Line24a_YesNo[0]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. 19. Have you EVER been a J nonimmigrant exchange visitor who was subject to the two-year foreign residence requirement? Select Yes.",
+      "expect": false,
+      "unknown": true,
+      "category": "attestation",
+      "source": "not stated anywhere in the packet"
+    },
+    {
+      "id": "form1[0].#subform[13].Pt8Line24a_YesNo[1]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. 19. Have you EVER been a J nonimmigrant exchange visitor who was subject to the two-year foreign residence requirement? Select No.",
+      "expect": false,
+      "unknown": true,
+      "category": "attestation",
+      "source": "not stated anywhere in the packet"
+    },
+    {
+      "id": "form1[0].#subform[13].Pt8Line22_YesNo[0]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. Criminal Acts and Violations. For Item Numbers 22. - 41., you must answer \"Yes\" to any question that applies to you, even if your records were sealed or otherwise cleared, or even if anyone, including a judge, law enforcement officer, or attorney, told you that you no longer have a record. You must also answer \"Yes\" to the following questions whether the action or offense occurred here in the United States or anywhere else in the world. If you answer \"Yes\" to Item Numbers 22. - 41., use the space provided in Part 14. Additional Information to provide an explanation for each offense, if applicable, that includes a description of the criminal offense; where the criminal offense occurred; when the criminal offense occurred; whether you were arrested, cited, charged, or detained for the criminal offense you committed; and the outcome or disposition of that criminal offense (for example, convicted, placement in a diversion program, no charges filed, charges dismissed, jail, prison, detention, probation, or community service). Your explanation must include the duration of any sentence to confinement (even if suspended). 22. Have you EVER been arrested, cited, charged, or permitted to participate in a diversion program (including pre-trial diversion, deferred prosecution, deferred adjudication, or any withheld adjudication), or detained for any reason by any law enforcement official in any country including but not limited to any U.S. immigration official or any official of the U.S. armed forces or U.S. Coast Guard or by a similar official of a country other than the United States? Select Yes.",
+      "expect": false,
+      "category": "attestation",
+      "source": "additional notes states the answer"
+    },
+    {
+      "id": "form1[0].#subform[13].Pt8Line22_YesNo[1]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. Criminal Acts and Violations. For Item Numbers 22. - 41., you must answer \"Yes\" to any question that applies to you, even if your records were sealed or otherwise cleared, or even if anyone, including a judge, law enforcement officer, or attorney, told you that you no longer have a record. You must also answer \"Yes\" to the following questions whether the action or offense occurred here in the United States or anywhere else in the world. If you answer \"Yes\" to Item Numbers 22. - 41., use the space provided in Part 14. Additional Information to provide an explanation for each offense, if applicable, that includes a description of the criminal offense; where the criminal offense occurred; when the criminal offense occurred; whether you were arrested, cited, charged, or detained for the criminal offense you committed; and the outcome or disposition of that criminal offense (for example, convicted, placement in a diversion program, no charges filed, charges dismissed, jail, prison, detention, probation, or community service). Your explanation must include the duration of any sentence to confinement (even if suspended). 22. Have you EVER been arrested, cited, charged, or permitted to participate in a diversion program (including pre-trial diversion, deferred prosecution, deferred adjudication, or any withheld adjudication), or detained for any reason by any law enforcement official in any country including but not limited to any U.S. immigration official or any official of the U.S. armed forces or U.S. Coast Guard or by a similar official of a country other than the United States? Select No.",
+      "expect": true,
+      "category": "attestation",
+      "source": "additional notes states the answer: never arrested, cited, charged, or detained"
+    },
+    {
+      "id": "form1[0].#subform[14].Pt9Line23_YesNo[0]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. Criminal Acts and Violations. 23. Have you EVER committed a crime of any kind (even if you were not arrested, cited, charged with, or tried for that crime, or convicted)? Select No.",
+      "expect": false,
+      "unknown": true,
+      "category": "attestation",
+      "source": "'committed a crime' is broader than the stated 'never arrested, cited, charged, or detained'"
+    },
+    {
+      "id": "form1[0].#subform[14].Pt9Line23_YesNo[1]",
+      "label": "Part 9. General Eligibility and Inadmissibility Grounds. Criminal Acts and Violations. 23. Have you EVER committed a crime of any kind (even if you were not arrested, cited, charged with, or tried for that crime, or convicted)? Select Yes.",
+      "expect": false,
+      "unknown": true,
+      "category": "attestation",
+      "source": "'committed a crime' is broader than the stated 'never arrested, cited, charged, or detained'"
+    },
+    {
+      "id": "form1[0].#subform[22].Pt3Line3_DaytimePhoneNumber1[0]",
+      "label": "Part 10. Applicant's Contact Information, Certification, and Signature. Applicants Contact Information. Provide your daytime telephone number, mobile telephone number (if any), and email address (if any). 1. Enter Applicant's Daytime Telephone Number.",
+      "expect": "6145550177",
+      "match": "digits",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[22].Pt3Line5_Email[0]",
+      "label": "Part 10. Applicant's Contact Information, Certification, and Signature. Applicants Contact Information. Provide your daytime telephone number, mobile telephone number (if any), and email address (if any). 3. Enter Applicant's Email Address (if any).",
+      "expect": "maria.jones@example.com",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[22].Pt3Line4_MobileNumber1[0]",
+      "label": "Part 10. Applicant's Contact Information, Certification, and Signature. Applicants Contact Information. Provide your daytime telephone number, mobile telephone number (if any), and email address (if any). 2. Enter Applicant's Mobile Telephone Number (if any)",
+      "expect": "6145550177",
+      "match": "digits",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[22].Pt3Line7b_DateofSignature[0]",
+      "label": "Part 10. Applicant's Contact Information, Certification, and Signature. Applicant's Certification and Signature. I certify, under penalty of perjury, that I provided or authorized all of the responses and information contained in and submitted with my application, I read and understand or, if interpreted to me in a language in which I am fluent by the interpreter listed in Part 11., understood, all of the responses and information contained in, and submitted with, my application, and that all of the responses and the information are complete, true, and correct. Furthermore, I authorize the release of any information from any and all of my records that USCIS may need to determine my eligibility for an immigration request and to other entities and persons where necessary for the administration and enforcement of U.S. immigration law. 4. Date of Signature. Enter the 2-digit Month, 2-digit Day and 4-digit Year.",
+      "expect": "",
+      "unknown": true,
+      "category": "filing",
+      "source": "signature date is written when the applicant signs"
+    }
+  ]
+}

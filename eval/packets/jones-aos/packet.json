@@ -1,0 +1,24 @@
+{
+  "id": "jones-aos",
+  "description": "Fictional marriage-based adjustment of status. Petitioner William \"Bill\" Robert Jones (U.S. citizen by birth, Ohio); beneficiary Maria Elena Jones, born Maria Elena Garcia Lopez (Mexican citizen, last entered on a B-2 visa). All documents are simulated test specimens.",
+  "processId": "aos",
+  "userId": "eval:jones-aos",
+  "uiAnswers": {
+    "situationDescription": "Bill (legal name William Robert Jones) is a U.S. citizen, born in Columbus, Ohio. His wife, Maria Elena Jones (born Maria Elena Garcia Lopez), was born in Guadalajara, Mexico and is a Mexican citizen. They married in Columbus, Ohio on July 12, 2024. Neither of them had been married before, and they have no children. They have lived together at 482 Placeholder Lane, Apt 2B, Columbus, OH 43004 since September 1, 2024. Before that, Maria lived at Avenida Simulada 1234, Colonia Centro, Guadalajara, Jalisco 44100, Mexico from June 1, 2015 to August 25, 2024, and Bill lived at 77 Testing Street, Columbus, OH 43215 from May 1, 2016 to August 31, 2024. Maria first came to the U.S. in 2024 to visit Bill. She went back to Mexico in late 2025 to get a new visa and most recently entered the U.S. on February 20, 2026 at Dallas/Fort Worth on a B-2 tourist visa. She has stayed in the U.S. since then.",
+    "processDescription": "Maria wants to apply for her green card from inside the U.S. based on her marriage to Bill. Bill is filing the I-130 petition for her and they are filing everything together. She also wants a work permit while the case is pending. Bill will sign the Affidavit of Support as her sponsor.",
+    "additionalNotes": "Contact: Bill's cell is (614) 555-0199 (also his daytime number), email bill.jones@example.com, Social Security number 123-45-6789. Maria's cell is (614) 555-0177 (also her daytime number), email maria.jones@example.com.\nMaria has no A-Number and no Social Security number. She has never applied for any U.S. immigration benefit, and no one has ever filed a petition for her before. Bill has never filed a petition for anyone or sponsored anyone before.\nMaria has never been arrested, cited, charged, or detained by any police or immigration official anywhere. She has never been in immigration court or removal proceedings, and she has never worked in the U.S.\nEmployment: Bill works full time at Buckeye Widgetworks LLC (see letter). Maria worked as an accountant at Contables Simulados S.A. de C.V., Calle Ficticia 55, Guadalajara, Jalisco 44160, Mexico from March 1, 2017 to July 31, 2024, and has not worked since then.\nHousehold: just Bill and Maria. Bill has no children or other dependents. Bill's only income is his salary of $84,500 per year; Maria has no income.\nParents: Bill's parents were both born in the U.S. and live in Columbus, Ohio. Maria's parents were both born in Mexico and live in Guadalajara.\nBiographic: Bill is 6 ft 0 in, 185 lbs, blue eyes, brown hair, not Hispanic or Latino, race White. Maria is 5 ft 4 in, 130 lbs, brown eyes, black hair, Hispanic or Latino, race White."
+  },
+  "documents": [
+    { "file": "docs/us_passport_bill_jones.pdf", "slot": "citizenship_proof", "owner": "petitioner" },
+    { "file": "docs/birth_certificate_bill_jones.pdf", "slot": "citizenship_proof", "owner": "petitioner" },
+    { "file": "docs/employment_verification_bill_jones.pdf", "slot": "employment_letter", "owner": "petitioner" },
+    { "file": "docs/mexican_passport_maria_jones.pdf", "slot": "passport_bio", "owner": "beneficiary" },
+    { "file": "docs/b2_visa_maria_jones.pdf", "slot": "visa", "owner": "beneficiary" },
+    { "file": "docs/i94_maria_jones.pdf", "slot": "i94", "owner": "beneficiary" },
+    { "file": "docs/birth_certificate_maria_jones.pdf", "slot": "birth_cert", "owner": "beneficiary" },
+    { "file": "docs/marriage_certificate_jones.pdf", "slot": "marriage_cert", "owner": "both" },
+    { "file": "docs/joint_rental_lease_jones.pdf", "slot": "bona_fide", "owner": "both" }
+  ],
+  "forms": ["i-130", "i-130a", "i-485", "i-864", "i-765"],
+  "beneficiary": "Maria"
+}

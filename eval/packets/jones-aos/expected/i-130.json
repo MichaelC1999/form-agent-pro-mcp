@@ -1,0 +1,1284 @@
+{
+  "formId": "i-130",
+  "pdf": "assets/forms/aos/i-130/blank.pdf",
+  "notes": "Petitioner = Bill (Part 2, Part 3 biographics, Part 6 contact). Beneficiary = Maria (Part 4). Address history (Items 12-15) is not scored: the form is ambiguous about repeating the current address when it matches the mailing address.",
+  "fields": [
+    {
+      "id": "form1[0].#subform[0].Pt2Line11_SSN[0]",
+      "label": "Part 2. Information About You (Petitioner). 3. Enter U.S. Social Security Number, if any.",
+      "expect": "123456789",
+      "match": "digits",
+      "category": "identity",
+      "source": "additional notes: SSN 123-45-6789 (9-digit comb field)"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line1_Spouse[0]",
+      "label": "Part 1. Relationship (You are the Petitioner. Your relative is the Beneficiary). 1. I am filing this petition for my (Select only one box). Select Spouse.",
+      "expect": true,
+      "category": "filing",
+      "source": "process description: Bill petitions for his wife"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line1_Siblings[0]",
+      "label": "Part 1. Relationship (You are the Petitioner. Your relative is the Beneficiary). 1. I am filing this petition for my (Select only one box). Select Brother / Sister.",
+      "expect": false,
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line1_Parent[0]",
+      "label": "Part 1. Relationship (You are the Petitioner. Your relative is the Beneficiary). 1. I am filing this petition for my (Select only one box). Select Parent.",
+      "expect": false,
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line1_Child[0]",
+      "label": "Part 1. Relationship (You are the Petitioner. Your relative is the Beneficiary). 1. I am filing this petition for my (Select only one box). Select Child.",
+      "expect": false,
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line4_No[0]",
+      "label": "Part 1. Relationship (You are the Petitioner. Your relative is the Beneficiary). 4. Did you gain lawful permanent resident status or citizenship through adoption? Select No.",
+      "expect": true,
+      "category": "family",
+      "source": "birth_certificate_bill_jones.pdf: citizen by birth in Ohio, not through adoption"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt1Line4_Yes[0]",
+      "label": "Part 1. Relationship (You are the Petitioner. Your relative is the Beneficiary). 4. Did you gain lawful permanent resident status or citizenship through adoption? Select Yes.",
+      "expect": false,
+      "category": "family",
+      "source": "birth_certificate_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt2Line4a_FamilyName[0]",
+      "label": "Part 2. Information About You (Petitioner). Your Full Name. 4. A. Enter Family Name (Last Name).",
+      "expect": "Jones",
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt2Line4b_GivenName[0]",
+      "label": "Part 2. Information About You (Petitioner). Your Full Name. 4. B. Enter Given Name (First Name).",
+      "expect": "William",
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf: given names WILLIAM \"BILL\" ROBERT; nickname excluded"
+    },
+    {
+      "id": "form1[0].#subform[0].Pt2Line4c_MiddleName[0]",
+      "label": "Part 2. Information About You (Petitioner). Your Full Name. 4. C. Enter Middle Name.",
+      "expect": "Robert",
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf, birth_certificate_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[0].#area[4].Pt2Line1_AlienNumber[0]",
+      "label": "Part 2. Information About You (Petitioner). 1. Enter Alien Registration Number (A. Number), if any.",
+      "expect": "",
+      "category": "identity",
+      "source": "U.S. citizen by birth: no A-Number"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line8_DateofBirth[0]",
+      "label": "Part 2. Information About You (Petitioner). Other Information. 8. Enter Date of Birth. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "03/14/1992",
+      "match": "date",
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line9_Male[0]",
+      "label": "Part 2. Information About You (Petitioner). Other Information. 9. Sex. Select Male.",
+      "expect": true,
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf: SEX M"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line9_Female[0]",
+      "label": "Part 2. Information About You (Petitioner). Other Information. 9. Sex. Select Female.",
+      "expect": false,
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line7_CountryofBirth[0]",
+      "label": "Part 2. Information About You (Petitioner). Other Information. 7. Enter Country of Birth.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line11_Yes[0]",
+      "label": "Part 2. Information About You (Petitioner). Mailing Address. 11. Is your current mailing address the same as your physical address? Select Yes.",
+      "expect": true,
+      "category": "address",
+      "source": "situation description: they live at the mailing address"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line11_No[0]",
+      "label": "Part 2. Information About You (Petitioner). Mailing Address. 11. Is your current mailing address the same as your physical address? Select No. If you answered \"No\" to Item Number 11., provide information on your physical address in Item Numbers 12. A. through 13. B.",
+      "expect": false,
+      "category": "address",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line10_StreetNumberName[0]",
+      "label": "Part 2. Information About You (Petitioner). Mailing Address. 10. B. Enter Street Number and Name.",
+      "expect": [
+        "482 Placeholder"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf, situation description"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line10_Unit[0]",
+      "label": "Part 2. Information About You (Petitioner). Mailing Address. 10. C. Select Apartment.",
+      "expect": true,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf: Apt 2B"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line10_Unit[1]",
+      "label": "Part 2. Information About You (Petitioner). Mailing Address. 10. C. Select Suite.",
+      "expect": false,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line10_Unit[2]",
+      "label": "Part 2. Information About You (Petitioner). Mailing Address. 10. C. Select Floor.",
+      "expect": false,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line10_AptSteFlrNumber[0]",
+      "label": "Part 2. Information About You (Petitioner). Mailing Address. 10. C. Enter Apartment, Suite or Floor Number.",
+      "expect": "2B",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line10_CityOrTown[0]",
+      "label": "Part 2. Information About You (Petitioner). Mailing Address. 10. D. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line10_ZipCode[0]",
+      "label": "Part 2. Information About You (Petitioner). Mailing Address. 10. F. Enter Zip Code.",
+      "expect": "43004",
+      "match": "digits",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line10_State[0]",
+      "label": "Part 2. Information About You (Petitioner). Mailing Address. 10. E. Select State from List of States.",
+      "expect": "OH",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line6_CityTownOfBirth[0]",
+      "label": "Part 2. Information About You (Petitioner). Other Information. 6. Enter City / Town / Village of Birth.",
+      "expect": [
+        "Columbus"
+      ],
+      "match": "contains",
+      "category": "identity",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line16_NumberofMarriages[0]",
+      "label": "Part 2. Information About You (Petitioner). Your Marital Information. 16. How many times have you been married? Enter Number of Times Married.",
+      "expect": "1",
+      "category": "family",
+      "source": "situation description: neither had been married before"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line17_Single[0]",
+      "label": "Part 2. Information About You (Petitioner). Your Marital Information. 17. Current Marital Status. Select Single, Never Married.",
+      "expect": false,
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line17_Married[0]",
+      "label": "Part 2. Information About You (Petitioner). Your Marital Information. 17. Current Marital Status. Select Married.",
+      "expect": true,
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[1].Pt2Line17_Divorced[0]",
+      "label": "Part 2. Information About You (Petitioner). Your Marital Information. 17. Current Marital Status. Select Divorced.",
+      "expect": false,
+      "category": "family",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[2].PtLine20a_FamilyName[0]",
+      "label": "Part 2. Information About You (Petitioner). Names of All Your Spouses, if any. Provide information on your current spouse (if currently married) first and then list all your prior spouses, if any. Spouse 1. 20. A. Enter Family Name (Last Name).",
+      "expect": "Jones",
+      "category": "family",
+      "source": "mexican_passport_maria_jones.pdf: current spouse"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line20b_GivenName[0]",
+      "label": "Part 2. Information About You (Petitioner). Names of All Your Spouses, if any. Spouse 1. 20. B. Enter Given Name (First Name).",
+      "expect": [
+        "Maria",
+        "Maria Elena"
+      ],
+      "category": "family",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line20c_MiddleName[0]",
+      "label": "Part 2. Information About You (Petitioner). Names of All Your Spouses, if any. Spouse 1. 20. C. Enter Middle Name.",
+      "expect": [
+        "Elena",
+        ""
+      ],
+      "category": "family",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line22a_FamilyName[0]",
+      "label": "Part 2. Information About You (Petitioner). Names of All Your Spouses, if any. Spouse 2. 22. A. Enter Family Name (Last Name).",
+      "expect": "",
+      "category": "family",
+      "source": "situation description: no prior spouses"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line21_DateMarriageEnded[0]",
+      "label": "Part 2. Information About You (Petitioner). Names of All Your Spouses, if any. Spouse 1. 21. Enter Date Marriage Ended. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "",
+      "category": "family",
+      "source": "current marriage has not ended"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line18_DateOfMarriage[0]",
+      "label": "Part 2. Information About You (Petitioner). Your Marital Information. 18. Enter Date of Current Marriage (if currently married). Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "07/12/2024",
+      "match": "date",
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line24_FamilyName[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent One's Information. Full Name of Parent One. 24. A. Enter Family Name (Last Name).",
+      "expect": [
+        "Jones",
+        "Miller"
+      ],
+      "category": "family",
+      "source": "birth_certificate_bill_jones.pdf: parents Robert Dean Jones / Patricia Anne Jones (née Miller)"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line24_GivenName[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent One's Information. Full Name of Parent One. 24. B. Enter Given Name (First Name).",
+      "expect": [
+        "Robert",
+        "Patricia"
+      ],
+      "category": "family",
+      "source": "birth_certificate_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line24_MiddleName[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent One's Information. Full Name of Parent One. 24. C. Enter Middle Name.",
+      "expect": [
+        "Dean",
+        "Anne"
+      ],
+      "category": "family",
+      "source": "birth_certificate_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line25_DateofBirth[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent One's Information. 25. Enter Date of Birth. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "",
+      "unknown": true,
+      "category": "family",
+      "source": "parents' dates of birth are not in the packet"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line28_CityTownOrVillageOfResidence[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent One's Information. 28. Enter City / Town / Village of Residence.",
+      "expect": "Columbus",
+      "category": "family",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line29_CountryOfResidence[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent One's Information. 29. Enter Country of Residence.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "family",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line27_CountryofBirth[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent One's Information. 27. Enter Country of Birth.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "family",
+      "source": "additional notes: Bill's parents were born in the U.S."
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line30b_GivenName[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent Two's Information. Full Name of Parent Two. 30. B. Enter Given Name (First Name).",
+      "expect": [
+        "Robert",
+        "Patricia"
+      ],
+      "category": "family",
+      "source": "birth_certificate_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line30c_MiddleName[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent Two's Information. Full Name of Parent Two. 30. C. Enter Middle Name.",
+      "expect": [
+        "Dean",
+        "Anne"
+      ],
+      "category": "family",
+      "source": "birth_certificate_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line30a_FamilyName[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent Two's Information. Full Name of Parent Two. 30. A. Enter Family Name (Last Name).",
+      "expect": [
+        "Jones",
+        "Miller"
+      ],
+      "category": "family",
+      "source": "birth_certificate_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line31_DateofBirth[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent Two's Information. 31. Enter Date of Birth. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "",
+      "unknown": true,
+      "category": "family",
+      "source": "parents' dates of birth are not in the packet"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line34_CityTownOrVillageOfResidence[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent Two's Information. 34. Enter City / Town / Village of Residence.",
+      "expect": "Columbus",
+      "category": "family",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line35_CountryOfResidence[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent Two's Information. 35. Enter Country of Residence.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "family",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line33_CountryofBirth[0]",
+      "label": "Part 2. Information About You (Petitioner). Information About Your Parents. Parent Two's Information. 33. Enter Country of Birth.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "family",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line36_USCitizen[0]",
+      "label": "Part 2. Information About You (Petitioner). Additional Information About You (Petitioner). 36. I am a (Select only one box). Select U.S. Citizen.",
+      "expect": true,
+      "category": "immigration",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line36_LPR[0]",
+      "label": "Part 2. Information About You (Petitioner). Additional Information About You (Petitioner). 36. I am a (Select only one box). Select Lawful Permanent Resident.",
+      "expect": false,
+      "category": "immigration",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line23a_checkbox[0]",
+      "label": "Part 2. Information About You (Petitioner). Additional Information About You (Petitioner). If you are a U.S. citizen, complete Item Number 37. 37. My citizenship was acquired through (Select only one box). Select Birth in the United States.",
+      "expect": true,
+      "category": "immigration",
+      "source": "birth_certificate_bill_jones.pdf: born in Columbus, Ohio"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line23b_checkbox[0]",
+      "label": "Part 2. Information About You (Petitioner). Additional Information About You (Petitioner). 37. My citizenship was acquired through (Select only one box). Select Naturalization.",
+      "expect": false,
+      "category": "immigration",
+      "source": "birth_certificate_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line23c_checkbox[0]",
+      "label": "Part 2. Information About You (Petitioner). Additional Information About You (Petitioner). 37. My citizenship was acquired through (Select only one box). Select Parents.",
+      "expect": false,
+      "category": "immigration",
+      "source": "birth_certificate_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line37a_CertificateNumber[0]",
+      "label": "Part 2. Information About You (Petitioner). Additional Information About You (Petitioner). If you answered \"Yes\" to Item Number 38., complete the following. 39. A. Enter Certificate Number.",
+      "expect": "",
+      "category": "immigration",
+      "source": "no certificate"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line36_Yes[0]",
+      "label": "Part 2. Information About You (Petitioner). Additional Information About You (Petitioner). 38. Have you obtained a Certificate of Naturalization or a Certificate of Citizenship? Select Yes.",
+      "expect": false,
+      "category": "immigration",
+      "source": "birth_certificate_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line36_No[0]",
+      "label": "Part 2. Information About You (Petitioner). Additional Information About You (Petitioner). 38. Have you obtained a Certificate of Naturalization or a Certificate of Citizenship? Select No.",
+      "expect": true,
+      "category": "immigration",
+      "source": "citizen by birth: no naturalization/citizenship certificate"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line19a_CityTown[0]",
+      "label": "Part 2. Information About You (Petitioner). Place of Your Current Marriage, if married. 19. A. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line19b_State[0]",
+      "label": "Part 2. Information About You (Petitioner). Place of Your Current Marriage, if married. 19. B. Select State from List of States.",
+      "expect": "OH",
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[2].Pt2Line19d_Country[0]",
+      "label": "Part 2. Information About You (Petitioner). Place of Your Current Marriage, if married. 19. D. Enter Country.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt2Line41_StreetNumberName[0]",
+      "label": "Part 2. Information About You (Petitioner). Employment History. Employer 1. 43. A. Enter Street Number and Name.",
+      "expect": [
+        "123 Example Ave"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt2Line41_CityOrTown[0]",
+      "label": "Part 2. Information About You (Petitioner). Employment History. Employer 1. 43. C. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt2Line41_ZipCode[0]",
+      "label": "Part 2. Information About You (Petitioner). Employment History. Employer 1. 43. E. Enter Zip Code.",
+      "expect": "43004",
+      "match": "digits",
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt2Line41_State[0]",
+      "label": "Part 2. Information About You (Petitioner). Employment History. Employer 1. 43. D. Select State from List of States.",
+      "expect": "OH",
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt2Line40_EmployerOrCompName[0]",
+      "label": "Part 2. Information About You (Petitioner). Employment History. Provide your employment history for the last five years, whether inside or outside the United States. Provide your current employment first. If you are currently unemployed, type or print \"Unemployed\" in Item Number 42. Employer 1. 42. Enter Name of Employer / Company.",
+      "expect": [
+        "Buckeye Widgetworks"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt3Line1_Ethnicity[0]",
+      "label": "Part 3. Biographic Information. 1. Ethnicity (Select only one box). Select Not Hispanic or Latino.",
+      "expect": true,
+      "category": "identity",
+      "source": "additional notes: Bill is not Hispanic or Latino"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt3Line1_Ethnicity[1]",
+      "label": "Part 3. Biographic Information. NOTE: Provide the biographic information about you, the petitioner. 1. Ethnicity (Select only one box). Select Hispanic or Latino.",
+      "expect": false,
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt3Line2_Race_Black[0]",
+      "label": "Part 3. Biographic Information. 2. Race (Select all applicable boxes). Select Black or African American.",
+      "expect": false,
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt3Line2_Race_White[0]",
+      "label": "Part 3. Biographic Information. 2. Race (Select all applicable boxes). Select White.",
+      "expect": true,
+      "category": "identity",
+      "source": "additional notes: Bill's race White"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt3Line2_Race_Asian[0]",
+      "label": "Part 3. Biographic Information. 2. Race (Select all applicable boxes). Select Asian.",
+      "expect": false,
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt3Line3_HeightFeet[0]",
+      "label": "Part 3. Biographic Information. 3. Height. Enter Feet.",
+      "expect": "6",
+      "category": "identity",
+      "source": "additional notes: Bill 6 ft 0 in"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt3Line3_HeightInches[0]",
+      "label": "Part 3. Biographic Information. 3. Height. Enter Inches.",
+      "expect": "0",
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt3Line4_Pound1[0]",
+      "label": "Part 3. Biographic Information. 4. Weight. Enter Pounds. Enter First Digit of Three Digits.",
+      "expect": "1",
+      "category": "identity",
+      "source": "additional notes: Bill 185 lbs"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt3Line4_Pound2[0]",
+      "label": "Part 3. Biographic Information. 4. Weight. Enter Pounds. Enter Second Digit of Three Digits.",
+      "expect": "8",
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt3Line4_Pound3[0]",
+      "label": "Part 3. Biographic Information. 4. Weight. Enter Pounds. Enter Third Digit of Three Digits.",
+      "expect": "5",
+      "category": "identity",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt2Line44_EmployerOrOrgName[0]",
+      "label": "Part 2. Information About You (Petitioner). Employment History. Employer 2. 46. Enter Name of Employer / Company.",
+      "expect": "",
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf: one employer covers the last five years"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt2Line42_Occupation[0]",
+      "label": "Part 2. Information About You (Petitioner). Employment History. Employer 1. 44. Enter Your Occupation.",
+      "expect": [
+        "Senior Operations Analyst"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt2Line43a_DateFrom[0]",
+      "label": "Part 2. Information About You (Petitioner). Employment History. Employer 1. 45. A. Enter Date From. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "09/07/2018",
+      "match": "date",
+      "category": "employment",
+      "source": "employment_verification_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt3Line5_EyeColor[0]",
+      "label": "Part 3. Biographic Information. 5. Eye Color (Select only one box). Select Blue.",
+      "expect": true,
+      "category": "identity",
+      "source": "additional notes: Bill has blue eyes"
+    },
+    {
+      "id": "form1[0].#subform[3].Pt3Line5_EyeColor[1]",
+      "label": "Part 3. Biographic Information. 5. Eye Color (Select only one box). Select Brown.",
+      "expect": false,
+      "category": "identity",
+      "source": "additional notes: brown is Maria's eye color, not Bill's"
+    },
+    {
+      "id": "form1[0].#subform[4].#area[6].Pt4Line1_AlienNumber[0]",
+      "label": "Part 4. Information About Beneficiary. 1. Enter Alien Registration Number (A. Number), if any.",
+      "expect": "",
+      "category": "identity",
+      "source": "additional notes: Maria has no A-Number"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line4a_FamilyName[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Full Name. 4. A. Enter Family Name (Last Name).",
+      "expect": "Jones",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line4b_GivenName[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Full Name. 4. B. Enter Given Name (First Name).",
+      "expect": [
+        "Maria",
+        "Maria Elena"
+      ],
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line4c_MiddleName[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Full Name. 4. C. Enter Middle Name.",
+      "expect": [
+        "Elena",
+        ""
+      ],
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].P4Line5a_FamilyName[0]",
+      "label": "Part 4. Information About Beneficiary. Other Names Used, if any. Provide all other names the beneficiary has ever used, including aliases, maiden name, and nicknames. 5. A. Enter Family Name (Last Name).",
+      "expect": "Garcia Lopez",
+      "category": "identity",
+      "source": "birth_certificate_maria_jones.pdf, marriage_certificate_jones.pdf: birth name"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line5b_GivenName[0]",
+      "label": "Part 4. Information About Beneficiary. Other Names Used, if any. 5. B. Enter Given Name (First Name).",
+      "expect": [
+        "Maria",
+        "Maria Elena"
+      ],
+      "category": "identity",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line5c_MiddleName[0]",
+      "label": "Part 4. Information About Beneficiary. Other Names Used, if any. 5. C. Enter Middle Name.",
+      "expect": [
+        "Elena",
+        ""
+      ],
+      "category": "identity",
+      "source": "birth_certificate_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line7_CityTownOfBirth[0]",
+      "label": "Part 4. Information About Beneficiary. Other Information About Beneficiary. 6. Enter City / Town / Village of Birth.",
+      "expect": [
+        "Guadalajara"
+      ],
+      "match": "contains",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line8_CountryOfBirth[0]",
+      "label": "Part 4. Information About Beneficiary. Other Information About Beneficiary. 7. Enter Country of Birth.",
+      "expect": "Mexico",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line11_Country[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Physical Address. 11. H. Enter Country.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line12a_StreetNumberName[0]",
+      "label": "Part 4. Information About Beneficiary. Other Address and Contact Information. Provide the address in the United States where the beneficiary intends to live, if different from Item Numbers 11. A. through 11. H. If the address is the same, type or print \"SAME\" in Item Number 12. A. 12. A. Enter Street Number and Name.",
+      "expect": "SAME",
+      "category": "address",
+      "source": "form instruction: type SAME when it matches Item 11"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line11_StreetNumberName[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Physical Address. If the beneficiary lives outside the United States in a home without a street number or name, leave Item Numbers 11. A. and 11. B. blank. 11. A. Enter Street Number and Name.",
+      "expect": [
+        "482 Placeholder"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line11_Unit[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Physical Address. 11. B. Select Apartment.",
+      "expect": true,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf: Apt 2B"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line11_Unit[1]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Physical Address. 11. B. Select Suite.",
+      "expect": false,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line11_Unit[2]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Physical Address. 11. B. Select Floor.",
+      "expect": false,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line11_AptSteFlrNumber[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Physical Address. 11. B. Enter Apartment, Suite or Floor Number.",
+      "expect": "2B",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line11_CityOrTown[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Physical Address. 11. C. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line11_ZipCode[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Physical Address. 11. E. Enter Zip Code.",
+      "expect": "43004",
+      "match": "digits",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line11_State[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Physical Address. 11. D. Select State from List of States.",
+      "expect": "OH",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line9_DateOfBirth[0]",
+      "label": "Part 4. Information About Beneficiary. Other Information About Beneficiary. 8. Enter Date of Birth. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "08/22/1994",
+      "match": "date",
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line9_Male[0]",
+      "label": "Part 4. Information About Beneficiary. Other Information About Beneficiary. 9. Sex. Select Male.",
+      "expect": false,
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line9_Female[0]",
+      "label": "Part 4. Information About Beneficiary. Other Information About Beneficiary. 9. Sex. Select Female.",
+      "expect": true,
+      "category": "identity",
+      "source": "mexican_passport_maria_jones.pdf: SEX F"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt3Line6_HairColor[1]",
+      "label": "Part 3. Biographic Information. 6. Hair Color (Select only one box). Select Black.",
+      "expect": false,
+      "category": "identity",
+      "source": "additional notes: black is Maria's hair color, not Bill's"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt3Line6_HairColor[3]",
+      "label": "Part 3. Biographic Information. 6. Hair Color (Select only one box). Select Brown.",
+      "expect": true,
+      "category": "identity",
+      "source": "additional notes: Bill has brown hair"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line10_Yes[0]",
+      "label": "Part 4. Information About Beneficiary. Other Information About Beneficiary. 10. Has anyone else ever filed a petition for the beneficiary? Select Yes.",
+      "expect": false,
+      "category": "immigration",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line10_No[0]",
+      "label": "Part 4. Information About Beneficiary. Other Information About Beneficiary. 10. Has anyone else ever filed a petition for the beneficiary? Select No.",
+      "expect": true,
+      "category": "immigration",
+      "source": "additional notes: no one has filed a petition for her before"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line10_Unknown[0]",
+      "label": "Part 4. Information About Beneficiary. Other Information About Beneficiary. 10. Has anyone else ever filed a petition for the beneficiary? Select Unknown. NOTE: Select \"Unknown\" only if you do not know, and the beneficiary also does not know, if anyone else has ever filed a petition for the beneficiary.",
+      "expect": false,
+      "category": "immigration",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line14_DaytimePhoneNumber[0]",
+      "label": "Part 4. Information About Beneficiary. Other Address and Contact Information. 14. Enter Daytime Telephone Number, if any.",
+      "expect": "6145550177",
+      "match": "digits",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[4].Pt4Line3_SSN[0]",
+      "label": "Part 4. Information About Beneficiary. 3. Enter U.S. Social Security Number, if any.",
+      "expect": "",
+      "category": "identity",
+      "source": "additional notes: Maria has no SSN"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line17_NumberofMarriages[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Marital Information. 17. How many times has the beneficiary been married? Enter Number of Times Married.",
+      "expect": "1",
+      "category": "family",
+      "source": "situation description"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line18_MaritalStatus[3]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Marital Information. 18. Current Marital Status. Select Single, Never Married.",
+      "expect": false,
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line18_MaritalStatus[4]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Marital Information. 18. Current Marital Status. Select Married.",
+      "expect": true,
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line15_MobilePhoneNumber[0]",
+      "label": "Part 4. Information About Beneficiary. Other Address and Contact Information. 15. Enter Mobile Telephone Number, if any.",
+      "expect": "6145550177",
+      "match": "digits",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line16_EmailAddress[0]",
+      "label": "Part 4. Information About Beneficiary. Other Address and Contact Information. 16. Enter Email Address, if any.",
+      "expect": "maria.jones@example.com",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line19_DateOfMarriage[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Marital Information. 19. Enter Date of Current Marriage (if currently married). Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "07/12/2024",
+      "match": "date",
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line16a_FamilyName[0]",
+      "label": "Part 4. Information About Beneficiary. Names of Beneficiary's Spouses, if any. Provide information on the beneficiary's current spouse (if currently married) first and then list all the beneficiary's prior spouses (if any). Spouse 1. 21. A. Enter Family Name (Last Name).",
+      "expect": "Jones",
+      "category": "family",
+      "source": "us_passport_bill_jones.pdf: Maria's spouse"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line16b_GivenName[0]",
+      "label": "Part 4. Information About Beneficiary. Names of Beneficiary's Spouses, if any. Spouse 1. 21. B. Enter Given Name (First Name).",
+      "expect": "William",
+      "category": "family",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line16c_MiddleName[0]",
+      "label": "Part 4. Information About Beneficiary. Names of Beneficiary's Spouses, if any. Spouse 1. 21. C. Enter Middle Name.",
+      "expect": "Robert",
+      "category": "family",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line17_DateMarriageEnded[0]",
+      "label": "Part 4. Information About Beneficiary. Names of Beneficiary's Spouses, if any. Spouse 1. 22. Enter Date Marriage Ended. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "",
+      "category": "family",
+      "source": "current marriage has not ended"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line31_Relationship[0]",
+      "label": "Part 4. Information About Beneficiary. Information About Beneficiary's Family. Person 1. 26. Enter Relationship.",
+      "expect": [
+        "Spouse",
+        "Husband"
+      ],
+      "match": "contains",
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line30a_FamilyName[0]",
+      "label": "Part 4. Information About Beneficiary. Information About Beneficiary's Family. Provide information about the beneficiary's spouse and children. Person 1. 25. A. Enter Family Name (Last Name).",
+      "expect": "Jones",
+      "category": "family",
+      "source": "beneficiary's family member 1 is her spouse"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line30b_GivenName[0]",
+      "label": "Part 4. Information About Beneficiary. Information About Beneficiary's Family. Person 1. 25. B. Enter Given Name (First Name).",
+      "expect": "William",
+      "category": "family",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line30c_MiddleName[0]",
+      "label": "Part 4. Information About Beneficiary. Information About Beneficiary's Family. Person 1. 25. C. Enter Middle Name.",
+      "expect": "Robert",
+      "category": "family",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line32_DateOfBirth[0]",
+      "label": "Part 4. Information About Beneficiary. Information About Beneficiary's Family. Person 1. 27. Enter Date of Birth. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "03/14/1992",
+      "match": "date",
+      "category": "family",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line49_CountryOfBirth[0]",
+      "label": "Part 4. Information About Beneficiary. Information About Beneficiary's Family. Person 1. 28. Enter Country of Birth.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "family",
+      "source": "us_passport_bill_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line34a_FamilyName[0]",
+      "label": "Part 4. Information About Beneficiary. Information About Beneficiary's Family. Person 2. 29. A. Enter Family Name (Last Name).",
+      "expect": "",
+      "category": "family",
+      "source": "situation description: no children"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line20a_CityTown[0]",
+      "label": "Part 4. Information About Beneficiary. Place of Beneficiary's Current Marriage, if married. 20. A. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line20b_State[0]",
+      "label": "Part 4. Information About Beneficiary. Place of Beneficiary's Current Marriage, if married. 20. B. Select State from List of States.",
+      "expect": "OH",
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[5].Pt4Line20d_Country[0]",
+      "label": "Part 4. Information About Beneficiary. Place of Beneficiary's Current Marriage, if married. 20. D. Enter Country.",
+      "expect": [
+        "United States",
+        "USA",
+        "United States of America",
+        "U.S.A.",
+        "U.S.",
+        "US"
+      ],
+      "category": "family",
+      "source": "marriage_certificate_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[6].Pt4Line20_Yes[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Entry Information. 45. Was the beneficiary EVER in the United States? Select Yes.",
+      "expect": true,
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[6].Pt4Line20_No[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Entry Information. 45. Was the beneficiary EVER in the United States? Select No.",
+      "expect": false,
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[6].Pt4Line21d_DateExpired[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Entry Information. If the beneficiary is currently in the United States, complete Items Numbers 46. A. through 46. D. 46. D. Enter Date authorized stay expired, or will expire, as shown on Form I - 94 or Form I - 95 or type or print \"D / S\" for Duration of Status. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "08/19/2026",
+      "match": "date",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf: admit until date"
+    },
+    {
+      "id": "form1[0].#subform[6].Pt4Line21a_ClassOfAdmission[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Entry Information. If the beneficiary is currently in the United States, complete Items Numbers 46. A. through 46. D. 46. A. He or she arrived as a (Class of Admission). Enter Class of Admission.",
+      "expect": "B2",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[6].#area[8].Pt4Line21b_ArrivalDeparture[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Entry Information. If the beneficiary is currently in the United States, complete Items Numbers 46. A. through 46. D. 46. B. Enter Form I - 94 Arrival-Departure Record Number.",
+      "expect": "99887766544",
+      "match": "digits",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[6].Pt4Line21c_DateOfArrival[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Entry Information. If the beneficiary is currently in the United States, complete Items Numbers 46. A. through 46. D. 46. C. Enter Date of Arrival. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "02/20/2026",
+      "match": "date",
+      "category": "immigration",
+      "source": "i94_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[6].Pt4Line22_PassportNumber[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Entry Information. 47. Enter Passport Number.",
+      "expect": "X99887766",
+      "category": "immigration",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[6].Pt4Line23_TravelDocNumber[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Entry Information. 48. Enter Travel Document Number.",
+      "expect": "",
+      "category": "immigration",
+      "source": "entered on a passport, not a travel document"
+    },
+    {
+      "id": "form1[0].#subform[6].Pt4Line24_CountryOfIssuance[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Entry Information. 49. Enter Country of Issuance for Passport or Travel Document.",
+      "expect": "Mexico",
+      "category": "immigration",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[6].Pt4Line25_ExpDate[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Entry Information. 50. Enter Expiration Date for Passport or Travel Document. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "01/09/2033",
+      "match": "date",
+      "category": "immigration",
+      "source": "mexican_passport_maria_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[6].Pt4Line26_NameOfCompany[0]",
+      "label": "Part 4. Information About Beneficiary. Beneficiary's Employment Information. Provide the beneficiary's current employment information (if applicable), even if they are employed outside of the United States. If the beneficiary is currently unemployed, type or print \"Unemployed\" in Item Number 51. A. 51. A. Enter Name of Current Employer, if applicable.",
+      "expect": [
+        "Unemployed"
+      ],
+      "match": "contains",
+      "category": "employment",
+      "source": "additional notes + form instruction: type Unemployed"
+    },
+    {
+      "id": "form1[0].#subform[6].Pt4Line28_No[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. 53. Was the beneficiary EVER in immigration proceedings? Select No.",
+      "expect": true,
+      "category": "immigration",
+      "source": "additional notes: never in immigration proceedings"
+    },
+    {
+      "id": "form1[0].#subform[6].Pt4Line28_Yes[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. 53. Was the beneficiary EVER in immigration proceedings? Select Yes.",
+      "expect": false,
+      "category": "immigration",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line57_Unit[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. 59. B. Select Apartment.",
+      "expect": true,
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line57_AptSteFlrNumber[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. 59. B. Enter Apartment, Suite or Floor.",
+      "expect": "2B",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line57_StreetNumberName[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. If filing for your spouse, provide the last address at which you physically lived together. If you never lived together, type or print, \"Never lived together\" in Item Number 59. A. 59. A. Street Number and Name.",
+      "expect": [
+        "482 Placeholder"
+      ],
+      "match": "contains",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf: last address lived together"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line57_CityOrTown[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. 59. C. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line57_ZipCode[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. 59. E. Enter Zip Code.",
+      "expect": "43004",
+      "match": "digits",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line57_State[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. 59. D. Select State from List of States.",
+      "expect": "OH",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line58a_DateFrom[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. 60. A. Enter Date From. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "09/01/2024",
+      "match": "date",
+      "category": "address",
+      "source": "joint_rental_lease_jones.pdf: lease start"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line58b_DateTo[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. 60. B. Enter Date To. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": [
+        "Present",
+        ""
+      ],
+      "match": "date",
+      "category": "address",
+      "source": "still living together"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line61a_CityOrTown[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. The beneficiary will not apply for adjustment of status in the United States, but he or she will apply for an immigrant visa abroad at the U.S. Embassy or U.S. Consulate in: 62. A. Enter City or Town.",
+      "expect": "",
+      "category": "filing",
+      "source": "process description: not consular processing"
+    },
+    {
+      "id": "form1[0].#subform[7].Part4Line1_Yes[0]",
+      "label": "Part 5. Other Information. 1. Have you EVER previously filed a petition for this beneficiary or any other alien? Select Yes.",
+      "expect": false,
+      "category": "immigration",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[7].Part4Line1_No[0]",
+      "label": "Part 5. Other Information. 1. Have you EVER previously filed a petition for this beneficiary or any other alien? Select No.",
+      "expect": true,
+      "category": "immigration",
+      "source": "additional notes: Bill never filed a petition before"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line60a_CityOrTown[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. The beneficiary is in the United States and will apply for adjustment of status to that of a lawful permanent resident at the U.S. Citizenship and Immigration Services (U S C I S) office in. 61. A. Enter City or Town.",
+      "expect": "Columbus",
+      "category": "filing",
+      "source": "process description: adjusting status from Columbus, OH"
+    },
+    {
+      "id": "form1[0].#subform[7].Pt4Line60b_State[0]",
+      "label": "Part 4. Information About Beneficiary. Additional Information About Beneficiary. The beneficiary is in the United States and will apply for adjustment of status to that of a lawful permanent resident at the U.S. Citizenship and Immigration Services (U S C I S) office in. 61. B. Select State from List of States.",
+      "expect": "OH",
+      "category": "filing",
+      "source": "process description"
+    },
+    {
+      "id": "form1[0].#subform[8].Pt6Line3_DaytimePhoneNumber[0]",
+      "label": "Part 6. Petitioner's Statement, Contact Information, Declaration, and Signature. Petitioner's Contact Information. 3. Enter Petitioner's Daytime Telephone Number.",
+      "expect": "6145550199",
+      "match": "digits",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[8].Pt6Line5_Email[0]",
+      "label": "Part 6. Petitioner's Statement, Contact Information, Declaration, and Signature. Petitioner's Contact Information. 5. Enter Petitioner's Email Address, if any.",
+      "expect": "bill.jones@example.com",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[8].Pt6Line4_MobileNumber[0]",
+      "label": "Part 6. Petitioner's Statement, Contact Information, Declaration, and Signature. Petitioner's Contact Information. 4. Enter Petitioner's Mobile Telephone Number, if any.",
+      "expect": "6145550199",
+      "match": "digits",
+      "category": "contact",
+      "source": "additional notes"
+    },
+    {
+      "id": "form1[0].#subform[8].Pt6Line6b_DateofSignature[0]",
+      "label": "Part 6. Petitioner's Statement, Contact Information, Declaration, and Signature. Petitioner's Signature. 6. B. Enter Date of Signature. Enter as 2 digit month, 2 digit day and 4 digit year.",
+      "expect": "",
+      "unknown": true,
+      "category": "filing",
+      "source": "signature date is written when the petitioner signs"
+    }
+  ]
+}
