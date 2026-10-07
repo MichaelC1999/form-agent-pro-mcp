@@ -96,6 +96,41 @@ export function extractFieldValues(pdfPath: string): Map<string, PdfFieldInfo> {
   return fields;
 }
 
+export type PdfFieldLabel = {
+  /** The field's tooltip (/TU) — USCIS forms use it as the full printed question + answer option */
+  tooltip: string;
+  type: string;
+  /** For checkboxes/radios: the value the box writes when checked (e.g. "Y", "N", "APT", "BLU") */
+  onValue?: string;
+};
+
+/**
+ * Returns the tooltip, type, and checked value of every field in a blank PDF.
+ * Uses dump_data_fields_utf8 so tooltips keep their original punctuation.
+ * Returns an empty map when pdftk is unavailable or fails — callers treat
+ * labels as optional enrichment.
+ */
+export function readFieldLabels(pdfPath: string): Map<string, PdfFieldLabel> {
+  const labels = new Map<string, PdfFieldLabel>();
+  if (!isPdftkInstalled()) return labels;
+
+  const result = spawnSync("pdftk", [pdfPath, "dump_data_fields_utf8"], { encoding: "utf-8" });
+  if (result.status !== 0) return labels;
+
+  for (const block of result.stdout.split(/^---$/m)) {
+    const name = block.match(/^FieldName: (.+)$/m)?.[1]?.trim();
+    if (!name) continue;
+    const tooltip = (block.match(/^FieldNameAlt: (.+)$/m)?.[1] ?? "").replace(/\s+/g, " ").trim();
+    const type = block.match(/^FieldType: (.+)$/m)?.[1]?.trim() ?? "";
+    const onValue = type === "Button"
+      ? [...block.matchAll(/^FieldStateOption: (.+)$/gm)].map((m) => m[1].trim()).find((s) => s !== "Off")
+      : undefined;
+    labels.set(name, { tooltip, type, ...(onValue ? { onValue } : {}) });
+  }
+
+  return labels;
+}
+
 // ─── PDF text extraction (for document parsing) ──────────────────────────────
 
 /**

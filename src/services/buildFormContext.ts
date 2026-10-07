@@ -6,6 +6,7 @@ import { FormMap } from "../models/FormMap";
 import { FormContext } from "../models/FormContext";
 import { logAnthropicResponse } from "../models/AnthropicLog";
 import { listProcesses, getProcessReadme } from "../lib/processes";
+import { readFieldLabels, type PdfFieldLabel } from "../lib/pdf";
 import type {
   BuildFormContextInput,
   IFormContext,
@@ -53,8 +54,18 @@ Your task is to produce a FormContext — a structured, detailed knowledge base 
 You will be given:
 1. The raw PDF form file attached as a document — read it directly as a human would, taking in the visual layout, section headers, printed instructions, question labels, eligibility conditions, certification language, and all remarks.
 2. The complete visible text extracted from that same PDF in plain text — a complementary reference that is easier to search but may be incomplete or mis-ordered due to PDF layout.
-3. A flat list of every fillable field ID extracted from the PDF.
+3. A list of every fillable field ID extracted from the PDF, each with the tooltip the PDF attaches to that field and, for checkboxes, the value the box writes when checked.
 4. Optionally, supplemental reference files (official form instructions, policy documents, markdown guides).
+
+─────────────────────────────────────────────────────────────────────────────
+FIELD LABELS ARE AUTHORITATIVE
+─────────────────────────────────────────────────────────────────────────────
+
+A field's PDF tooltip states which question — and, for checkboxes, which answer option — that specific field represents. Use it to identify the field.
+
+- Never infer a checkbox's answer option from its index ([0], [1], …) or from the order the options are printed on the page. Field indexes do not follow visual order.
+- A checked value is an export code, not a label — a "No" box may write "Y", and Sex boxes may write "N"/"Y". Identify the option from the tooltip.
+- Only when two boxes for the same question have identical tooltips, use the checked value to tell them apart ("Y" = Yes, "N" = No).
 
 ─────────────────────────────────────────────────────────────────────────────
 KNOWLEDGE INSTRUCTIONS
@@ -126,7 +137,7 @@ For every field ID in the input list, produce one entry. Do not skip or merge fi
   The most specific, actionable description you can write for this field. Read the attached PDF to find the exact question label, section header, or instruction text that corresponds to this field — that is your starting point.
 
   - For text fields: state exactly what data goes here, in what format, from which source document, and the legal or practical meaning of the value.
-  - For checkbox/button fields: include the COMPLETE question or label text as it is printed on the form — not a paraphrase. Then explain what selecting it means or triggers.
+  - For checkbox/button fields: include the COMPLETE question or label text as it is printed on the form — not a paraphrase — and state the specific answer option this box represents, taken from its tooltip and checked value. Then explain what selecting it means or triggers.
   - For signature/date-of-signature fields: include the full certification language the signature attests to, plus any timing instruction from the form (e.g. "Do not sign until instructed by the civil surgeon").
   - For barcode/system fields: note they are administrative and require no applicant input.
 
@@ -194,8 +205,10 @@ export function buildFormContextUserMessage(params: {
   fieldIds: string[];
   contextFileContents: Array<{ name: string; content: string }>;
   pdfAttached: boolean;
+  /** Tooltip + checked value per field ID, read from the blank PDF. */
+  fieldLabels?: Map<string, PdfFieldLabel>;
 }): string {
-  const { formId, formPdfText, fieldIds, contextFileContents, pdfAttached } = params;
+  const { formId, formPdfText, fieldIds, contextFileContents, pdfAttached, fieldLabels } = params;
   const parts: string[] = [];
   const hr = "─".repeat(72);
 
@@ -237,15 +250,30 @@ export function buildFormContextUserMessage(params: {
   // ── Field ID list ──────────────────────────────────────────────────────────
   parts.push(`\n${hr}`);
   parts.push(`FIELD IDs  (${fieldIds.length} total — annotate every one)`);
+  if (fieldLabels && fieldLabels.size > 0) {
+    parts.push(`Each field ID is followed by its PDF tooltip and, for checkboxes, the value the box writes when checked.`);
+  }
   parts.push(hr);
-  parts.push(fieldIds.join("\n"));
+  parts.push(
+    fieldIds
+      .map((id) => {
+        const label = fieldLabels?.get(id);
+        if (!label) return id;
+        const lines = [id];
+        if (label.tooltip) lines.push(`  tooltip: ${label.tooltip}`);
+        if (label.onValue) lines.push(`  checked value: ${label.onValue}`);
+        return lines.join("\n");
+      })
+      .join("\n")
+  );
 
   // ── Final instruction ──────────────────────────────────────────────────────
   parts.push(`\n${hr}`);
   parts.push(
-    `Produce the FormContext JSON now. For each field ID above, locate its label or question\n` +
-    `in the attached PDF. For checkboxes and questions, include the complete printed text —\n` +
-    `not a paraphrase. Use your knowledge of "${formId}" to fill any gaps. Annotate every field.`
+    `Produce the FormContext JSON now. For each field ID above, start from its PDF tooltip and\n` +
+    `checked value, then locate its question in the attached PDF. For checkboxes and questions,\n` +
+    `include the complete printed text — not a paraphrase. Use your knowledge of "${formId}" to\n` +
+    `fill any gaps. Annotate every field.`
   );
 
   return parts.join("\n");
@@ -294,6 +322,7 @@ export async function getFormContextPromptText(input: BuildFormContextInput): Pr
       fieldIds,
       contextFileContents,
       pdfAttached: pdfExists,
+      fieldLabels: pdfExists ? readFieldLabels(formPdfPath) : undefined,
     }),
   };
 }
@@ -346,7 +375,15 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
     }
   }
 
-  // 6. Build prompts
+  // 6. Read each field's tooltip + checked value from the PDF. These identify
+  //    which question and answer option a field is — without them the model
+  //    guesses checkbox options from field index, which doesn't follow the
+  //    printed order.
+  const fieldLabels = readFieldLabels(formPdfPath);
+  const labeledCount = fieldIds.filter((id) => fieldLabels.get(id)?.tooltip).length;
+  console.log(`[buildFormContext] PDF tooltips: ${labeledCount}/${fieldIds.length} fields`);
+
+  // 7. Build prompts
   const systemPrompt = buildFormContextSystemPrompt(resolvedCandidates);
   const userTextBlock = buildFormContextUserMessage({
     formId,
@@ -354,12 +391,13 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
     fieldIds,
     contextFileContents,
     pdfAttached: true,
+    fieldLabels,
   });
 
-  // 7. Encode PDF as base64 for the document block
+  // 8. Encode PDF as base64 for the document block
   const pdfBase64 = fs.readFileSync(formPdfPath).toString("base64");
 
-  // 8. Anthropic call — claude-opus-4-5, high token budget, runs once per form
+  // 9. Anthropic call — claude-opus-4-5, high token budget, runs once per form
   const client = getAnthropicClient();
   console.log(
     `[buildFormContext] Calling claude-opus-4-5 for "${formId}" — ` +
@@ -398,10 +436,10 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
   });
   const response = await stream.finalMessage();
 
-  // 9. Log full response payload to MongoDB (non-blocking)
+  // 10. Log full response payload to MongoDB (non-blocking)
   logAnthropicResponse(response, { service: "buildFormContext", formId });
 
-  // 10. Parse response
+  // 11. Parse response
   const rawBlock = response.content.find((b) => b.type === "text");
   const rawJson = rawBlock?.type === "text" ? rawBlock.text.trim() : "";
   const cleaned = rawJson.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
@@ -438,7 +476,7 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
     (parsed.formMetadata as Record<string, unknown>).scope = scope;
   }
 
-  // 11. Warn about any skipped field IDs
+  // 12. Warn about any skipped field IDs
   const expectedIds = new Set(fieldIds);
   const returnedIds = new Set(parsed.fields.map((f) => f.field));
   const missing = [...expectedIds].filter((id) => !returnedIds.has(id));
@@ -452,7 +490,7 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
     console.log(`[buildFormContext] ✅ All ${fieldIds.length} fields annotated.`);
   }
 
-  // 12. Persist
+  // 13. Persist
   const doc = await FormContext.create({
     formId,
     createdAt: new Date(),
