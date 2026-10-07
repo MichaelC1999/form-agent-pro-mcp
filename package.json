@@ -11,6 +11,7 @@
     "fill-form": "ts-node src/services/fillForm.ts",
     "extract-pdf": "ts-node src/services/extractPdf.ts",
     "load": "ts-node src/services/manualLoad.ts",
+    "eval": "ts-node --transpile-only src/scripts/eval.ts",
     "verify-smtp": "ts-node src/scripts/verifySmtp.ts"
   },
   "dependencies": {
