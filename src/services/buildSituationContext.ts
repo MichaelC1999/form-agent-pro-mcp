@@ -56,8 +56,12 @@ export async function extractRawText(
 ): Promise<string> {
   switch (category) {
     case "pdf": {
-      const buffer = fs.readFileSync(file.path);
-      const result = await pdfParse(buffer);
+      // Copy into a standalone Uint8Array: pdf-parse's bundled pdf.js (v1.10)
+      // reads the underlying ArrayBuffer from byte 0 and ignores byteOffset.
+      // Newer Node versions return small files as a slice of a shared pool
+      // (byteOffset ≠ 0), which shifts every object lookup → "bad XRef entry".
+      const buffer = new Uint8Array(fs.readFileSync(file.path));
+      const result = await pdfParse(buffer as Buffer);
       return result.text.trim();
     }
     case "image": {
