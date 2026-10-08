@@ -14,6 +14,8 @@ import type {
   ISituationalContext,
   AssumptionLevel,
   FieldMap,
+  FieldMeta,
+  SkippedField,
 } from "../types";
 
 // ─── Prompt builders ──────────────────────────────────────────────────────────
@@ -119,6 +121,11 @@ FORMATTING RULES
 - Dates: Match the format specified in the field's notes. Default to MM/DD/YYYY unless instructed otherwise.
 - Names: Use the exact spelling from the source document. Do not translate or alter proper nouns.
 - Checkboxes: Use exactly "1" for checked/yes and "0" for unchecked/no. Determine the correct value from the field's description and the applicant's situation.
+  A Yes/No question has one checkbox per answer — put "1" in the box whose description matches the true answer. Never write "Y", "N", "Yes", "No", or other text into a checkbox.
+- Field tags: some field IDs are followed by a tag in parentheses giving the PDF's input constraint.
+  (checkbox) — only "1" or "0".
+  (max N chars) — the PDF cuts off anything longer. Enter phone numbers, SSNs, A-Numbers, receipt numbers, and I-94 numbers as digits only — no dashes, spaces, or parentheses.
+  (dropdown: …) — only one of the listed values or codes, written exactly as listed (e.g. "OH", "B2").
 - Numbers and IDs: Reproduce exactly as they appear in the source — preserve leading zeros, dashes, and spacing.
 - "N/A" vs blank: Use "N/A" only when the field's notes explicitly say to write N/A for inapplicable entries. Otherwise use "".
 - Country names: Use the full English country name (e.g. "Germany", not "DEU"; "Philippines", not "PHL").
@@ -195,8 +202,10 @@ function buildUserMessage(params: {
   formContext: IFormContext;
   situationalContext: ISituationalContext;
   beneficiaryKey?: string;
+  /** Input-constraint tag per field ID as it appears in formContext (see buildFieldTags) */
+  fieldTags?: Record<string, string>;
 }): string {
-  const { formContext, situationalContext, beneficiaryKey } = params;
+  const { formContext, situationalContext, beneficiaryKey, fieldTags = {} } = params;
   const hr = "─".repeat(72);
   const parts: string[] = [];
 
@@ -252,8 +261,9 @@ function buildUserMessage(params: {
 
   const contextLines: string[] = [];
   for (const fc of formContext.fields) {
+    const tag = fieldTags[fc.field];
     contextLines.push(
-      `[${fc.field}]\n` +
+      `[${fc.field}]${tag ? `  (${tag})` : ""}\n` +
       `  Description : ${fc.description}\n` +
       `  Party       : ${fc.party}\n` +
       `  Notes       : ${fc.notes}`
@@ -274,6 +284,99 @@ function buildUserMessage(params: {
   );
 
   return parts.join("\n");
+}
+
+// ─── Field constraints ────────────────────────────────────────────────────────
+//
+// FormMap.fieldMeta records each PDF field's input constraint. Only the ones
+// that change how a value must be written are shown to the model, as a short
+// tag on the field ID: checkboxes, short text fields (where a formatted phone
+// or SSN overflows), and dropdowns. Long text fields (names, streets — 30+
+// chars) are untagged; every constraint is still enforced after the call.
+
+/** Text fields at or under this length get a "(max N chars)" tag in the prompt. */
+const MAX_LENGTH_TAG_LIMIT = 15;
+/** Dropdowns with at most this many options list them in the tag. */
+const DROPDOWN_LIST_LIMIT = 15;
+
+function isUsStateList(options: string[]): boolean {
+  return options.length >= 50 && options.every((o) => /^[A-Z]{2}$/.test(o)) && ["CA", "NY", "OH", "TX"].every((c) => options.includes(c));
+}
+
+/** Prompt tag per full field ID — only for fields whose constraint matters. */
+function buildFieldTags(fieldMeta: Record<string, FieldMeta> | undefined): Record<string, string> {
+  const tags: Record<string, string> = {};
+  for (const [id, meta] of Object.entries(fieldMeta ?? {})) {
+    if (meta.type === "checkbox") {
+      tags[id] = "checkbox";
+    } else if (meta.type === "dropdown" && meta.options && meta.options.length > 0) {
+      tags[id] = isUsStateList(meta.options)
+        ? "dropdown: 2-letter US state code"
+        : meta.options.length <= DROPDOWN_LIST_LIMIT
+          ? `dropdown: ${meta.options.join(" | ")}`
+          : "dropdown: a code from the form's list";
+    } else if (meta.type === "text" && meta.maxLength && meta.maxLength <= MAX_LENGTH_TAG_LIMIT) {
+      tags[id] = `max ${meta.maxLength} chars`;
+    }
+  }
+  return tags;
+}
+
+/** Comparison key for dropdown values: "B-2" and "b2" both match the option "B2". */
+const optionKey = (v: string) => v.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/**
+ * Makes every value writable as the PDF expects, using FormMap.fieldMeta:
+ *  - checkbox values other than "1", "0", or the box's own checked value are cleared
+ *    ("N" in a box that checks as "Y" prints unchecked; "Y" in that box prints checked)
+ *  - dropdown values are snapped to the matching option ("B-2" → "B2"), or cleared
+ *  - over-long numeric values ("(614) 555-0177" in a 10-char field) are reduced to digits;
+ *    other over-long values are kept but flagged, since the PDF will cut them off
+ * Every change or remaining problem is returned as a skipped-log entry for review.
+ */
+export function enforceFieldConstraints(
+  fields: Record<string, string>,
+  fieldMeta: Record<string, FieldMeta> | undefined
+): { fields: Record<string, string>; flagged: SkippedField[] } {
+  const out = { ...fields };
+  const flagged: SkippedField[] = [];
+  if (!fieldMeta) return { fields: out, flagged };
+
+  for (const [id, value] of Object.entries(out)) {
+    const meta = fieldMeta[id];
+    if (!meta || value === "") continue;
+
+    if (meta.type === "checkbox") {
+      if (value !== "1" && value !== "0" && value !== meta.onValue) {
+        out[id] = "";
+        flagged.push({
+          fieldId: id,
+          reason: `Cleared: "${value}" is not a value this checkbox accepts ("1", "0"${meta.onValue ? `, or "${meta.onValue}"` : ""}).`,
+        });
+      }
+    } else if (meta.type === "dropdown" && meta.options && meta.options.length > 0) {
+      if (!meta.options.includes(value)) {
+        const match = meta.options.find((o) => optionKey(o) !== "" && optionKey(o) === optionKey(value));
+        if (match) {
+          out[id] = match;
+        } else {
+          out[id] = "";
+          flagged.push({ fieldId: id, reason: `Cleared: "${value}" is not one of this dropdown's values.` });
+        }
+      }
+    } else if (meta.type === "text" && meta.maxLength && value.length > meta.maxLength) {
+      const digits = value.replace(/\D/g, "");
+      if (/^[\d\s()+\-./]+$/.test(value) && digits.length > 0 && digits.length <= meta.maxLength) {
+        out[id] = digits;
+      } else {
+        flagged.push({
+          fieldId: id,
+          reason: `Value is ${value.length} characters; the PDF field holds ${meta.maxLength} and will cut off the rest.`,
+        });
+      }
+    }
+  }
+  return { fields: out, flagged };
 }
 
 // ─── Data loading helpers ─────────────────────────────────────────────────────
@@ -564,6 +667,9 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
   // separately after the LLM call — it is not sent to the LLM. Its field IDs
   // are already present inside the form context.
   const formContext = await loadFormContext(formId, processId);
+  // The form map supplies each field's input constraints (fieldMeta) for the
+  // prompt tags and post-fill checks, and the blank base the fill is merged over.
+  const formMap = await loadFormMap(formId);
 
   // Field IDs are sourced from the context, not the map
   const fieldIds = formContext.fields.map((f) => f.field);
@@ -607,10 +713,15 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
     readme: getProcessReadme(processId),
     languages: listProcessLanguages(processId),
   });
+  const fieldTags: Record<string, string> = {};
+  for (const [id, tag] of Object.entries(buildFieldTags(formMap.fieldMeta))) {
+    if (keyMap.fullToShort[id]) fieldTags[keyMap.fullToShort[id]] = tag;
+  }
   const userMessage = buildUserMessage({
     formContext: compressedFormContext,
     situationalContext,
     beneficiaryKey,
+    fieldTags,
   });
 
   // 4. Anthropic call — claude-opus-4-8 with adaptive thinking for the
@@ -651,8 +762,14 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
   const rawText = rawBlock?.type === "text" ? rawBlock.text.trim() : "";
   const llmResultShort = parseLLMResponse(rawText, shortFieldIds);
 
-  // 7. Expand short keys back to full XFA IDs before any downstream use
-  const llmResult = expandLLMResult(llmResultShort, keyMap.shortToFull);
+  // 7. Expand short keys back to full XFA IDs before any downstream use, then
+  //    make every value writable as the PDF expects (checkbox / dropdown / length)
+  const expanded = expandLLMResult(llmResultShort, keyMap.shortToFull);
+  const enforced = enforceFieldConstraints(expanded.fields, formMap.fieldMeta);
+  const llmResult = { fields: enforced.fields, skipped: [...expanded.skipped, ...enforced.flagged] };
+  if (enforced.flagged.length > 0) {
+    console.log(`[fillFormMap] Field constraints: ${enforced.flagged.length} value(s) cleared or flagged`);
+  }
 
   // 8. Log fill stats
   const filled = Object.values(llmResult.fields).filter((v) => v !== "").length;
@@ -669,10 +786,9 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
     );
   }
 
-  // 9. Load the form map now — used only as the base for persisting the filled
-  //    record so the FilledFormMap has the correct formId/version provenance.
-  //    The LLM output already contains all the field values; we merge them in.
-  const formMap = await loadFormMap(formId);
+  // 9. The form map is the base for persisting the filled record so the
+  //    FilledFormMap has the correct formId/version provenance. The LLM output
+  //    already contains all the field values; we merge them in.
   const baseFields = formMap.fields as FieldMap;
 
   // Merge LLM values over the blank map — ensures any field the LLM returned
@@ -729,6 +845,11 @@ export async function getFillFormMapPromptText(
   const fieldIds = formContext.fields.map((f) => f.field);
   const keyMap = buildKeyMap(fieldIds);
   const compressedFormContext = remapFormContextKeys(formContext, keyMap.fullToShort);
+  const formMap = await loadFormMap(formId).catch(() => null);
+  const fieldTags: Record<string, string> = {};
+  for (const [id, tag] of Object.entries(buildFieldTags(formMap?.fieldMeta))) {
+    if (keyMap.fullToShort[id]) fieldTags[keyMap.fullToShort[id]] = tag;
+  }
 
   let situationalContext: ISituationalContext;
 
@@ -767,6 +888,7 @@ export async function getFillFormMapPromptText(
       formContext: compressedFormContext,
       situationalContext,
       beneficiaryKey,
+      fieldTags,
     }),
   };
 }
