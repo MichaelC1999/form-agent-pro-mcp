@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { getAnthropicClient } from "../lib/anthropic";
+import { getAnthropicClient, CLAUDE_MODEL, REFUSAL_FALLBACK, throwIfRefused } from "../lib/anthropic";
 import { SituationalContext } from "../models/SituationalContext";
 import { FilledAffidavit, type IFilledAffidavit } from "../models/FilledAffidavit";
 import { logAnthropicResponse } from "../models/AnthropicLog";
@@ -129,9 +129,13 @@ export async function fillAffidavit(input: FillAffidavitInput): Promise<IFilledA
   );
 
   const client = getAnthropicClient();
-  const response = await client.messages.create({
-    model: "claude-opus-4-7",
-    max_tokens: 16000,
+  // Streamed: thinking is always on for CLAUDE_MODEL, so max_tokens covers it
+  // plus the affidavit text — above the SDK's non-streaming limit
+  const stream = client.beta.messages.stream({
+    model: CLAUDE_MODEL,
+    max_tokens: 64000,
+    output_config: { effort: "high" },
+    ...REFUSAL_FALLBACK,
     system: buildSystemPrompt(processId),
     messages: [
       {
@@ -145,12 +149,14 @@ export async function fillAffidavit(input: FillAffidavitInput): Promise<IFilledA
       },
     ],
   });
+  const response = await stream.finalMessage();
 
   logAnthropicResponse(response, {
     service: "fillAffidavit",
     userId,
     situationalContextId,
   });
+  throwIfRefused(response, "fillAffidavit");
 
   const rawBlock = response.content.find((b) => b.type === "text");
   const rawText = rawBlock?.type === "text" ? rawBlock.text : "";

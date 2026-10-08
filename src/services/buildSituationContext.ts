@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import pdfParse from "pdf-parse";
 import Tesseract from "tesseract.js";
-import { getAnthropicClient } from "../lib/anthropic";
+import { getAnthropicClient, CLAUDE_MODEL, REFUSAL_FALLBACK, getRefusal, throwIfRefused } from "../lib/anthropic";
 import { SituationalContext } from "../models/SituationalContext";
 import { logAnthropicResponse } from "../models/AnthropicLog";
 import { ClaudeContentError, ClaudeParseError } from "../models/AppError";
@@ -451,9 +451,12 @@ async function extractDocumentFacts(
   const client = getAnthropicClient();
   const userText = buildExtractionUserMessage({ originalName: doc.originalName, rawText: doc.rawText });
 
-  const response = await client.messages.create({
-    model: "claude-opus-4-7",
-    max_tokens: 8000,
+  // max_tokens covers thinking (always on for CLAUDE_MODEL) plus the facts JSON
+  const response = await client.beta.messages.create({
+    model: CLAUDE_MODEL,
+    max_tokens: 16000,
+    output_config: { effort: "high" },
+    ...REFUSAL_FALLBACK,
     // Use the array form so we can attach cache_control. After the first call
     // the cached prompt block is reused at ~10% cost.
     system: [
@@ -478,6 +481,12 @@ async function extractDocumentFacts(
     service: "buildSituationContext:extract",
     userId: ctx.userId,
   });
+
+  // A declined document soft-fails like an unreadable one, so synthesis still runs
+  const refusal = getRefusal(response);
+  if (refusal) {
+    return { documentName: doc.originalName, error: { code: "refusal", message: refusal.explanation } };
+  }
 
   const textBlock = response.content.find((b) => b.type === "text");
   const raw = textBlock?.type === "text" ? textBlock.text.trim() : "";
@@ -675,9 +684,11 @@ async function synthesizeContext(
   // Streaming is required here — max_tokens (128000) exceeds the SDK's
   // non-streaming timeout threshold (~21333 tokens), and a non-streaming
   // call above that throws AnthropicError before any request is sent.
-  const stream = client.messages.stream({
-    model: "claude-opus-4-7",
+  const stream = client.beta.messages.stream({
+    model: CLAUDE_MODEL,
     max_tokens: 128000,
+    output_config: { effort: "high" },
+    ...REFUSAL_FALLBACK,
     system: buildSynthesisSystemPrompt(processes),
     messages: [
       {
@@ -692,6 +703,7 @@ async function synthesizeContext(
     service: "buildSituationContext:synthesize",
     userId: ctx.userId,
   });
+  throwIfRefused(response, "buildSituationContext:synthesize");
 
   const textBlock = response.content.find((b) => b.type === "text");
   const raw = textBlock?.type === "text" ? textBlock.text.trim() : "";
@@ -864,9 +876,11 @@ export async function buildSituationContext(
     // Streaming is required here — max_tokens (128000) exceeds the SDK's
     // non-streaming timeout threshold (~21333 tokens), and a non-streaming
     // call above that throws AnthropicError before any request is sent.
-    const stream = client.messages.stream({
-      model: "claude-opus-4-7",
+    const stream = client.beta.messages.stream({
+      model: CLAUDE_MODEL,
       max_tokens: 128000,
+      output_config: { effort: "high" },
+      ...REFUSAL_FALLBACK,
       system: buildSystemPrompt(processes),
       messages: [
         {
@@ -883,6 +897,7 @@ export async function buildSituationContext(
     const response = await stream.finalMessage();
 
     logAnthropicResponse(response, { service: "buildSituationContext", userId });
+    throwIfRefused(response, "buildSituationContext");
 
     const rawText = response.content.find((b) => b.type === "text");
     const rawJson = rawText?.type === "text" ? rawText.text.trim() : "";

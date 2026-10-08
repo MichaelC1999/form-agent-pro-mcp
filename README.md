@@ -45,7 +45,7 @@ npx ts-node src/services/buildFormMap.ts <formId> <pdfPath> [version]
 
 **Route:** `POST /api/form-context/build`
 **File:** `src/services/buildFormContext.ts`
-**AI:** `claude-opus-4-5`, up to 32 000 tokens
+**AI:** `claude-opus-5-5` (streamed), up to 128 000 tokens
 
 Annotates every field in the `FormMap` with rich metadata using the form's full narrative PDF text and pdftk-extracted per-field alt-text (USCIS-authored descriptions). Produces a `FormContext` document in MongoDB. Run once per form; thoroughness over speed.
 
@@ -67,7 +67,7 @@ PRINT_PROMPT=1 npx ts-node src/services/buildFormContext.ts <formId> <pdfPath>
 
 **Route:** `POST /api/situation/build`
 **File:** `src/services/buildSituationContext.ts`
-**AI:** `claude-opus-4-5`, up to 8 096 tokens
+**AI:** `claude-opus-5-5` (streamed), up to 128 000 tokens
 
 Accepts a user's immigration situation description and supporting documents. Documents are pre-processed without the LLM (PDFs via `pdf-parse`, images via Tesseract OCR with `eng+por`, plain text via `fs.readFileSync`) to extract raw text cheaply before it is passed to Anthropic. The model produces two outputs: a plain-English `situationSummary` and a structured `partyData` map of named parties to key→value fact bags. All output is in English; dates are normalized to ISO 8601; proper nouns are preserved as written in source documents.
 

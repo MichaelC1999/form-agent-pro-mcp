@@ -38,7 +38,7 @@ Annotates every fillable field in a form with rich, specific metadata (descripti
    - Falls back to bare field IDs if pdftk is unavailable.
 4. **Read context files** — Any supplemental files read as UTF-8 text.
 5. **Build prompts** — Calls `buildFormContextSystemPrompt()` and `buildFormContextUserMessage()`.
-6. **Anthropic call** — `claude-opus-4-5`, `max_tokens: 32000`. One-time operation; cost and latency are acceptable.
+6. **Anthropic call** — `claude-opus-5-5`, `max_tokens: 128000` (streamed). One-time operation; cost and latency are acceptable.
 7. **Parse + validate** — Strips markdown fences, parses JSON. Warns to console if any field IDs were skipped by the LLM.
 8. **Persist** — Saves to the `FormContext` MongoDB collection.
 

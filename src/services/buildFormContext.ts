@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import pdfParse from "pdf-parse";
-import { getAnthropicClient } from "../lib/anthropic";
+import { getAnthropicClient, CLAUDE_MODEL, REFUSAL_FALLBACK, throwIfRefused } from "../lib/anthropic";
 import { FormMap } from "../models/FormMap";
 import { FormContext } from "../models/FormContext";
 import { logAnthropicResponse } from "../models/AnthropicLog";
@@ -397,10 +397,10 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
   // 8. Encode PDF as base64 for the document block
   const pdfBase64 = fs.readFileSync(formPdfPath).toString("base64");
 
-  // 9. Anthropic call — claude-opus-4-5, high token budget, runs once per form
+  // 9. Anthropic call — high token budget, runs once per form
   const client = getAnthropicClient();
   console.log(
-    `[buildFormContext] Calling claude-opus-4-5 for "${formId}" — ` +
+    `[buildFormContext] Calling ${CLAUDE_MODEL} for "${formId}" — ` +
     `${fieldIds.length} fields, ${formPdfText.length} chars extracted text, ` +
     `PDF attached (${(pdfBase64.length * 0.75 / 1024).toFixed(0)} KB), ` +
     `${contextFileContents.length} supplemental file(s). May take several minutes...`
@@ -409,9 +409,11 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
   // Streaming is required here — max_tokens (128000) exceeds the SDK's
   // non-streaming timeout threshold (~21333 tokens), and a non-streaming
   // call above that throws AnthropicError before any request is sent.
-  const stream = client.messages.stream({
-    model: "claude-opus-4-7",
+  const stream = client.beta.messages.stream({
+    model: CLAUDE_MODEL,
     max_tokens: 128000,
+    output_config: { effort: "high" },
+    ...REFUSAL_FALLBACK,
     system: systemPrompt,
     messages: [
       {
@@ -438,6 +440,7 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
 
   // 10. Log full response payload to MongoDB (non-blocking)
   logAnthropicResponse(response, { service: "buildFormContext", formId });
+  throwIfRefused(response, "buildFormContext");
 
   // 11. Parse response
   const rawBlock = response.content.find((b) => b.type === "text");

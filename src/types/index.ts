@@ -428,7 +428,7 @@ export interface IAppError {
 export interface IAnthropicLog {
   /** Service that triggered the LLM call (e.g. "fillFormMap", "buildFormContext") */
   service: string;
-  /** Model ID returned by the Anthropic response (e.g. "claude-opus-4-5") */
+  /** Model ID returned by the Anthropic response (e.g. "claude-opus-5-5") */
   anthropicModel: string;
   /** Optional — form ID for form-scoped calls */
   formId?: string;

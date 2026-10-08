@@ -1,4 +1,4 @@
-import { getAnthropicClient } from "../lib/anthropic";
+import { getAnthropicClient, CLAUDE_MODEL, REFUSAL_FALLBACK, throwIfRefused } from "../lib/anthropic";
 import { FormMap } from "../models/FormMap";
 import { FormContext } from "../models/FormContext";
 import { SituationalContext } from "../models/SituationalContext";
@@ -724,7 +724,7 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
     fieldTags,
   });
 
-  // 4. Anthropic call — claude-opus-4-8 with adaptive thinking for the
+  // 4. Anthropic call — adaptive thinking for the
   //    cross-referential reasoning this task requires (hundreds of fields to
   //    reconcile against one situational-context blob), structured outputs to
   //    guarantee a schema-conformant response, and streaming since max_tokens
@@ -732,13 +732,14 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
   const client = getAnthropicClient();
   const responseSchema = buildResponseSchema();
   console.log(
-    `[fillFormMap] Calling claude-opus-4-8 (adaptive thinking, effort: high) for "${formId}" — ` +
+    `[fillFormMap] Calling ${CLAUDE_MODEL} (adaptive thinking, effort: high) for "${formId}" — ` +
     `this may take a minute for large forms...`
   );
 
-  const stream = client.messages.stream({
-    model: "claude-opus-4-8",
+  const stream = client.beta.messages.stream({
+    model: CLAUDE_MODEL,
     max_tokens: 128000,
+    ...REFUSAL_FALLBACK,
     thinking: { type: "adaptive", display: "summarized" },
     output_config: {
       effort: "high",
@@ -756,6 +757,7 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
 
   // 5. Log full response payload to MongoDB (non-blocking)
   logAnthropicResponse(response, { service: "fillFormMap", formId, userId, situationalContextId });
+  throwIfRefused(response, "fillFormMap");
 
   // 6. Parse and validate response (keys are still short at this point)
   const rawBlock = response.content.find((b) => b.type === "text");

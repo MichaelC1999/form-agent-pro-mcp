@@ -48,8 +48,8 @@ Documents are categorized and pre-processed with native libraries — **not** th
 
 ### Anthropic Call
 
-**Model:** `claude-opus-4-5`
-**Max tokens:** `8096`
+**Model:** `claude-opus-5-5`
+**Max tokens:** `128000` (streamed)
 
 **Message structure:**
 ```
