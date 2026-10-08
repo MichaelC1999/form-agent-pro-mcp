@@ -6,6 +6,13 @@ import { getAnthropicClient, CLAUDE_MODEL, REFUSAL_FALLBACK, getRefusal, throwIf
 import { SituationalContext } from "../models/SituationalContext";
 import { logAnthropicResponse } from "../models/AnthropicLog";
 import { ClaudeContentError, ClaudeParseError } from "../models/AppError";
+import {
+  buildSituationResponseSchema,
+  normalizeResponseForms,
+  renderPartyDataRules,
+  toPartyDataMap,
+  type SituationResponse,
+} from "../lib/partyData";
 import { summarizeProcesses, getProcessLanguagesTesseractString, type ProcessSummary } from "../lib/processes";
 import type {
   BuildSituationContextInput,
@@ -135,79 +142,22 @@ Produce an ordered list of forms that will need to be completed.
 When processId matches a supported process, draw form IDs from that process's "available forms" list above. When processId is one you invented, use whichever short lowercase-hyphenated form IDs are appropriate (e.g. "i-129f", "ds-160").
 
 Each entry MUST be an object of the shape:
-  { "formId": "<form-id>", "beneficiaryKey": "<party name from partyData>" }
+  { "formId": "<form-id>", "beneficiaryKey": "<a party's name>" }
 
-The "beneficiaryKey" MUST match EXACTLY one of the top-level keys in your "partyData" object (e.g. "Maria Souza"). It identifies the beneficiary this form is being filed for.
+The "beneficiaryKey" MUST match EXACTLY the "name" of one of your parties (e.g. "Maria Souza"). It identifies the beneficiary this form is being filed for.
 
 PER-BENEFICIARY vs. ONCE-PER-HOUSEHOLD FORMS — important:
 - A form is PER-BENEFICIARY when each beneficiary requires their own filing (typical for applications and petitions specific to one person). Emit one entry per (form × beneficiary) pair, each with a beneficiaryKey.
   Example: if a single petitioner is sponsoring two children, requiredForms must contain a separate entry for each child for every per-beneficiary form.
-- A form is HOUSEHOLD-SCOPE when a single filing covers the whole sponsor unit or applicant household (typical for affidavits, sponsor declarations, family-wide applications). Emit a single entry and OMIT the beneficiaryKey field.
+- A form is HOUSEHOLD-SCOPE when a single filing covers the whole sponsor unit or applicant household (typical for affidavits, sponsor declarations, family-wide applications). Emit a single entry with "beneficiaryKey": "".
 
 Use your knowledge of how each specific form is filed to decide its scope — do not guess. When there is only one beneficiary, still produce object entries with beneficiaryKey set to that beneficiary's party name for per-beneficiary forms.
 
 Include only forms genuinely required for this specific situation. Order entries in the sequence they should be filed (primary petition first, supporting forms after).
 
-PART D — Structured Party Data
-Extract and organize every piece of information from the documents and UI answers into a structured JSON object.
+${renderPartyDataRules()}
 
-TRANSLATION RULES — strictly follow these:
-- ALL output must be in English. Translate every field label, value, and narrative string from any non-English source language into English. English is the only assumed language; treat all others equally.
-- Document labels and field names from foreign documents must be translated accurately to their standard English equivalent (e.g. a date-of-birth label in any language becomes "Date of Birth", a place-of-birth label becomes "Place of Birth"). Use the conventional English form regardless of source language.
-- Proper nouns (personal names, city names, employer names) should be preserved as written in the original document — do not translate names.
-- When a foreign document uses an abbreviation or code (e.g. national tax IDs, occupation codes), include both the original code and a translated label.
-
-DATA SANITIZATION RULES — apply these when writing values:
-- Strip incidental metadata or document-context artifacts from values. Store only the practical, usable piece of information the field label implies.
-  Examples:
-  - "Springfield, IL USA (Open To Relocation)" → store as "Springfield, IL, USA" under "Current Location"
-  - "R$ 1.000,00/month" → store as "R$ 1,000.00 / month"
-  - "01 JAN/JAN 1990" → store as "1990-01-01"
-  - "DOE<<JANE<MARY" (MRZ format) → store as "Jane Mary Doe" under "Name (MRZ)"
-- Normalize dates to ISO 8601 (YYYY-MM-DD) wherever the original value is unambiguous.
-- Do not include parenthetical clarifications, source caveats, or document-type context inside a value. Those belong in the key name or a separate "Notes" field if truly needed.
-
-STRUCTURE RULES:
-- The top-level keys of the JSON are specific parties or situational subjects (e.g. "John Alexander Doe", "Jane Mary Doe", "Marriage (2024)", "US Immigration Context").
-  Keep subjects specific — avoid vague keys like "Documents" or "Information".
-- Within each subject, use key-value pairs where:
-  - Precise, discrete facts (a name, date, number, address) are stored with full precision: { "Passport Number": "AB1234567" }
-  - Narrative or multi-entry information is stored as a labeled string or nested object: { "Employment History": "..." }
-- Capture EVERY piece of information present. Redundancy across subjects is acceptable; omissions are not.
-- Preserve exact proper nouns, numbers, ID numbers, and addresses — do not paraphrase them.
-- Always decompose addresses into separate keys: Street Number, Street Name, Apt / Unit, City, State / Province, Zip / Postal Code, Country. Never store an address as a single string.
-- Infer and include reasonable derived facts (e.g. if a marriage certificate shows two spouses, record the relationship and immigration relevance under a "US Immigration Context" subject).
-
-PHYSICAL & BIOGRAPHIC ATTRIBUTES — this is critical for government form accuracy:
-For every individual party, you MUST extract and record the following under that party's subject key whenever the information appears anywhere in the documents or images. Government forms require these fields and they must be exact:
-  - "Height" — in feet and inches (e.g. "5 ft 7 in") and/or centimeters as shown on the document
-  - "Weight" — in pounds and/or kilograms as shown on the document
-  - "Eye Color" — exact value as printed on the document (e.g. "Brown", "Blue", "Green", "Hazel", "Gray", "Black")
-  - "Hair Color" — exact value as printed (e.g. "Black", "Brown", "Blonde", "Gray", "Red", "White", "Bald")
-  - "Race / Ethnicity" — as declared on the document or self-reported; use the exact US government categories where applicable:
-      White, Black or African American, Asian, American Indian or Alaska Native,
-      Native Hawaiian or Other Pacific Islander, Hispanic or Latino, Other
-  - "Sex" — as printed on the document ("Male", "Female", or as stated)
-  - "Complexion / Skin Tone" — if present on any document (common on older passports and visas)
-  - "Place of Birth" — city and country
-  - "Country of Birth"
-  - "Country of Citizenship / Nationality"
-If a value is not present anywhere in the provided materials, omit the key entirely — do not guess or leave a placeholder.
-
-Return a single valid JSON object with this exact shape — no markdown fences, no explanation outside the JSON:
-{
-  "situationSummary": "<2-3 sentence summary in English>",
-  "processId": "<exact processId from the supported list, OR a new kebab-case identifier you invented>",
-  "requiredForms": [
-    { "formId": "<form-id>", "beneficiaryKey": "<party name from partyData>" },
-    { "formId": "<household-form-id>" }
-  ],
-  "partyData": {
-    "<Party or Subject Name>": {
-      "<Key in English>": "<sanitized value or narrative string in English>"
-    }
-  }
-}
+Respond with the JSON object defined by the response schema (situationSummary, processId, requiredForms, parties, marriage, household, caseFacts).
 
 ─────────────────────────────────────────────────────────────────────────────
 ERROR PATH — MANDATORY
@@ -243,7 +193,7 @@ Valid examples of "code":
 
 This error shape is the ONLY acceptable response when you cannot produce the
 full situational context. Do not mix the two shapes. Do not return an empty
-situationSummary, an empty partyData object, or fabricated forms in lieu of
+situationSummary, an empty parties list, or fabricated forms in lieu of
 returning the error object.`;
 }
 
@@ -270,15 +220,15 @@ function buildBeneficiarySignal(
       `The beneficiary names provided by the user are: ${names.map((n) => `"${n}"`).join(", ")}.`
     );
     lines.push(
-      `When emitting partyData, use these exact strings as the top-level keys for each beneficiary (matching the spelling and casing the user provided). Use the same strings as "beneficiaryKey" values inside requiredForms entries.`
+      `Use these exact strings as the "name" of each beneficiary party (matching the spelling and casing the user provided), and as "beneficiaryKey" values inside requiredForms entries.`
     );
   } else {
     lines.push(
-      `Beneficiary names were not provided. Identify each beneficiary from the documents and use a clear, specific party-name string as the top-level key in partyData and as the "beneficiaryKey" inside requiredForms entries.`
+      `Beneficiary names were not provided. Identify each beneficiary from the documents and use a clear, specific party name as the beneficiary's "name" and as the "beneficiaryKey" inside requiredForms entries.`
     );
   }
   lines.push(
-    `Produce ${count} distinct top-level beneficiary entries in partyData (separate from any petitioner/sponsor entries). Emit one requiredForms entry per (per-beneficiary form × beneficiary) pair as described in the system prompt.`
+    `Produce ${count} distinct beneficiary parties (separate from any petitioner/sponsor parties). Emit one requiredForms entry per (per-beneficiary form × beneficiary) pair as described in the system prompt.`
   );
   return lines.join("\n");
 }
@@ -390,7 +340,7 @@ DATA SANITIZATION RULES:
   - "Springfield, IL USA (Open To Relocation)" → "Springfield, IL, USA"
   - "P<USADOE<<JANE<MARY<..." (MRZ) → "Jane Mary Doe"
   - "EUR 1.000,00/month" → "EUR 1,000.00 / month"
-- Always decompose addresses into separate keys: Street Number, Street Name, Apt/Unit, City, State/Province, Zip/Postal Code, Country.
+- Always decompose addresses into separate keys: Street Number and Name (exactly as written, in the address's own country order — "Avenida Simulada 1234" stays as is), Apt/Ste/Flr Number, Neighborhood / Colonia, City or Town, State/Province, Zip/Postal Code, Country.
 
 BIOGRAPHIC ATTRIBUTES — extract when visible on the document:
 Height, Weight, Eye Color, Hair Color, Race/Ethnicity, Sex, Complexion/Skin Tone, Place of Birth, Country of Birth, Country of Citizenship.
@@ -583,37 +533,18 @@ PART C — Required Forms
 An ordered list of forms required for this situation. When processId matches a supported process, draw form IDs from that process's "available forms" list above. When processId is one you invented, use whichever short lowercase-hyphenated form IDs are appropriate. Order them in the sequence they should be filed (primary petition first, supporting forms after). Include only forms genuinely required for this specific situation.
 
 Each entry MUST be an object of the shape:
-  { "formId": "<form-id>", "beneficiaryKey": "<party name from partyData>" }
+  { "formId": "<form-id>", "beneficiaryKey": "<a party's name>" }
 
-The "beneficiaryKey" MUST match EXACTLY one of the top-level keys in your "partyData" object. It identifies the beneficiary this form is being filed for.
+The "beneficiaryKey" MUST match EXACTLY the "name" of one of your parties. It identifies the beneficiary this form is being filed for.
 
 PER-BENEFICIARY vs. ONCE-PER-HOUSEHOLD FORMS — important:
 - A form is PER-BENEFICIARY when each beneficiary requires their own filing. Emit one entry per (form × beneficiary) pair, each with a beneficiaryKey.
-- A form is HOUSEHOLD-SCOPE when a single filing covers the whole sponsor unit or applicant household. Emit a single entry and OMIT the beneficiaryKey field.
+- A form is HOUSEHOLD-SCOPE when a single filing covers the whole sponsor unit or applicant household. Emit a single entry with "beneficiaryKey": "".
 Use your knowledge of how each specific form is filed to decide its scope — do not guess. When there is only one beneficiary, still produce object entries with beneficiaryKey set to that beneficiary's party name for per-beneficiary forms.
 
-PART D — Structured Party Data
-A top-level JSON object whose keys are specific parties or situational subjects (e.g. "John Alexander Doe", "Jane Mary Doe", "Marriage (2024)", "US Immigration Context"). Merge facts about the same person from multiple documents under a single party key. Values are key-value pairs of sanitized, English-translated facts. Capture EVERY fact present across the extracted documents — redundancy across subjects is acceptable; omissions are not. Decompose addresses into separate keys (Street Number, Street Name, Apt/Unit, City, State/Province, Zip/Postal Code, Country).
+${renderPartyDataRules()}
 
-PHYSICAL & BIOGRAPHIC ATTRIBUTES — for every individual party, include the following when present in ANY extracted document:
-Height, Weight, Eye Color, Hair Color, Race/Ethnicity, Sex, Complexion/Skin Tone, Place of Birth, Country of Birth, Country of Citizenship/Nationality.
-Omit any key whose value is not present anywhere in the materials — never guess or fill in placeholders.
-
-Return a single valid JSON object with this exact shape — no markdown fences, no prose outside the JSON:
-
-{
-  "situationSummary": "<2-3 sentence summary in English>",
-  "processId": "<exact processId from the supported list, OR a new kebab-case identifier you invented>",
-  "requiredForms": [
-    { "formId": "<form-id>", "beneficiaryKey": "<party name from partyData>" },
-    { "formId": "<household-form-id>" }
-  ],
-  "partyData": {
-    "<Party or Subject Name>": {
-      "<Key in English>": "<value or narrative string in English>"
-    }
-  }
-}
+Respond with the JSON object defined by the response schema (situationSummary, processId, requiredForms, parties, marriage, household, caseFacts).
 
 ─────────────────────────────────────────────────────────────────────────────
 ERROR PATH — MANDATORY
@@ -673,6 +604,47 @@ interface SynthesisOutput {
   partyData: PartyDataMap;
 }
 
+/**
+ * Parses a structured situational-context response (SITUATION_RESPONSE_SCHEMA)
+ * into the stored shape. Surfaces the schema's error branch as a
+ * ClaudeContentError, exactly as the free-text error JSON used to be.
+ */
+function parseSituationResponse(raw: string, service: string): SynthesisOutput {
+  let parsed: Partial<SituationResponse> & { error?: { code?: string; message?: string; details?: string } };
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new ClaudeParseError({ service, message: "Claude response was not valid JSON.", rawResponse: raw.slice(0, 4000) });
+  }
+
+  if (parsed.error && typeof parsed.error === "object") {
+    throw new ClaudeContentError({
+      service,
+      code: parsed.error.code ?? "unspecified",
+      message: parsed.error.message ?? "Claude could not produce a situational context.",
+      details: parsed.error.details,
+      rawResponse: raw.slice(0, 4000),
+    });
+  }
+
+  if (!parsed.situationSummary || !parsed.processId || !Array.isArray(parsed.parties) || parsed.parties.length === 0) {
+    throw new ClaudeContentError({
+      service,
+      code: "incomplete_response",
+      message: "Claude returned a context that is missing required fields (situationSummary, processId, or parties).",
+      rawResponse: raw.slice(0, 4000),
+    });
+  }
+
+  const response = parsed as SituationResponse;
+  return {
+    situationSummary: response.situationSummary,
+    processId: response.processId.trim(),
+    requiredForms: normalizeResponseForms(response),
+    partyData: toPartyDataMap(response),
+  };
+}
+
 async function synthesizeContext(
   uiAnswers: BuildSituationContextInput["uiAnswers"],
   extracted: ExtractedDocumentResult[],
@@ -687,7 +659,10 @@ async function synthesizeContext(
   const stream = client.beta.messages.stream({
     model: CLAUDE_MODEL,
     max_tokens: 128000,
-    output_config: { effort: "high" },
+    output_config: {
+      effort: "high",
+      format: { type: "json_schema", schema: buildSituationResponseSchema() },
+    },
     ...REFUSAL_FALLBACK,
     system: buildSynthesisSystemPrompt(processes),
     messages: [
@@ -706,51 +681,7 @@ async function synthesizeContext(
   throwIfRefused(response, "buildSituationContext:synthesize");
 
   const textBlock = response.content.find((b) => b.type === "text");
-  const raw = textBlock?.type === "text" ? textBlock.text.trim() : "";
-  const cleaned = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
-
-  let parsed: {
-    situationSummary?: string;
-    processId?: string;
-    requiredForms?: RequiredFormsStored;
-    partyData?: PartyDataMap;
-    error?: { code?: string; message?: string; details?: string };
-  };
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    throw new ClaudeParseError({
-      service: "buildSituationContext:synthesize",
-      message: "Synthesis response was not valid JSON.",
-      rawResponse: cleaned.slice(0, 4000),
-    });
-  }
-
-  if (parsed.error && typeof parsed.error === "object") {
-    throw new ClaudeContentError({
-      service: "buildSituationContext:synthesize",
-      code: parsed.error.code ?? "unspecified",
-      message: parsed.error.message ?? "Synthesis could not produce a situational context.",
-      details: parsed.error.details,
-      rawResponse: cleaned.slice(0, 4000),
-    });
-  }
-
-  if (!parsed.situationSummary || !parsed.partyData || !parsed.processId) {
-    throw new ClaudeContentError({
-      service: "buildSituationContext:synthesize",
-      code: "incomplete_response",
-      message: "Synthesis returned a context that is missing required fields (situationSummary, processId, or partyData).",
-      rawResponse: cleaned.slice(0, 4000),
-    });
-  }
-
-  return {
-    situationSummary: parsed.situationSummary,
-    processId: parsed.processId.trim(),
-    requiredForms: Array.isArray(parsed.requiredForms) ? parsed.requiredForms : [],
-    partyData: parsed.partyData,
-  };
+  return parseSituationResponse(textBlock?.type === "text" ? textBlock.text.trim() : "", "buildSituationContext:synthesize");
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -879,7 +810,10 @@ export async function buildSituationContext(
     const stream = client.beta.messages.stream({
       model: CLAUDE_MODEL,
       max_tokens: 128000,
-      output_config: { effort: "high" },
+      output_config: {
+        effort: "high",
+        format: { type: "json_schema", schema: buildSituationResponseSchema() },
+      },
       ...REFUSAL_FALLBACK,
       system: buildSystemPrompt(processes),
       messages: [
@@ -899,52 +833,8 @@ export async function buildSituationContext(
     logAnthropicResponse(response, { service: "buildSituationContext", userId });
     throwIfRefused(response, "buildSituationContext");
 
-    const rawText = response.content.find((b) => b.type === "text");
-    const rawJson = rawText?.type === "text" ? rawText.text.trim() : "";
-    const cleaned = rawJson.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
-
-    let parsed: {
-      situationSummary?: string;
-      processId?: string;
-      requiredForms?: RequiredFormsStored;
-      partyData?: PartyDataMap;
-      error?: { code?: string; message?: string; details?: string };
-    };
-    try {
-      parsed = JSON.parse(cleaned);
-    } catch {
-      throw new ClaudeParseError({
-        service: "buildSituationContext",
-        message: "Claude response was not valid JSON.",
-        rawResponse: cleaned.slice(0, 4000),
-      });
-    }
-
-    if (parsed.error && typeof parsed.error === "object") {
-      throw new ClaudeContentError({
-        service: "buildSituationContext",
-        code: parsed.error.code ?? "unspecified",
-        message: parsed.error.message ?? "Claude could not produce a situational context.",
-        details: parsed.error.details,
-        rawResponse: cleaned.slice(0, 4000),
-      });
-    }
-
-    if (!parsed.situationSummary || !parsed.partyData || !parsed.processId) {
-      throw new ClaudeContentError({
-        service: "buildSituationContext",
-        code: "incomplete_response",
-        message: "Claude returned a context that is missing required fields (situationSummary, processId, or partyData).",
-        rawResponse: cleaned.slice(0, 4000),
-      });
-    }
-
-    synthesized = {
-      situationSummary: parsed.situationSummary,
-      processId: parsed.processId.trim(),
-      requiredForms: Array.isArray(parsed.requiredForms) ? parsed.requiredForms : [],
-      partyData: parsed.partyData,
-    };
+    const textBlock = response.content.find((b) => b.type === "text");
+    synthesized = parseSituationResponse(textBlock?.type === "text" ? textBlock.text.trim() : "", "buildSituationContext");
   }
 
   // 3. Persist to MongoDB (same shape regardless of which path produced it)
