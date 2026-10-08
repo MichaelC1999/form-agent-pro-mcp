@@ -1,6 +1,7 @@
 import { execSync, spawnSync } from "child_process";
 import * as fs from "fs";
 import pdfParse from "pdf-parse";
+import type { FieldMeta } from "../types";
 
 export type PdfFieldInfo = {
   name: string;
@@ -104,6 +105,18 @@ export type PdfFieldLabel = {
   onValue?: string;
 };
 
+/** Runs pdftk dump_data_fields_utf8 and returns one text block per field, or [] when pdftk is unavailable or fails. */
+function dumpFieldBlocks(pdfPath: string): string[] {
+  if (!isPdftkInstalled()) return [];
+  const result = spawnSync("pdftk", [pdfPath, "dump_data_fields_utf8"], { encoding: "utf-8" });
+  if (result.status !== 0) return [];
+  return result.stdout.split(/^---$/m);
+}
+
+const blockName = (block: string) => block.match(/^FieldName: (.+)$/m)?.[1]?.trim();
+const blockType = (block: string) => block.match(/^FieldType: (.+)$/m)?.[1]?.trim() ?? "";
+const blockOptions = (block: string) => [...block.matchAll(/^FieldStateOption: (.*)$/gm)].map((m) => m[1].trim());
+
 /**
  * Returns the tooltip, type, and checked value of every field in a blank PDF.
  * Uses dump_data_fields_utf8 so tooltips keep their original punctuation.
@@ -112,23 +125,41 @@ export type PdfFieldLabel = {
  */
 export function readFieldLabels(pdfPath: string): Map<string, PdfFieldLabel> {
   const labels = new Map<string, PdfFieldLabel>();
-  if (!isPdftkInstalled()) return labels;
-
-  const result = spawnSync("pdftk", [pdfPath, "dump_data_fields_utf8"], { encoding: "utf-8" });
-  if (result.status !== 0) return labels;
-
-  for (const block of result.stdout.split(/^---$/m)) {
-    const name = block.match(/^FieldName: (.+)$/m)?.[1]?.trim();
+  for (const block of dumpFieldBlocks(pdfPath)) {
+    const name = blockName(block);
     if (!name) continue;
     const tooltip = (block.match(/^FieldNameAlt: (.+)$/m)?.[1] ?? "").replace(/\s+/g, " ").trim();
-    const type = block.match(/^FieldType: (.+)$/m)?.[1]?.trim() ?? "";
-    const onValue = type === "Button"
-      ? [...block.matchAll(/^FieldStateOption: (.+)$/gm)].map((m) => m[1].trim()).find((s) => s !== "Off")
-      : undefined;
+    const type = blockType(block);
+    const onValue = type === "Button" ? blockOptions(block).find((s) => s !== "" && s !== "Off") : undefined;
     labels.set(name, { tooltip, type, ...(onValue ? { onValue } : {}) });
   }
-
   return labels;
+}
+
+/**
+ * Returns the input constraints of every fillable field in a blank PDF —
+ * only what decides whether a value can be written as-is: checkbox vs text vs
+ * dropdown, a checkbox's checked value, a text field's max length (pdftk
+ * truncates past it), and a dropdown's accepted values. Push buttons and
+ * signature fields are omitted.
+ */
+export function readFieldMeta(pdfPath: string): Record<string, FieldMeta> {
+  const meta: Record<string, FieldMeta> = {};
+  for (const block of dumpFieldBlocks(pdfPath)) {
+    const name = blockName(block);
+    if (!name) continue;
+    const type = blockType(block);
+    if (type === "Button") {
+      const onValue = blockOptions(block).find((s) => s !== "" && s !== "Off");
+      if (onValue) meta[name] = { type: "checkbox", onValue };
+    } else if (type === "Choice") {
+      meta[name] = { type: "dropdown", options: blockOptions(block).filter((s) => s !== "") };
+    } else if (type === "Text") {
+      const maxLength = Number(block.match(/^FieldMaxLength: (\d+)$/m)?.[1]);
+      meta[name] = maxLength > 0 ? { type: "text", maxLength } : { type: "text" };
+    }
+  }
+  return meta;
 }
 
 // ─── PDF text extraction (for document parsing) ──────────────────────────────

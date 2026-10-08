@@ -7,7 +7,8 @@ import {
   type PDFContext, type PDFObject,
 } from "pdf-lib";
 import { FormMap } from "../models/FormMap";
-import type { BuildFormMapInput, IFormMap, FieldMap } from "../types";
+import { readFieldMeta } from "../lib/pdf";
+import type { BuildFormMapInput, IFormMap, FieldMap, FieldMeta } from "../types";
 
 // ─── Tool availability ────────────────────────────────────────────────────────
 
@@ -423,11 +424,20 @@ export async function buildFormMap(
   const { fields, strategy } = await extractFields(formPdfPath);
   const fieldCount = Object.keys(fields).length;
 
+  // Input constraints (checkbox / max length / dropdown options) for the
+  // fields in this map — fillFormMap uses them to prompt for and validate values
+  const allMeta = readFieldMeta(formPdfPath);
+  const fieldMeta: Record<string, FieldMeta> = {};
+  for (const id of Object.keys(fields)) {
+    if (allMeta[id]) fieldMeta[id] = allMeta[id];
+  }
+
   const doc = await FormMap.create({
     formId,
     version,
     createdAt: new Date(),
     fields,
+    ...(Object.keys(fieldMeta).length > 0 ? { fieldMeta } : {}),
   });
 
   const saved = doc.toObject() as IFormMap;
@@ -464,6 +474,7 @@ if (require.main === module) {
       console.log(`\n✅ FormMap saved for "${result.formId}" (v${result.version})`);
       console.log(`   Strategy : ${result.strategy}`);
       console.log(`   Fields   : ${result.fieldCount}`);
+      console.log(`   Metadata : ${Object.keys(result.fieldMeta ?? {}).length} fields`);
       console.log(`   MongoDB _id: ${(result as any)._id}\n`);
       process.exit(0);
     } catch (err) {

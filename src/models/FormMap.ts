@@ -10,6 +10,8 @@ const FormMapSchema = new Schema<FormMapDocument>(
     createdAt: { type: Date, default: Date.now },
     // fields is a free-form object: { "<fieldId>": "" }
     fields: { type: Schema.Types.Mixed, required: true, default: {} },
+    // fieldMeta: { "<fieldId>": { type, maxLength?, options? } } — see FieldMeta
+    fieldMeta: { type: Schema.Types.Mixed },
   },
   { timestamps: false }
 );

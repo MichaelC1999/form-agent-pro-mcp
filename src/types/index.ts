@@ -7,11 +7,27 @@ export type FieldMap = Record<string, string>;
 
 // ─── FormMap ────────────────────────────────────────────────────────────────
 
+/**
+ * Input constraints of one PDF field — only what decides whether a value can
+ * be written as-is. Read from the blank PDF by buildFormMap.
+ */
+export interface FieldMeta {
+  type: "text" | "checkbox" | "dropdown";
+  /** Checkboxes: the value the box writes when checked (e.g. "Y", "APT") — validation only, not shown to the model */
+  onValue?: string;
+  /** Text fields: the PDF truncates longer values */
+  maxLength?: number;
+  /** Dropdowns: the values the PDF accepts */
+  options?: string[];
+}
+
 export interface IFormMap {
   formId: string;
   version: string;
   createdAt: Date;
   fields: FieldMap; // { "<fieldId>": "" }
+  /** Per-field input constraints. Absent on FormMaps built before it was added. */
+  fieldMeta?: Record<string, FieldMeta>;
 }
 
 // ─── FormContext ─────────────────────────────────────────────────────────────
