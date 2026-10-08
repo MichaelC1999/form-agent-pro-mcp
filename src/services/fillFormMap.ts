@@ -1,11 +1,13 @@
+import type Anthropic from "@anthropic-ai/sdk";
 import { getAnthropicClient, CLAUDE_MODEL, REFUSAL_FALLBACK, throwIfRefused } from "../lib/anthropic";
+import { readFieldLabels } from "../lib/pdf";
 import { FormMap } from "../models/FormMap";
 import { FormContext } from "../models/FormContext";
 import { SituationalContext } from "../models/SituationalContext";
 import { FilledFormMap } from "../models/FilledFormMap";
 import { logAnthropicResponse } from "../models/AnthropicLog";
 import { ClaudeContentError, ClaudeParseError } from "../models/AppError";
-import { resolveProcessId, getProcessReadme, listProcessLanguages } from "../lib/processes";
+import { resolveProcessId, getProcessReadme, listProcessLanguages, getBlankPdfPath } from "../lib/processes";
 import type {
   FillFormMapInput,
   IFilledFormMap,
@@ -193,19 +195,16 @@ place of this error object — that is a forbidden output.`;
 }
 
 /**
- * Builds the user turn: serialises both inputs into a structured,
- * clearly delimited text block that the LLM can navigate without ambiguity.
- * The form map is not included here — the field IDs are already present
- * inside the annotated FORM CONTEXT section.
+ * Builds the part of the user turn shared by every batch of a form: the
+ * situational context, any matching user clarifications, and the form
+ * metadata. Sent as its own cached block when a form is filled in batches.
  */
-function buildUserMessage(params: {
+function buildSharedContext(params: {
   formContext: IFormContext;
   situationalContext: ISituationalContext;
   beneficiaryKey?: string;
-  /** Input-constraint tag per field ID as it appears in formContext (see buildFieldTags) */
-  fieldTags?: Record<string, string>;
 }): string {
-  const { formContext, situationalContext, beneficiaryKey, fieldTags = {} } = params;
+  const { formContext, situationalContext, beneficiaryKey } = params;
   const hr = "─".repeat(72);
   const parts: string[] = [];
 
@@ -254,13 +253,35 @@ function buildUserMessage(params: {
   parts.push(hr);
   parts.push(JSON.stringify(formContext.formMetadata, null, 2));
 
+  return parts.join("\n");
+}
+
+/**
+ * Builds the field-by-field part of the user turn for one batch (or the whole
+ * form): every field ID the LLM must output, then the final instruction.
+ */
+function buildFieldSection(params: {
+  fields: IFormContext["fields"];
+  /** Input-constraint tag per field ID as it appears in `fields` (see buildFieldTags) */
+  fieldTags?: Record<string, string>;
+  /** Set when the form is split: which Parts this batch covers, and the form's total field count */
+  batch?: { partsLabel: string; formFieldCount: number };
+}): string {
+  const { fields, fieldTags = {}, batch } = params;
+  const hr = "─".repeat(72);
+  const parts: string[] = [];
+
   // ── 3. Field-by-field context — every field ID the LLM must output ────────
-  parts.push(`\n${hr}`);
-  parts.push(`FORM CONTEXT  |  ${formContext.fields.length} fields  |  every field ID below must appear as a key in your output`);
+  parts.push(hr);
+  parts.push(
+    batch
+      ? `FORM CONTEXT  |  ${batch.partsLabel}  |  ${fields.length} of the form's ${batch.formFieldCount} fields  |  every field ID below must appear as a key in your output`
+      : `FORM CONTEXT  |  ${fields.length} fields  |  every field ID below must appear as a key in your output`
+  );
   parts.push(hr);
 
   const contextLines: string[] = [];
-  for (const fc of formContext.fields) {
+  for (const fc of fields) {
     const tag = fieldTags[fc.field];
     contextLines.push(
       `[${fc.field}]${tag ? `  (${tag})` : ""}\n` +
@@ -279,11 +300,94 @@ function buildUserMessage(params: {
     `  2. Determine whether the SITUATIONAL CONTEXT contains a relevant value.\n` +
     `  3. If yes — extract, format, and insert it. If no — set it to "".\n` +
     `  4. Record any uncertain or inferred fills in the "skipped" audit log.\n\n` +
-    `Your output "fields" array must contain one entry for every one of the ${formContext.fields.length} field IDs above — no additions, no omissions.\n\n` +
+    (batch
+      ? `This request covers ${batch.partsLabel} of the form; the other Parts are filled in separate requests. ` +
+        `Use the whole situational context, but output only the field IDs listed here.\n\n`
+      : "") +
+    `Your output "fields" array must contain one entry for every one of the ${fields.length} field IDs above — no additions, no omissions.\n\n` +
     `Return the JSON object now.`
   );
 
   return parts.join("\n");
+}
+
+/**
+ * Builds the whole-form user turn (shared context + every field) — what a
+ * single-batch fill sends, and what PRINT_PROMPT shows.
+ */
+function buildUserMessage(params: {
+  formContext: IFormContext;
+  situationalContext: ISituationalContext;
+  beneficiaryKey?: string;
+  fieldTags?: Record<string, string>;
+}): string {
+  return `${buildSharedContext(params)}\n\n${buildFieldSection({ fields: params.formContext.fields, fieldTags: params.fieldTags })}`;
+}
+
+// ─── Batching by form Part ────────────────────────────────────────────────────
+//
+// Large forms are filled in several smaller calls, each covering whole Parts
+// of the form (from the PDF tooltips, "Part 2. Information About You…").
+// Every call gets the same system prompt and shared context — cached after
+// the first call — and only its own fields, so the model attends to tens of
+// fields at a time instead of hundreds. Forms up to SINGLE_CALL_MAX_FIELDS
+// stay a single call.
+
+const SINGLE_CALL_MAX_FIELDS = 250;
+/** A batch closes before a Part that would take it past this size… */
+const BATCH_MAX_FIELDS = 150;
+/** …unless it holds fewer than this many fields. Parts are never split. */
+const BATCH_MIN_FIELDS = 40;
+
+interface FieldBatch {
+  fields: IFormContext["fields"];
+  parts: number[];
+}
+
+/**
+ * Groups the form's fields into batches of whole Parts, in Part order. A field
+ * whose tooltip names no Part takes the Part of the field before it in form
+ * order; the header block before Part 1 is Part 0.
+ */
+export function planBatches(fields: IFormContext["fields"], tooltips: Map<string, string>): FieldBatch[] {
+  if (fields.length <= SINGLE_CALL_MAX_FIELDS) return [{ fields, parts: [] }];
+
+  // All fields of each Part, in form order within the Part. The context's
+  // field order doesn't follow Parts strictly, so group by number, not by run.
+  const byPart = new Map<number, IFormContext["fields"]>();
+  let part = 0;
+  for (const fc of fields) {
+    const match = (tooltips.get(fc.field) ?? "").match(/^\s*Part\s+(\d+)/i);
+    if (match) part = Number(match[1]);
+    if (!byPart.has(part)) byPart.set(part, []);
+    byPart.get(part)!.push(fc);
+  }
+  const groups: FieldBatch[] = [...byPart.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([p, partFields]) => ({ fields: partFields, parts: [p] }));
+
+  const batches: FieldBatch[] = [];
+  let current: FieldBatch = { fields: [], parts: [] };
+  for (const group of groups) {
+    if (current.fields.length >= BATCH_MIN_FIELDS && current.fields.length + group.fields.length > BATCH_MAX_FIELDS) {
+      batches.push(current);
+      current = { fields: [], parts: [] };
+    }
+    current.fields.push(...group.fields);
+    if (!current.parts.includes(group.parts[0])) current.parts.push(group.parts[0]);
+  }
+  if (current.fields.length > 0) batches.push(current);
+  return batches;
+}
+
+/** "Part 9", "Parts 2–5", or "the form header and Part 1" for a batch's Parts. */
+export function describeParts(parts: number[]): string {
+  const numbered = parts.filter((p) => p > 0);
+  const header = parts.includes(0) ? "the form header and " : "";
+  if (numbered.length === 0) return parts.length > 0 ? "the form header" : "the whole form";
+  const lo = Math.min(...numbered);
+  const hi = Math.max(...numbered);
+  return `${header}${lo === hi ? `Part ${lo}` : `Parts ${lo}–${hi}`}`;
 }
 
 // ─── Field constraints ────────────────────────────────────────────────────────
@@ -704,10 +808,11 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
   //    ("f0000"…"f9999", ~2 tokens each), saving ~14k tokens on a 736-field form.
   //    The keyMap is used after the response to expand short keys back to full IDs.
   const keyMap = buildKeyMap(fieldIds);
-  const shortFieldIds = fieldIds.map((id) => keyMap.fullToShort[id]);
   const compressedFormContext = remapFormContextKeys(formContext, keyMap.fullToShort);
 
-  // 3. Build prompts using the compressed FormContext
+  // 3. Build prompts using the compressed FormContext. Large forms are split
+  //    into batches of whole Parts (see planBatches); each batch shares the
+  //    system prompt and the shared-context block.
   const systemPrompt = buildSystemPrompt(assumptionLevel, beneficiaryKey, {
     processId,
     readme: getProcessReadme(processId),
@@ -717,52 +822,79 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
   for (const [id, tag] of Object.entries(buildFieldTags(formMap.fieldMeta))) {
     if (keyMap.fullToShort[id]) fieldTags[keyMap.fullToShort[id]] = tag;
   }
-  const userMessage = buildUserMessage({
-    formContext: compressedFormContext,
-    situationalContext,
-    beneficiaryKey,
-    fieldTags,
-  });
+  const tooltips = new Map<string, string>();
+  for (const [id, label] of readFieldLabels(getBlankPdfPath(processId, formId))) {
+    if (keyMap.fullToShort[id]) tooltips.set(keyMap.fullToShort[id], label.tooltip);
+  }
+  const batches = planBatches(compressedFormContext.fields, tooltips);
+  const sharedContext = buildSharedContext({ formContext: compressedFormContext, situationalContext, beneficiaryKey });
 
-  // 4. Anthropic call — adaptive thinking for the
-  //    cross-referential reasoning this task requires (hundreds of fields to
-  //    reconcile against one situational-context blob), structured outputs to
-  //    guarantee a schema-conformant response, and streaming since max_tokens
-  //    exceeds the ~16k non-streaming timeout-risk threshold.
+  // 4. Anthropic calls — adaptive thinking for the cross-referential reasoning
+  //    this task requires (each field reconciled against one situational-
+  //    context blob), structured outputs to guarantee a schema-conformant
+  //    response, and streaming since max_tokens exceeds the ~16k
+  //    non-streaming timeout-risk threshold. With several batches the first
+  //    runs alone so the cached prefix (system prompt + shared context) is
+  //    written once; the rest then run in parallel and read it.
   const client = getAnthropicClient();
   const responseSchema = buildResponseSchema();
   console.log(
     `[fillFormMap] Calling ${CLAUDE_MODEL} (adaptive thinking, effort: high) for "${formId}" — ` +
-    `this may take a minute for large forms...`
+    (batches.length > 1
+      ? `${batches.length} batches by Part: ${batches.map((b) => `${describeParts(b.parts)} (${b.fields.length})`).join(", ")}`
+      : `this may take a minute for large forms...`)
   );
 
-  const stream = client.beta.messages.stream({
-    model: CLAUDE_MODEL,
-    max_tokens: 128000,
-    ...REFUSAL_FALLBACK,
-    thinking: { type: "adaptive", display: "summarized" },
-    output_config: {
-      effort: "high",
-      format: { type: "json_schema", schema: responseSchema },
-    },
-    system: systemPrompt,
-    messages: [
-      {
-        role: "user",
-        content: [{ type: "text", text: userMessage }],
+  const runBatch = async (batch: FieldBatch, index: number): Promise<LLMResponse> => {
+    const fieldSection = buildFieldSection({
+      fields: batch.fields,
+      fieldTags,
+      ...(batches.length > 1 ? { batch: { partsLabel: describeParts(batch.parts), formFieldCount: fieldIds.length } } : {}),
+    });
+    const content: Anthropic.Beta.BetaTextBlockParam[] =
+      batches.length > 1
+        ? [
+            { type: "text", text: sharedContext, cache_control: { type: "ephemeral" } },
+            { type: "text", text: fieldSection },
+          ]
+        : [{ type: "text", text: `${sharedContext}\n\n${fieldSection}` }];
+
+    const stream = client.beta.messages.stream({
+      model: CLAUDE_MODEL,
+      max_tokens: 128000,
+      ...REFUSAL_FALLBACK,
+      thinking: { type: "adaptive", display: "summarized" },
+      output_config: {
+        effort: "high",
+        format: { type: "json_schema", schema: responseSchema },
       },
-    ],
-  });
-  const response = await stream.finalMessage();
+      system: systemPrompt,
+      messages: [{ role: "user", content }],
+    });
+    const response = await stream.finalMessage();
 
-  // 5. Log full response payload to MongoDB (non-blocking)
-  logAnthropicResponse(response, { service: "fillFormMap", formId, userId, situationalContextId });
-  throwIfRefused(response, "fillFormMap");
+    // 5. Log full response payload to MongoDB (non-blocking)
+    logAnthropicResponse(response, { service: "fillFormMap", formId, userId, situationalContextId });
+    throwIfRefused(response, "fillFormMap");
+    if (batches.length > 1) {
+      console.log(
+        `[fillFormMap] Batch ${index + 1}/${batches.length} (${describeParts(batch.parts)}) done — ` +
+        `cache read ${response.usage.cache_read_input_tokens ?? 0} / written ${response.usage.cache_creation_input_tokens ?? 0} tokens`
+      );
+    }
 
-  // 6. Parse and validate response (keys are still short at this point)
-  const rawBlock = response.content.find((b) => b.type === "text");
-  const rawText = rawBlock?.type === "text" ? rawBlock.text.trim() : "";
-  const llmResultShort = parseLLMResponse(rawText, shortFieldIds);
+    // 6. Parse and validate the batch (keys are still short at this point)
+    const rawBlock = response.content.find((b) => b.type === "text");
+    const rawText = rawBlock?.type === "text" ? rawBlock.text.trim() : "";
+    return parseLLMResponse(rawText, batch.fields.map((f) => f.field));
+  };
+
+  const first = await runBatch(batches[0], 0);
+  const rest = await Promise.all(batches.slice(1).map((batch, i) => runBatch(batch, i + 1)));
+  const llmResultShort: LLMResponse = {
+    fields: Object.assign({}, first.fields, ...rest.map((r) => r.fields)),
+    skipped: [first, ...rest].flatMap((r) => r.skipped),
+  };
 
   // 7. Expand short keys back to full XFA IDs before any downstream use, then
   //    make every value writable as the PDF expects (checkbox / dropdown / length)
