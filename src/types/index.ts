@@ -19,6 +19,8 @@ export interface FieldMeta {
   maxLength?: number;
   /** Dropdowns: the values the PDF accepts */
   options?: string[];
+  /** 1-based PDF page the field is on — used to reference it from the form's Additional Information section */
+  page?: number;
 }
 
 export interface IFormMap {

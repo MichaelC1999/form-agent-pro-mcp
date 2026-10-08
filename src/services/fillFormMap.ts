@@ -483,6 +483,99 @@ export function enforceFieldConstraints(
   return { fields: out, flagged };
 }
 
+// ─── Additional Information overflow ──────────────────────────────────────────
+//
+// A value longer than its PDF field prints cut off ("…Silva 460" → "…Silva 46").
+// USCIS forms provide an "Additional Information" Part for this: each row takes
+// the page, Part and item number being continued plus the full answer. Rows are
+// found from the PDF tooltips ("Part 9. Additional Information. 3. A. Enter Page
+// Number."); the row number groups a row's four fields, since some tooltips name
+// the wrong Part.
+
+const SEE_ADDITIONAL_INFO = "See Additional Information";
+
+interface AdditionalInfoRow {
+  page: string;
+  part: string;
+  item: string;
+  text: string;
+}
+
+/** The form's Additional Information rows (field IDs), in row order. */
+function findAdditionalInfoRows(tooltips: Map<string, string>): AdditionalInfoRow[] {
+  const roles: Record<string, keyof AdditionalInfoRow> = {
+    "page number": "page",
+    "part number": "part",
+    "item number": "item",
+    "additional information": "text",
+  };
+  const rows = new Map<number, Partial<AdditionalInfoRow>>();
+  for (const [id, tooltip] of tooltips) {
+    const m = tooltip
+      .replace(/\s+/g, " ")
+      .match(/^\s*Part\s+\d+\.\s+Additional Information\.\s+(\d+)\.\s*(?:[A-D]\.\s*)?Enter (?:the )?(Page Number|Part Number|Item Number|Additional Information)/i);
+    if (!m) continue;
+    const row = rows.get(Number(m[1])) ?? {};
+    row[roles[m[2].toLowerCase()]] = id;
+    rows.set(Number(m[1]), row);
+  }
+  return [...rows.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([, row]) => row)
+    .filter((row): row is AdditionalInfoRow => Boolean(row.page && row.part && row.item && row.text));
+}
+
+/** Part and item number of a field, from its tooltip ("Part 2. … 6. A. Enter Street…" → 2, "6.A"). */
+function locateItem(tooltip: string): { part: string; item: string } | null {
+  const part = tooltip.match(/^\s*Part\s+(\d+)/i)?.[1];
+  const items = [...tooltip.matchAll(/(\d+)\.\s*(?:([A-Z])\.\s*)?(?=Enter|Select|Provide|Check|If)/g)];
+  const last = items[items.length - 1];
+  if (!part || !last) return null;
+  return { part, item: last[2] ? `${last[1]}.${last[2]}` : last[1] };
+}
+
+/**
+ * Moves each text value too long for its field into the next empty
+ * Additional Information row (page, Part, item, full value) and writes
+ * "See Additional Information" in the field. Values stay in place, and keep
+ * their overflow flag, when no empty row remains or the field's location
+ * can't be read from its tooltip.
+ */
+export function moveOverflowToAdditionalInfo(
+  fields: Record<string, string>,
+  fieldMeta: Record<string, FieldMeta> | undefined,
+  tooltips: Map<string, string>
+): { fields: Record<string, string>; moved: SkippedField[] } {
+  const out = { ...fields };
+  const moved: SkippedField[] = [];
+  if (!fieldMeta) return { fields: out, moved };
+
+  const rows = findAdditionalInfoRows(tooltips);
+  const rowFieldIds = new Set(rows.flatMap((r) => [r.page, r.part, r.item, r.text]));
+  const freeRows = rows.filter((r) => [r.page, r.part, r.item, r.text].every((id) => !out[id]));
+
+  for (const [id, value] of Object.entries(out)) {
+    const meta = fieldMeta[id];
+    if (meta?.type !== "text" || !meta.maxLength || value.length <= meta.maxLength || rowFieldIds.has(id)) continue;
+    const location = locateItem(tooltips.get(id) ?? "");
+    if (!location || !meta.page || freeRows.length === 0 || SEE_ADDITIONAL_INFO.length > meta.maxLength) continue;
+
+    const row = freeRows.shift()!;
+    out[row.page] = String(meta.page);
+    out[row.part] = location.part;
+    out[row.item] = location.item;
+    out[row.text] = value;
+    out[id] = SEE_ADDITIONAL_INFO;
+    moved.push({
+      fieldId: id,
+      reason:
+        `Moved to Additional Information (page ${meta.page}, Part ${location.part}, item ${location.item}): ` +
+        `${value.length} characters don't fit the ${meta.maxLength}-character field.`,
+    });
+  }
+  return { fields: out, moved };
+}
+
 // ─── Data loading helpers ─────────────────────────────────────────────────────
 
 async function loadFormMap(formId: string): Promise<IFormMap> {
@@ -823,10 +916,12 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
     if (keyMap.fullToShort[id]) fieldTags[keyMap.fullToShort[id]] = tag;
   }
   const tooltips = new Map<string, string>();
-  for (const [id, label] of readFieldLabels(getBlankPdfPath(processId, formId))) {
-    if (keyMap.fullToShort[id]) tooltips.set(keyMap.fullToShort[id], label.tooltip);
+  for (const [id, label] of readFieldLabels(getBlankPdfPath(processId, formId))) tooltips.set(id, label.tooltip);
+  const shortTooltips = new Map<string, string>();
+  for (const [id, tooltip] of tooltips) {
+    if (keyMap.fullToShort[id]) shortTooltips.set(keyMap.fullToShort[id], tooltip);
   }
-  const batches = planBatches(compressedFormContext.fields, tooltips);
+  const batches = planBatches(compressedFormContext.fields, shortTooltips);
   const sharedContext = buildSharedContext({ formContext: compressedFormContext, situationalContext, beneficiaryKey });
 
   // 4. Anthropic calls — adaptive thinking for the cross-referential reasoning
@@ -899,10 +994,20 @@ export async function fillFormMap(input: FillFormMapInput): Promise<IFilledFormM
   // 7. Expand short keys back to full XFA IDs before any downstream use, then
   //    make every value writable as the PDF expects (checkbox / dropdown / length)
   const expanded = expandLLMResult(llmResultShort, keyMap.shortToFull);
+  //    Values still too long for their field then move to the form's
+  //    Additional Information section, replacing their overflow flag.
   const enforced = enforceFieldConstraints(expanded.fields, formMap.fieldMeta);
-  const llmResult = { fields: enforced.fields, skipped: [...expanded.skipped, ...enforced.flagged] };
-  if (enforced.flagged.length > 0) {
-    console.log(`[fillFormMap] Field constraints: ${enforced.flagged.length} value(s) cleared or flagged`);
+  const overflow = moveOverflowToAdditionalInfo(enforced.fields, formMap.fieldMeta, tooltips);
+  const movedIds = new Set(overflow.moved.map((m) => m.fieldId));
+  const llmResult = {
+    fields: overflow.fields,
+    skipped: [...expanded.skipped, ...enforced.flagged.filter((f) => !movedIds.has(f.fieldId)), ...overflow.moved],
+  };
+  if (enforced.flagged.length > 0 || overflow.moved.length > 0) {
+    console.log(
+      `[fillFormMap] Field constraints: ${enforced.flagged.length} value(s) cleared or flagged, ` +
+      `${overflow.moved.length} moved to Additional Information`
+    );
   }
 
   // 8. Log fill stats

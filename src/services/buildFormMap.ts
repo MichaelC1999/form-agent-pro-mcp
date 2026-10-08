@@ -130,7 +130,12 @@ function getQualifiedFieldName(widget: PDFDict, context: PDFContext): string {
   return parts.join(".");
 }
 
-async function extractWithPageAnnotations(pdfPath: string): Promise<FieldMap | null> {
+/** Field name → 1-based page number, filled by the page-annotation walk. */
+type FieldPages = Record<string, number>;
+
+async function extractWithPageAnnotations(
+  pdfPath: string
+): Promise<{ fields: FieldMap; pages: FieldPages } | null> {
   try {
     const bytes = fs.readFileSync(pdfPath);
     const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
@@ -138,8 +143,9 @@ async function extractWithPageAnnotations(pdfPath: string): Promise<FieldMap | n
     const pages = doc.getPages();
 
     const fields: FieldMap = {};
+    const fieldPages: FieldPages = {};
 
-    for (const page of pages) {
+    for (const [pageIndex, page] of pages.entries()) {
       const annotsVal = page.node.get(PDFName.of("Annots"));
       if (!annotsVal) continue;
 
@@ -176,11 +182,12 @@ async function extractWithPageAnnotations(pdfPath: string): Promise<FieldMap | n
 
         if (name && !BARCODE_RE.test(name)) {
           fields[name] = "";
+          fieldPages[name] ??= pageIndex + 1;
         }
       }
     }
 
-    return Object.keys(fields).length > 0 ? fields : null;
+    return Object.keys(fields).length > 0 ? { fields, pages: fieldPages } : null;
   } catch {
     return null;
   }
@@ -306,7 +313,7 @@ function extractWithRawScan(pdfPath: string): FieldMap | null {
  */
 async function extractFields(
   pdfPath: string
-): Promise<{ fields: FieldMap; strategy: string }> {
+): Promise<{ fields: FieldMap; strategy: string; pages: FieldPages }> {
   // ── Pre-processing: decrypt if the PDF has an owner password ──────────────
   // PDFs with an owner password (but empty user password — e.g. USCIS I-485)
   // store Widget /T field names in encrypted form. pdf-lib's ignoreEncryption
@@ -342,14 +349,16 @@ async function extractFields(
   }
 
   const merged: FieldMap = {};
+  let pages: FieldPages = {};
   const contributors: string[] = [];
 
   try {
     // 1. Page annotation walk — catches orphaned widgets
     const pageAnnot = await extractWithPageAnnotations(workingPath);
     if (pageAnnot) {
-      const n = Object.keys(pageAnnot).length;
-      Object.assign(merged, pageAnnot);
+      const n = Object.keys(pageAnnot.fields).length;
+      Object.assign(merged, pageAnnot.fields);
+      pages = pageAnnot.pages;
       contributors.push(`page-annots(${n})`);
     }
 
@@ -374,15 +383,15 @@ async function extractFields(
     }
 
     if (Object.keys(merged).length > 0) {
-      return { fields: merged, strategy: contributors.join(" + ") };
+      return { fields: merged, strategy: contributors.join(" + "), pages };
     }
 
     // 4 & 5 — last-resort fallbacks (only reached if all three above found nothing)
     const qpdf = await extractWithQpdf(workingPath);
-    if (qpdf) return { fields: qpdf, strategy: "qpdf" };
+    if (qpdf) return { fields: qpdf, strategy: "qpdf", pages };
 
     const raw = extractWithRawScan(workingPath);
-    if (raw) return { fields: raw, strategy: "raw-scan" };
+    if (raw) return { fields: raw, strategy: "raw-scan", pages };
 
     throw new Error(
       `Could not extract any fields from PDF at "${pdfPath}". ` +
@@ -421,7 +430,7 @@ export async function buildFormMap(
     throw new Error(`PDF not found: ${formPdfPath}`);
   }
 
-  const { fields, strategy } = await extractFields(formPdfPath);
+  const { fields, strategy, pages } = await extractFields(formPdfPath);
   const fieldCount = Object.keys(fields).length;
 
   // Input constraints (checkbox / max length / dropdown options) for the
@@ -429,7 +438,7 @@ export async function buildFormMap(
   const allMeta = readFieldMeta(formPdfPath);
   const fieldMeta: Record<string, FieldMeta> = {};
   for (const id of Object.keys(fields)) {
-    if (allMeta[id]) fieldMeta[id] = allMeta[id];
+    if (allMeta[id]) fieldMeta[id] = pages[id] ? { ...allMeta[id], page: pages[id] } : allMeta[id];
   }
 
   const doc = await FormMap.create({
