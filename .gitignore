@@ -1,0 +1,17 @@
+node_modules/
+.env
+todo.md
+.DS_Store
+.claude
+*.traineddata
+
+# Manual-load fixtures containing real personal data (PII).
+# The small "example-*" templates stay tracked; everything else is local-only.
+assets/manual-loads/*
+!assets/manual-loads/example-*.json
+
+# Real user documents used for local testing — never commit.
+assets/test-situational/
+
+# Filled forms from CLI runs and evals contain real personal data — never commit.
+output/
