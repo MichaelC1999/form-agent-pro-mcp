@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@types/nodemailer": "^8.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

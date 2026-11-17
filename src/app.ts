@@ -5,6 +5,9 @@ import { connectDB } from "./lib/db";
 import { requireAuth, requireAdmin } from "./middleware/requireAuth";
 import { generalLimiter, inferenceLimiter } from "./middleware/rateLimit";
 import { requireSpendBudget } from "./lib/spendCap";
+import { mcpAuthRouter } from "@modelcontextprotocol/sdk/server/auth/router.js";
+import { mcpRouter, mcpResourceUrl, requireMcpToken } from "./mcp/server";
+import { mcpOAuthProvider, googleCallbackRouter, publicBaseUrl, MCP_SCOPE } from "./mcp/oauthProvider";
 
 // Route modules
 import formMapRoutes from "./routes/formMap";
@@ -42,6 +45,23 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
+
+// ─── MCP (Streamable HTTP) ───────────────────────────────────────────────────
+// OAuth 2.1 for MCP clients: discovery metadata, dynamic client registration,
+// /authorize, /token, /revoke (the SDK rate-limits these itself), plus the
+// Google sign-in callback. Must be mounted at the app root.
+app.use(
+  mcpAuthRouter({
+    provider: mcpOAuthProvider,
+    issuerUrl: publicBaseUrl(),
+    resourceServerUrl: mcpResourceUrl(),
+    scopesSupported: [MCP_SCOPE],
+    resourceName: "Form Agent Pro",
+  })
+);
+app.use(googleCallbackRouter);
+// Remote MCP endpoint for AI agents: signed-in callers only, rate-limited.
+app.use("/mcp", generalLimiter, requireMcpToken, mcpRouter);
 
 // ─── API routes ───────────────────────────────────────────────────────────────
 //
