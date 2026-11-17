@@ -135,6 +135,8 @@ router.post("/build", requireAuth, requireUserSpendBudget, upload.array("documen
       logTag: authTag(req),
       serviceLabel: "POST /api/situation/build",
     });
+    // The background job now owns the uploaded files and deletes them itself.
+    res.locals.keepUploads = true;
 
     // Return 202 immediately — the pipeline runs in the background
     console.log(`[POST /api/situation/build] ${authTag(req)} | 202 — stub created id=${contextId}`);

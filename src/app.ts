@@ -4,6 +4,7 @@ import cors from "cors";
 import { connectDB } from "./lib/db";
 import { requireAuth, requireAdmin } from "./middleware/requireAuth";
 import { generalLimiter, inferenceLimiter, mcpUserLimiter } from "./middleware/rateLimit";
+import { cleanupUploadsOnFinish } from "./middleware/cleanupUploads";
 import { requireSpendBudget } from "./lib/spendCap";
 import { mcpAuthRouter } from "@modelcontextprotocol/sdk/server/auth/router.js";
 import { mcpRouter, mcpResourceUrl, requireMcpToken } from "./mcp/server";
@@ -73,6 +74,8 @@ app.use("/mcp", generalLimiter, requireMcpToken, mcpUserLimiter, mcpRouter);
 // get inferenceLimiter + requireSpendBudget (both skip GETs), mounted before
 // the route handlers so a blocked request never consumes a Stripe payment.
 app.use("/api", generalLimiter);
+// Delete multer uploads (users' documents) when each response finishes.
+app.use("/api", cleanupUploadsOnFinish);
 const modelGuards = [inferenceLimiter, requireSpendBudget];
 //
 // Form Setup (once per form) — admin-only: expensive and not part of the user flow

@@ -1,5 +1,6 @@
 import { buildSituationContext } from "./buildSituationContext";
 import { fillFormMap } from "./fillFormMap";
+import { deleteTempFiles } from "../middleware/cleanupUploads";
 import { SituationalContext } from "../models/SituationalContext";
 import { normalizeRequiredForms } from "../types";
 import type { FormGenerationFailure, UIAnswers, UploadedFile } from "../types";
@@ -32,6 +33,10 @@ export interface StartSituationBuildInput {
  * Callers poll the SituationalContext (status, failedForms, pipelineCompletedAt)
  * and the user's FilledFormMaps for progress. Payment and input validation
  * must happen before calling this.
+ *
+ * Takes ownership of `uploadedFiles`: they are deleted once their text has
+ * been extracted. Callers must not delete them (web route: set
+ * res.locals.keepUploads after this returns).
  */
 export async function startSituationBuild(input: StartSituationBuildInput): Promise<string> {
   const { userId, uiAnswers, uploadedFiles, processIdHint, requestMeta, logTag, serviceLabel } = input;
@@ -51,16 +56,23 @@ export async function startSituationBuild(input: StartSituationBuildInput): Prom
     try {
       console.log(`[background] ${logTag} | Starting Anthropic context build id=${contextId}`);
 
-      // Step 1: Build situational context via Anthropic (updates the stub doc)
-      const ctx = await buildSituationContext(
-        {
-          userId,
-          uiAnswers,
-          uploadedFiles,
-          ...(processIdHint && processIdHint.trim() !== "" ? { processIdHint: processIdHint.trim() } : {}),
-        },
-        contextId
-      );
+      // Step 1: Build situational context via Anthropic (updates the stub doc).
+      // The uploaded originals are only needed for text extraction here; their
+      // text is stored on the context, so delete the files right after.
+      let ctx: Awaited<ReturnType<typeof buildSituationContext>>;
+      try {
+        ctx = await buildSituationContext(
+          {
+            userId,
+            uiAnswers,
+            uploadedFiles,
+            ...(processIdHint && processIdHint.trim() !== "" ? { processIdHint: processIdHint.trim() } : {}),
+          },
+          contextId
+        );
+      } finally {
+        deleteTempFiles(uploadedFiles.map((f) => f.path));
+      }
 
       const requiredEntries = normalizeRequiredForms(ctx.requiredForms);
       const formsLabel = requiredEntries

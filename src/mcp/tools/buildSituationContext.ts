@@ -8,6 +8,7 @@ import * as z from "zod/v4";
 import { listProcesses } from "../../lib/processes";
 import { checkSpendBudget, checkUserSpendBudget } from "../../lib/spendCap";
 import { runWithUsage } from "../../lib/usageContext";
+import { deleteTempFiles } from "../../middleware/cleanupUploads";
 import { assertSessionPaid, createHostedCheckoutSession } from "../../services/stripe";
 import { startSituationBuild } from "../../services/startSituationBuild";
 import { logAppError } from "../../models/AppError";
@@ -223,13 +224,14 @@ export function registerBuildSituationContext(server: McpServer): void {
       }
 
       // ── Paid: write documents to temp files and start the shared pipeline ──
+      // startSituationBuild deletes these files once their text is extracted.
+      const uploadedFiles: { path: string; originalname: string; mimetype: string }[] = [];
       try {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mcp-docs-"));
-        const uploadedFiles = decoded.map((d) => {
-          const filePath = path.join(dir, `${randomUUID()}${EXT_FOR_TYPE[d.mimeType]}`);
+        for (const d of decoded) {
+          const filePath = path.join(os.tmpdir(), `mcp-doc-${randomUUID()}${EXT_FOR_TYPE[d.mimeType]}`);
           fs.writeFileSync(filePath, d.bytes);
-          return { path: filePath, originalname: path.basename(d.filename), mimetype: d.mimeType };
-        });
+          uploadedFiles.push({ path: filePath, originalname: path.basename(d.filename), mimetype: d.mimeType });
+        }
 
         // Tag every model call in this job (including the background part) as MCP usage.
         const situationalContextId = await runWithUsage({ channel: "mcp", mcpTool: "build_situation_context" }, () => startSituationBuild({
@@ -258,6 +260,8 @@ export function registerBuildSituationContext(server: McpServer): void {
           situationalContextId,
         });
       } catch (err) {
+        // The job never started, so nothing else will delete the files.
+        deleteTempFiles(uploadedFiles.map((f) => f.path));
         // The payment was consumed; log loudly so it can be refunded or re-run by hand.
         console.error(`[mcp] ${logTag} | Failed to start pipeline after payment ${args.stripeSessionId}:`, err);
         logAppError({
