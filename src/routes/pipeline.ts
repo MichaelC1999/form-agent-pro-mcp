@@ -8,6 +8,7 @@ import { fillForm } from "../services/fillForm";
 import { runPipeline } from "../services/runPipeline";
 import { SituationalContext } from "../models/SituationalContext";
 import { requireAuth, authTag } from "../middleware/requireAuth";
+import { requireUserSpendBudget } from "../lib/spendCap";
 import { assertSessionPaid } from "../services/stripe";
 import { logAppError, ClaudeContentError, ClaudeParseError } from "../models/AppError";
 import { normalizeRequiredForms } from "../types";
@@ -123,7 +124,7 @@ const VALID_ASSUMPTION_LEVELS: AssumptionLevel[] = ["conservative", "moderate", 
 //     ]
 //   }
 //
-router.post("/run", requireAuth, upload.array("documents", 20), async (req: Request, res: Response) => {
+router.post("/run", requireAuth, requireUserSpendBudget, upload.array("documents", 20), async (req: Request, res: Response) => {
   console.log(`[POST /api/pipeline/run] ${authTag(req)} | Running full pipeline`);
   try {
     const userId = req.auth!.sub;
@@ -327,7 +328,7 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
 //     ]
 //   }
 //
-router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) => {
+router.post("/fill-form-maps", requireAuth, requireUserSpendBudget, async (req: Request, res: Response) => {
   console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | Batch filling form maps`);
   try {
     const { situationalContextId, assumptionLevel: assumptionLevelRaw } =
@@ -470,7 +471,7 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
 //     ]
 //   }
 //
-router.post("/resume", requireAuth, async (req: Request, res: Response) => {
+router.post("/resume", requireAuth, requireUserSpendBudget, async (req: Request, res: Response) => {
   console.log(`[POST /api/pipeline/resume] ${authTag(req)} | Resuming PDF generation`);
   try {
     const { situationalContextId } = req.body as Record<string, string | undefined>;

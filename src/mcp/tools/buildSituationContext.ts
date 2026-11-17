@@ -6,7 +6,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import * as z from "zod/v4";
 import { listProcesses } from "../../lib/processes";
-import { checkSpendBudget } from "../../lib/spendCap";
+import { checkSpendBudget, checkUserSpendBudget } from "../../lib/spendCap";
+import { runWithUsage } from "../../lib/usageContext";
 import { assertSessionPaid, createHostedCheckoutSession } from "../../services/stripe";
 import { startSituationBuild } from "../../services/startSituationBuild";
 import { logAppError } from "../../models/AppError";
@@ -159,13 +160,21 @@ export function registerBuildSituationContext(server: McpServer): void {
         });
       }
 
-      // ── Daily spend cap ──
+      // ── Daily spend caps: whole service, then this user ──
       const budget = await checkSpendBudget(`${logTag} build_situation_context`);
-      if (!budget.ok) {
+      const userBudget = budget.ok ? await checkUserSpendBudget(userId, `${logTag} build_situation_context`) : budget;
+      if (!userBudget.ok && userBudget.reason === "user_cap_reached") {
         return result({
           status: "error",
           message:
-            budget.reason === "cap_reached"
+            "This account has reached today's usage limit. Please try again tomorrow. No payment was taken.",
+        });
+      }
+      if (!budget.ok || !userBudget.ok) {
+        return result({
+          status: "error",
+          message:
+            !budget.ok && budget.reason === "cap_reached"
               ? "The service is at capacity for today. Please try again tomorrow. No payment was taken."
               : "The service is temporarily unavailable. Please try again shortly. No payment was taken.",
         });
@@ -222,7 +231,8 @@ export function registerBuildSituationContext(server: McpServer): void {
           return { path: filePath, originalname: path.basename(d.filename), mimetype: d.mimeType };
         });
 
-        const situationalContextId = await startSituationBuild({
+        // Tag every model call in this job (including the background part) as MCP usage.
+        const situationalContextId = await runWithUsage({ channel: "mcp", mcpTool: "build_situation_context" }, () => startSituationBuild({
           userId,
           uiAnswers: {
             situationDescription: args.situationDescription,
@@ -237,7 +247,7 @@ export function registerBuildSituationContext(server: McpServer): void {
           requestMeta: { userId, userEmail: email, route: "mcp build_situation_context (background)" },
           logTag,
           serviceLabel: "mcp build_situation_context",
-        });
+        }));
         console.log(`[mcp] ${logTag} | build_situation_context started id=${situationalContextId}`);
 
         return result({

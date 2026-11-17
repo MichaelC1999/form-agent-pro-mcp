@@ -1,7 +1,11 @@
 import { Router, Request, Response } from "express";
+import { isValidObjectId } from "mongoose";
 import { fillFormMap } from "../services/fillFormMap";
 import { FilledFormMap } from "../models/FilledFormMap";
+import { SituationalContext } from "../models/SituationalContext";
+import { assertSessionPaid } from "../services/stripe";
 import { requireAuth, authTag } from "../middleware/requireAuth";
+import { requireUserSpendBudget } from "../lib/spendCap";
 import { logAppError, ClaudeContentError, ClaudeParseError } from "../models/AppError";
 import type { AssumptionLevel } from "../types";
 
@@ -26,7 +30,7 @@ function serverError(
 }
 
 // ─── POST /api/filled-map/fill ────────────────────────────────────────────────
-router.post("/fill", requireAuth, async (req: Request, res: Response) => {
+router.post("/fill", requireAuth, requireUserSpendBudget, async (req: Request, res: Response) => {
   console.log(`[POST /api/filled-map/fill] ${authTag(req)} | Filling single form map`);
   try {
     const userId = req.auth!.sub;
@@ -46,6 +50,25 @@ router.post("/fill", requireAuth, async (req: Request, res: Response) => {
     const validLevels: AssumptionLevel[] = ["conservative", "moderate", "liberal"];
     const level: AssumptionLevel =
       validLevels.includes(assumptionLevel) ? assumptionLevel : "liberal";
+
+    // fillFormMap loads the context by ID without checking its owner, so check
+    // here: otherwise a caller could fill a form from another user's data.
+    const ctx = isValidObjectId(situationalContextId)
+      ? await SituationalContext.findById(situationalContextId).select("userId").lean()
+      : null;
+    if (!ctx || ctx.userId !== userId) {
+      console.log(`[POST /api/filled-map/fill] ${authTag(req)} | 404 — context not found or not owned`);
+      res.status(404).json({ error: "Not found." });
+      return;
+    }
+
+    // Paid like the other pipeline routes; consumes the session, so it runs last.
+    const paid = await assertSessionPaid(req.body?.stripeSessionId, userId);
+    if (!paid.ok) {
+      console.log(`[POST /api/filled-map/fill] ${authTag(req)} | ${paid.status} — ${paid.error}`);
+      res.status(paid.status).json({ error: paid.error });
+      return;
+    }
 
     const result = await fillFormMap({
       formId,

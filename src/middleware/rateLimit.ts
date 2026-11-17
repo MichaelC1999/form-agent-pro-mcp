@@ -19,6 +19,20 @@ export const generalLimiter = rateLimit({
 });
 
 /**
+ * Per-user limit on /mcp, keyed by the signed-in user from the MCP access
+ * token, so one account can't flood the server from many IPs. Must be mounted
+ * after requireMcpToken (which sets res.locals.mcpAuth).
+ */
+export const mcpUserLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: envInt("RATE_LIMIT_MCP_USER_PER_MIN", 60),
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  keyGenerator: (_req, res) => `mcp-user:${String(res.locals.mcpAuth?.extra?.userId ?? "unknown")}`,
+  message: { error: "Too many requests from this account. Please slow down." },
+});
+
+/**
  * Tight per-IP limit for requests that start model calls. GETs (polling,
  * downloads) are skipped. Per-user caps come later with usage metering.
  */

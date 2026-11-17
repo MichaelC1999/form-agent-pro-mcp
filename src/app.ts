@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import { connectDB } from "./lib/db";
 import { requireAuth, requireAdmin } from "./middleware/requireAuth";
-import { generalLimiter, inferenceLimiter } from "./middleware/rateLimit";
+import { generalLimiter, inferenceLimiter, mcpUserLimiter } from "./middleware/rateLimit";
 import { requireSpendBudget } from "./lib/spendCap";
 import { mcpAuthRouter } from "@modelcontextprotocol/sdk/server/auth/router.js";
 import { mcpRouter, mcpResourceUrl, requireMcpToken } from "./mcp/server";
@@ -65,7 +65,7 @@ app.use(googleCallbackRouter);
 app.use(mcpPublicRouter); // e.g. the "payment received" page after Stripe checkout
 app.use(DOWNLOAD_PATH_PREFIX, generalLimiter, mcpDownloadRouter); // short-lived PDF links from get_filled_pdf
 // Remote MCP endpoint for AI agents: signed-in callers only, rate-limited.
-app.use("/mcp", generalLimiter, requireMcpToken, mcpRouter);
+app.use("/mcp", generalLimiter, requireMcpToken, mcpUserLimiter, mcpRouter);
 
 // ─── API routes ───────────────────────────────────────────────────────────────
 //

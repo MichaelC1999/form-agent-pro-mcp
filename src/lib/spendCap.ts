@@ -22,7 +22,59 @@ export async function getTodaySpendUsd(): Promise<number> {
   return cached.usd;
 }
 
-export type SpendCheck = { ok: true } | { ok: false; reason: "cap_reached" | "unavailable" };
+export type SpendCheck = { ok: true } | { ok: false; reason: "cap_reached" | "user_cap_reached" | "unavailable" };
+
+/** One user's estimated Anthropic spend since 00:00 UTC today. Not cached. */
+export async function getUserTodaySpendUsd(userId: string): Promise<number> {
+  const [row] = await AnthropicLog.aggregate<{ usd: number }>([
+    { $match: { userId, createdAt: { $gte: new Date(`${utcDay()}T00:00:00.000Z`) } } },
+    { $group: { _id: null, usd: { $sum: { $ifNull: ["$costUsd", 0] } } } },
+  ]);
+  return row?.usd ?? 0;
+}
+
+/**
+ * Whether this user may start new model-calling work, given
+ * USER_DAILY_SPEND_CAP_USD. Unset or non-positive cap = no per-user limit.
+ * Fails closed if spend can't be read. Background work already running
+ * finishes, so a user can end slightly over the cap.
+ */
+export async function checkUserSpendBudget(userId: string, label: string): Promise<SpendCheck> {
+  const cap = parseFloat(process.env.USER_DAILY_SPEND_CAP_USD ?? "");
+  if (!Number.isFinite(cap) || cap <= 0) return { ok: true };
+
+  try {
+    const spent = await getUserTodaySpendUsd(userId);
+    if (spent >= cap) {
+      console.warn(`[spendCap] ${label} | blocked — user ${userId} at daily cap ($${spent.toFixed(2)} / $${cap})`);
+      return { ok: false, reason: "user_cap_reached" };
+    }
+    return { ok: true };
+  } catch (err) {
+    console.error("[spendCap] Failed to read user's spend:", err);
+    return { ok: false, reason: "unavailable" };
+  }
+}
+
+/**
+ * Express guard for model-calling routes, per signed-in user. Must run after
+ * requireAuth and before any payment check, so a blocked request never
+ * consumes a payment.
+ */
+export async function requireUserSpendBudget(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const userId = req.auth?.sub;
+  if (!userId) {
+    res.status(401).json({ error: "Authentication required." });
+    return;
+  }
+  const check = await checkUserSpendBudget(userId, `${req.method} ${req.originalUrl}`);
+  if (check.ok) return next();
+  if (check.reason === "user_cap_reached") {
+    res.status(429).json({ error: "You've reached today's usage limit. Please try again tomorrow." });
+    return;
+  }
+  res.status(503).json({ error: "Service temporarily unavailable. Please try again shortly." });
+}
 
 /**
  * Whether new model-calling work may start, given DAILY_SPEND_CAP_USD.

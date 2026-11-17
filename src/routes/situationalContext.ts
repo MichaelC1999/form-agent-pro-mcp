@@ -10,6 +10,7 @@ import type {
   ParsedDocument,
 } from "../types";
 import { requireAuth, authTag } from "../middleware/requireAuth";
+import { requireUserSpendBudget } from "../lib/spendCap";
 import { assertSessionPaid } from "../services/stripe";
 import { startSituationBuild } from "../services/startSituationBuild";
 import {
@@ -49,7 +50,7 @@ function serverError(
 // The frontend polls GET /api/situation/:id for the context status and
 // GET /api/filled-map/user/:userId for completed form maps.
 //
-router.post("/build", requireAuth, upload.array("documents", 50), async (req: Request, res: Response) => {
+router.post("/build", requireAuth, requireUserSpendBudget, upload.array("documents", 50), async (req: Request, res: Response) => {
   console.log(`[POST /api/situation/build] ${authTag(req)} | Building situational context`);
   try {
     const userId = req.auth!.sub;
@@ -184,6 +185,7 @@ router.get("/user/:userId", requireAuth, async (req: Request, res: Response) => 
 router.post(
   "/:id/retry-form",
   requireAuth,
+  requireUserSpendBudget,
   upload.array("documents", 10),
   async (req: Request, res: Response) => {
     console.log(`[POST /api/situation/:id/retry-form] ${authTag(req)} | Retrying form`);
