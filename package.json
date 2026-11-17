@@ -2,6 +2,7 @@
   "name": "immi-server",
   "version": "0.1.0",
   "description": "Immigration form processing server using Anthropic AI",
+  "license": "MIT",
   "main": "dist/app.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",

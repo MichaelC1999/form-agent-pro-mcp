@@ -4,6 +4,52 @@ Node.js / TypeScript server that automates filling USCIS immigration forms. Anth
 
 ---
 
+## Use it from an AI app (MCP)
+
+Form Agent Pro is a remote [Model Context Protocol](https://modelcontextprotocol.io) server. Any MCP client that supports remote servers with OAuth (Claude, ChatGPT, Cursor, VS Code, …) can connect to:
+
+```
+https://immi-server-i5sok.ondigitalocean.app/mcp
+```
+
+Registry name: `pro.formagent/form-agent` (see [`server.json`](server.json)).
+
+**Sign-in.** On first connect the app opens a browser window to sign in with Google. No API key is needed. Your forms are tied to your Google account, the same as on [formagent.pro](https://formagent.pro).
+
+**Pricing.** Browsing and checking progress are free. Preparing a case is paid per case: the first `build_situation_context` call returns a Stripe checkout link, and the price is shown there. Inference costs are covered by the service.
+
+### Tools
+
+| Tool | Cost | What it does |
+| --- | --- | --- |
+| `list_supported_forms` | Free | Lists the immigration processes and USCIS forms supported. |
+| `build_situation_context` | Paid | Takes the user's situation, goal and documents (base64; up to 20 files, 5 MB each, 7 MB total), works out the required forms and starts filling them. Returns a checkout link first, then a `situationalContextId` once paid. |
+| `get_situation_status` | Free | Progress for each required form: ready, pending, failed or not generated. |
+| `get_filled_pdf` | Free | 15-minute download links for each ready form and one merged PDF. |
+
+Typical flow: `list_supported_forms` → `build_situation_context` (pay) → `build_situation_context` again with `stripeSessionId` → poll `get_situation_status` → `get_filled_pdf`.
+
+### How it is protected
+
+- **OAuth 2.1:** dynamic client registration and PKCE. immi-server is its own authorization server and uses Google for the login itself. Discovery is at `/.well-known/oauth-protected-resource/mcp`.
+- **Paid tools:** these require a paid, single-use Stripe Checkout session.
+- **Limits:** per-account and per-IP rate limits, plus per-user and service-wide daily spend caps.
+- **Documents:** uploads are deleted from the server as soon as their text has been extracted. Download links expire after 15 minutes.
+
+### Publishing to the MCP Registry
+
+[`server.json`](server.json) is the registry entry. Publish it with [`mcp-publisher`](https://modelcontextprotocol.io/registry/quickstart). The `pro.formagent/` namespace is verified through a DNS TXT record on `formagent.pro`:
+
+```bash
+mcp-publisher login dns --domain formagent.pro --private-key <key>
+mcp-publisher validate
+mcp-publisher publish
+```
+
+Bump `version` in `server.json` (and `SERVER_INFO` in `src/mcp/server.ts`) for each release.
+
+---
+
 ## Pipeline
 
 ```
