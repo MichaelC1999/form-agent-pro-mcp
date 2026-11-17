@@ -2,6 +2,9 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { connectDB } from "./lib/db";
+import { requireAuth, requireAdmin } from "./middleware/requireAuth";
+import { generalLimiter, inferenceLimiter } from "./middleware/rateLimit";
+import { requireSpendBudget } from "./lib/spendCap";
 
 // Route modules
 import formMapRoutes from "./routes/formMap";
@@ -17,6 +20,10 @@ import landingEventRoutes from "./routes/landingEvent";
 import leadCaptureRoutes from "./routes/leadCapture";
 
 const app = express();
+
+// Number of reverse-proxy hops in front of the app (DigitalOcean App Platform),
+// so req.ip — used by the rate limiters — is the client, not the load balancer.
+app.set("trust proxy", parseInt(process.env.TRUST_PROXY ?? "1", 10));
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors());
@@ -38,19 +45,25 @@ app.get("/health", (_req, res) => {
 
 // ─── API routes ───────────────────────────────────────────────────────────────
 //
-// Form Setup (once per form)
-app.use("/api/form-map", formMapRoutes);         // build FormMap from blank PDF
-app.use("/api/form-context", formContextRoutes); // build FormContext via Anthropic
+// Every /api route is rate-limited per IP. Routers that call the model also
+// get inferenceLimiter + requireSpendBudget (both skip GETs), mounted before
+// the route handlers so a blocked request never consumes a Stripe payment.
+app.use("/api", generalLimiter);
+const modelGuards = [inferenceLimiter, requireSpendBudget];
+//
+// Form Setup (once per form) — admin-only: expensive and not part of the user flow
+app.use("/api/form-map", requireAuth, requireAdmin, formMapRoutes);         // build FormMap from blank PDF
+app.use("/api/form-context", requireAuth, requireAdmin, ...modelGuards, formContextRoutes); // build FormContext via Anthropic
 //
 // User Workflow (once per user)
-app.use("/api/situation", situationalContextRoutes); // build SituationalContext
+app.use("/api/situation", ...modelGuards, situationalContextRoutes); // build SituationalContext
 //
 // Convergence + Execution (once per form × user)
-app.use("/api/filled-map", filledFormMapRoutes); // fill the field map via Anthropic
-app.use("/api/form-fill", formFillRoutes);       // fill PDF + extract aux helper
+app.use("/api/filled-map", ...modelGuards, filledFormMapRoutes); // fill the field map via Anthropic
+app.use("/api/form-fill", requireAuth, requireAdmin, formFillRoutes); // fill PDF + extract aux helper (admin-only)
 //
 // End-to-end pipeline (situation → filled PDFs in one call)
-app.use("/api/pipeline", pipelineRoutes);        // POST /api/pipeline/run
+app.use("/api/pipeline", ...modelGuards, pipelineRoutes); // POST /api/pipeline/run
 //
 // PDF download (on-demand generation + streaming)
 app.use("/api/pdf", pdfRoutes);                  // GET /api/pdf/form/:id, /merged/:id

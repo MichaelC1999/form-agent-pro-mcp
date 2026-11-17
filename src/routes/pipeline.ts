@@ -8,6 +8,7 @@ import { fillForm } from "../services/fillForm";
 import { runPipeline } from "../services/runPipeline";
 import { SituationalContext } from "../models/SituationalContext";
 import { requireAuth, authTag } from "../middleware/requireAuth";
+import { assertSessionPaid } from "../services/stripe";
 import { logAppError, ClaudeContentError, ClaudeParseError } from "../models/AppError";
 import { normalizeRequiredForms } from "../types";
 import { getBlankPdfPath, resolveProcessId } from "../lib/processes";
@@ -47,6 +48,22 @@ function serverError(
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Stripe payment gate. Consumes the Checkout Session, so call it only after
+ * all input validation has passed — a 400 must not burn the user's payment.
+ * Sends the error response and returns false when the session isn't paid.
+ */
+async function requirePaidSession(req: Request, res: Response, route: string): Promise<boolean> {
+  const { stripeSessionId } = req.body as { stripeSessionId?: string };
+  const paid = await assertSessionPaid(stripeSessionId, req.auth!.sub);
+  if (!paid.ok) {
+    console.log(`[${route}] ${authTag(req)} | ${paid.status} — ${paid.error}`);
+    res.status(paid.status).json({ error: paid.error });
+    return false;
+  }
+  return true;
+}
 
 /** Accepts a JSON array string ("["i-130","i-485"]") or a comma-separated string. */
 function parseFormIds(raw: string): string[] {
@@ -142,11 +159,12 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
     if (situationalContextIdRaw) {
       // RESUME mode — verify the context exists
       const existing = await SituationalContext.findById(situationalContextIdRaw).lean();
-      if (!existing) {
-        console.log(`[POST /api/pipeline/run] ${authTag(req)} | 404 — context not found`);
+      if (!existing || existing.userId !== userId) {
+        console.log(`[POST /api/pipeline/run] ${authTag(req)} | 404 — context not found or not owned`);
         res.status(404).json({ error: `SituationalContext not found: ${situationalContextIdRaw}` });
         return;
       }
+      if (!(await requirePaidSession(req, res, "POST /api/pipeline/run"))) return;
       situationalContextId = situationalContextIdRaw;
       console.log(`[POST /api/pipeline/run] ${authTag(req)} | Resuming context id=${situationalContextId}`);
     } else {
@@ -161,6 +179,7 @@ router.post("/run", requireAuth, upload.array("documents", 20), async (req: Requ
         res.status(400).json({ error: "processDescription is required when situationalContextId is not provided" });
         return;
       }
+      if (!(await requirePaidSession(req, res, "POST /api/pipeline/run"))) return;
 
       console.log(`[POST /api/pipeline/run] ${authTag(req)} | Building situational context`);
       const uploadedFiles = (req.files as Express.Multer.File[] | undefined) ?? [];
@@ -333,8 +352,8 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
     }
 
     const ctxDoc = await SituationalContext.findById(situationalContextId).lean();
-    if (!ctxDoc) {
-      console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | 404 — context not found`);
+    if (!ctxDoc || ctxDoc.userId !== req.auth!.sub) {
+      console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | 404 — context not found or not owned`);
       res.status(404).json({ error: `SituationalContext not found: ${situationalContextId}` });
       return;
     }
@@ -347,6 +366,8 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
       res.status(400).json({ error: "SituationalContext has no requiredForms." });
       return;
     }
+
+    if (!(await requirePaidSession(req, res, "POST /api/pipeline/fill-form-maps"))) return;
 
     console.log(`[POST /api/pipeline/fill-form-maps] ${authTag(req)} | Processing ${requiredEntries.length} form entries`);
 
@@ -449,7 +470,7 @@ router.post("/fill-form-maps", requireAuth, async (req: Request, res: Response) 
 //     ]
 //   }
 //
-router.post("/resume", async (req: Request, res: Response) => {
+router.post("/resume", requireAuth, async (req: Request, res: Response) => {
   console.log(`[POST /api/pipeline/resume] ${authTag(req)} | Resuming PDF generation`);
   try {
     const { situationalContextId } = req.body as Record<string, string | undefined>;
@@ -457,6 +478,13 @@ router.post("/resume", async (req: Request, res: Response) => {
     if (!situationalContextId) {
       console.log(`[POST /api/pipeline/resume] ${authTag(req)} | 400 — missing contextId`);
       res.status(400).json({ error: "situationalContextId is required" });
+      return;
+    }
+
+    const ctx = await SituationalContext.findById(situationalContextId).select("userId").lean();
+    if (!ctx || ctx.userId !== req.auth!.sub) {
+      console.log(`[POST /api/pipeline/resume] ${authTag(req)} | 404 — context not found or not owned`);
+      res.status(404).json({ error: "Not found." });
       return;
     }
 

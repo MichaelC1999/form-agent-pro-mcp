@@ -72,3 +72,23 @@ export async function requireAuth(
     });
   }
 }
+
+/**
+ * Admin gate for form-setup routes (form-map, form-context, form-fill).
+ * These run expensive Anthropic calls and are not part of the user flow, so
+ * only emails listed in ADMIN_EMAILS (comma-separated) may call them.
+ * Must run after requireAuth. Fails closed when ADMIN_EMAILS is unset.
+ */
+export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+  const admins = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  const email = req.auth?.email.toLowerCase();
+  if (!email || !admins.includes(email)) {
+    console.log(`[requireAdmin] ${req.method} ${req.path} | 403 — ${authTag(req)} not an admin`);
+    res.status(403).json({ error: "Admin access required." });
+    return;
+  }
+  next();
+}

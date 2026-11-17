@@ -87,11 +87,12 @@ router.get("/user/:userId", requireAuth, async (req: Request, res: Response) => 
 });
 
 // ─── GET /api/filled-map/:id ──────────────────────────────────────────────────
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/:id", requireAuth, async (req: Request, res: Response) => {
   console.log(`[GET /api/filled-map/:id] ${authTag(req)} | Fetching form map by id`);
   try {
     const doc = await FilledFormMap.findById(req.params.id);
-    if (!doc) {
+    // Another user's document is reported as 404 so IDs can't be probed.
+    if (!doc || doc.userId !== req.auth!.sub) {
       console.log(`[GET /api/filled-map/:id] ${authTag(req)} | 404 — not found id=${req.params.id}`);
       res.status(404).json({ error: "Not found." });
       return;

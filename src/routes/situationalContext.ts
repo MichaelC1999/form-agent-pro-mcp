@@ -94,16 +94,6 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
       }
     }
 
-    // DEMO: Stripe payment gate disabled to allow full workflow demo without checkout.
-    // TODO: restore by uncommenting the block below.
-    // const paid = await assertSessionPaid(stripeSessionId, userId);
-    // if (!paid.ok) {
-    //   console.log(`[POST /api/situation/build] ${authTag(req)} | ${paid.status} — ${paid.error}`);
-    //   res.status(paid.status).json({ error: paid.error });
-    //   return;
-    // }
-    void stripeSessionId;
-
     if (!situationDescription) {
       console.log(`[POST /api/situation/build] ${authTag(req)} | 400 — missing situationDescription`);
       res.status(400).json({ error: "situationDescription is required" });
@@ -112,6 +102,15 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
     if (!processDescription) {
       console.log(`[POST /api/situation/build] ${authTag(req)} | 400 — missing processDescription`);
       res.status(400).json({ error: "processDescription is required" });
+      return;
+    }
+
+    // Stripe payment gate. Runs after input validation because it marks the
+    // session as consumed — a 400 must not burn the user's payment.
+    const paid = await assertSessionPaid(stripeSessionId, userId);
+    if (!paid.ok) {
+      console.log(`[POST /api/situation/build] ${authTag(req)} | ${paid.status} — ${paid.error}`);
+      res.status(paid.status).json({ error: paid.error });
       return;
     }
 
@@ -447,11 +446,12 @@ router.post(
 );
 
 // GET /api/situation/:id
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/:id", requireAuth, async (req: Request, res: Response) => {
   console.log(`[GET /api/situation/:id] ${authTag(req)} | Fetching context by id`);
   try {
     const doc = await SituationalContext.findById(req.params.id);
-    if (!doc) {
+    // Another user's document is reported as 404 so IDs can't be probed.
+    if (!doc || doc.userId !== req.auth!.sub) {
       console.log(`[GET /api/situation/:id] ${authTag(req)} | 404 — not found id=${req.params.id}`);
       res.status(404).json({ error: "Not found." });
       return;

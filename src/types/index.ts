@@ -443,6 +443,8 @@ export interface IAnthropicLog {
   usage?: {
     inputTokens: number;
     outputTokens: number;
+    cacheReadTokens?: number;
+    cacheCreationTokens?: number;
   };
   /** The complete raw Anthropic response object */
   payload: Record<string, unknown>;

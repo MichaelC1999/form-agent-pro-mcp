@@ -1,7 +1,11 @@
 import { Schema, model, Document } from "mongoose";
 import type { IAnthropicLog } from "../types";
+import { estimateCostUsd } from "../lib/pricing";
 
-export interface AnthropicLogDocument extends IAnthropicLog, Document {}
+export interface AnthropicLogDocument extends IAnthropicLog, Document {
+  /** Estimated USD cost of the call; summed by the daily spend cap. */
+  costUsd?: number;
+}
 
 const AnthropicLogSchema = new Schema<AnthropicLogDocument>(
   {
@@ -14,7 +18,10 @@ const AnthropicLogSchema = new Schema<AnthropicLogDocument>(
     usage: {
       inputTokens: { type: Number },
       outputTokens: { type: Number },
+      cacheReadTokens: { type: Number },
+      cacheCreationTokens: { type: Number },
     },
+    costUsd: { type: Number },
     payload: { type: Schema.Types.Mixed, required: true },
     createdAt: { type: Date, default: Date.now, index: true },
   },
@@ -45,19 +52,25 @@ export function logAnthropicResponse(
   response: any,
   ctx: AnthropicLogContext
 ): void {
+  const anthropicModel: string = response.model ?? "unknown";
+  const usage = response.usage
+    ? {
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+        cacheReadTokens: response.usage.cache_read_input_tokens ?? 0,
+        cacheCreationTokens: response.usage.cache_creation_input_tokens ?? 0,
+      }
+    : undefined;
+
   AnthropicLog.create({
     service: ctx.service,
-    anthropicModel: response.model ?? "unknown",
+    anthropicModel,
     formId: ctx.formId,
     userId: ctx.userId,
     situationalContextId: ctx.situationalContextId,
     stopReason: response.stop_reason ?? null,
-    usage: response.usage
-      ? {
-          inputTokens: response.usage.input_tokens,
-          outputTokens: response.usage.output_tokens,
-        }
-      : undefined,
+    usage,
+    costUsd: usage ? estimateCostUsd(anthropicModel, usage) : undefined,
     payload: JSON.parse(JSON.stringify(response)),
   }).catch((err: unknown) => {
     console.warn(
