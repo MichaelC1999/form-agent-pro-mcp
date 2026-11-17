@@ -9,6 +9,7 @@ import { summarizeProcesses } from "../lib/processes";
 import { mcpOAuthProvider, publicBaseUrl } from "./oauthProvider";
 import { registerBuildSituationContext } from "./tools/buildSituationContext";
 import { registerGetSituationStatus } from "./tools/getSituationStatus";
+import { registerGetFilledPdf } from "./tools/getFilledPdf";
 
 /**
  * Remote MCP endpoint (Streamable HTTP, stateless). Tools are thin wrappers
@@ -76,6 +77,7 @@ function buildServer(): McpServer {
 
   registerBuildSituationContext(server);
   registerGetSituationStatus(server);
+  registerGetFilledPdf(server);
 
   return server;
 }
