@@ -22,30 +22,45 @@ export async function getTodaySpendUsd(): Promise<number> {
   return cached.usd;
 }
 
-/**
- * Blocks new model-calling requests once today's estimated spend reaches
- * DAILY_SPEND_CAP_USD. GET requests (polling, downloads) always pass.
- * Unset or non-positive cap = no limit. Jobs already running finish, and
- * concurrent requests near the limit can overshoot it slightly.
- * Mount before route handlers so a blocked request never consumes a payment.
- */
-export async function requireSpendBudget(req: Request, res: Response, next: NextFunction): Promise<void> {
-  if (req.method === "GET") return next();
+export type SpendCheck = { ok: true } | { ok: false; reason: "cap_reached" | "unavailable" };
 
+/**
+ * Whether new model-calling work may start, given DAILY_SPEND_CAP_USD.
+ * Unset or non-positive cap = no limit. Fails closed if spend can't be read.
+ * Jobs already running finish, and concurrent requests near the limit can
+ * overshoot it slightly.
+ */
+export async function checkSpendBudget(label: string): Promise<SpendCheck> {
   const cap = parseFloat(process.env.DAILY_SPEND_CAP_USD ?? "");
-  if (!Number.isFinite(cap) || cap <= 0) return next();
+  if (!Number.isFinite(cap) || cap <= 0) return { ok: true };
 
   try {
     const spent = await getTodaySpendUsd();
     if (spent >= cap) {
-      console.warn(`[spendCap] ${req.method} ${req.originalUrl} | 503 — daily cap reached ($${spent.toFixed(2)} / $${cap})`);
-      res.status(503).json({ error: "Service is at capacity for today. Please try again tomorrow." });
-      return;
+      console.warn(`[spendCap] ${label} | blocked — daily cap reached ($${spent.toFixed(2)} / $${cap})`);
+      return { ok: false, reason: "cap_reached" };
     }
-    next();
+    return { ok: true };
   } catch (err) {
-    // Fail closed: if spend can't be measured, don't start new paid work.
     console.error("[spendCap] Failed to read today's spend:", err);
-    res.status(503).json({ error: "Service temporarily unavailable. Please try again shortly." });
+    return { ok: false, reason: "unavailable" };
   }
+}
+
+/**
+ * Express guard for model-calling routes; GET requests (polling, downloads)
+ * always pass. Mount before route handlers so a blocked request never
+ * consumes a payment.
+ */
+export async function requireSpendBudget(req: Request, res: Response, next: NextFunction): Promise<void> {
+  if (req.method === "GET") return next();
+
+  const check = await checkSpendBudget(`${req.method} ${req.originalUrl}`);
+  if (check.ok) return next();
+  res.status(503).json({
+    error:
+      check.reason === "cap_reached"
+        ? "Service is at capacity for today. Please try again tomorrow."
+        : "Service temporarily unavailable. Please try again shortly.",
+  });
 }

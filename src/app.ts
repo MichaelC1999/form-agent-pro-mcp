@@ -8,6 +8,7 @@ import { requireSpendBudget } from "./lib/spendCap";
 import { mcpAuthRouter } from "@modelcontextprotocol/sdk/server/auth/router.js";
 import { mcpRouter, mcpResourceUrl, requireMcpToken } from "./mcp/server";
 import { mcpOAuthProvider, googleCallbackRouter, publicBaseUrl, MCP_SCOPE } from "./mcp/oauthProvider";
+import { mcpPublicRouter } from "./mcp/shared";
 
 // Route modules
 import formMapRoutes from "./routes/formMap";
@@ -60,6 +61,7 @@ app.use(
   })
 );
 app.use(googleCallbackRouter);
+app.use(mcpPublicRouter); // e.g. the "payment received" page after Stripe checkout
 // Remote MCP endpoint for AI agents: signed-in callers only, rate-limited.
 app.use("/mcp", generalLimiter, requireMcpToken, mcpRouter);
 

@@ -1,14 +1,9 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
 import * as os from "os";
-import {
-  buildSituationContext,
-  extractRawText,
-  getMimeCategory,
-} from "../services/buildSituationContext";
+import { extractRawText, getMimeCategory } from "../services/buildSituationContext";
 import { fillFormMap } from "../services/fillFormMap";
 import { SituationalContext } from "../models/SituationalContext";
-import { normalizeRequiredForms } from "../types";
 import type {
   AdditionalContext,
   FormGenerationFailure,
@@ -16,6 +11,7 @@ import type {
 } from "../types";
 import { requireAuth, authTag } from "../middleware/requireAuth";
 import { assertSessionPaid } from "../services/stripe";
+import { startSituationBuild } from "../services/startSituationBuild";
 import {
   logAppError,
   requestErrorMeta,
@@ -116,155 +112,36 @@ router.post("/build", requireAuth, upload.array("documents", 50), async (req: Re
 
     const uploadedFiles = (req.files as Express.Multer.File[] | undefined) ?? [];
 
-    // Pre-create a stub document so we have an _id to return
-    const stub = await SituationalContext.create({
+    // Creates the stub and runs the pipeline in the background (shared with MCP).
+    const contextId = await startSituationBuild({
       userId,
-      status: "processing",
-      partyData: {},
-      documents: [],
-      situationSummary: "",
-      requiredForms: [],
+      uiAnswers: {
+        situationDescription,
+        processDescription,
+        additionalNotes,
+        beneficiaryCount,
+        beneficiaryNames,
+      },
+      uploadedFiles: uploadedFiles.map((f) => ({
+        path: f.path,
+        originalname: f.originalname,
+        mimetype: f.mimetype,
+      })),
+      processIdHint,
+      // Snapshot request meta now so background errors can still be tagged
+      // with the originating IP and email after the response has been sent.
+      requestMeta: requestErrorMeta(req, "POST /api/situation/build (background)"),
+      logTag: authTag(req),
+      serviceLabel: "POST /api/situation/build",
     });
-
-    // Snapshot request meta now so we can still tag background errors with the
-    // originating IP and email after the response has been sent.
-    const backgroundRequestMeta = requestErrorMeta(req, "POST /api/situation/build (background)");
 
     // Return 202 immediately — the pipeline runs in the background
-    console.log(`[POST /api/situation/build] ${authTag(req)} | 202 — stub created id=${stub._id}`);
+    console.log(`[POST /api/situation/build] ${authTag(req)} | 202 — stub created id=${contextId}`);
     res.status(202).json({
-      _id: stub._id.toString(),
+      _id: contextId,
       userId,
       status: "processing",
     });
-
-    // ── Background pipeline (fire-and-forget) ─────────────────────────────
-    (async () => {
-      try {
-        console.log(`[background] ${authTag(req)} | Starting Anthropic context build id=${stub._id}`);
-
-        // Step 1: Build situational context via Anthropic (updates the stub doc)
-        const ctx = await buildSituationContext(
-          {
-            userId,
-            uiAnswers: {
-              situationDescription,
-              processDescription,
-              additionalNotes,
-              beneficiaryCount,
-              beneficiaryNames,
-            },
-            uploadedFiles: uploadedFiles.map((f) => ({
-              path: f.path,
-              originalname: f.originalname,
-              mimetype: f.mimetype,
-            })),
-            ...(processIdHint && processIdHint.trim() !== ""
-              ? { processIdHint: processIdHint.trim() }
-              : {}),
-          },
-          stub._id.toString()
-        );
-
-        const requiredEntries = normalizeRequiredForms(ctx.requiredForms);
-        const formsLabel = requiredEntries
-          .map((e) => (e.beneficiaryKey ? `${e.formId} (${e.beneficiaryKey})` : e.formId))
-          .join(", ");
-        console.log(
-          `[background] ${authTag(req)} | Context ready id=${stub._id} forms=${formsLabel || "none"}`
-        );
-
-        // Step 2: Fill form maps for each required (form, beneficiary) entry.
-        // Failures must be persisted to the SituationalContext IMMEDIATELY
-        // (per-iteration $push), not batched at the end of the loop. The
-        // form-fill loop is sequential, so if we batch we leave every failed
-        // row stuck on "Pending" until the slowest remaining form finishes —
-        // sometimes minutes later. Per-iteration writes let the report UI
-        // flip a failed row to "Not generated" on its next 10s poll, while
-        // its sibling forms are still being attempted.
-        let failureCount = 0;
-
-        for (const entry of requiredEntries) {
-          const { formId, beneficiaryKey } = entry;
-          const label = beneficiaryKey ? `${formId} (${beneficiaryKey})` : formId;
-          try {
-            console.log(`[background] ${authTag(req)} | Filling form map ${label}`);
-            await fillFormMap({
-              formId,
-              userId,
-              situationalContextId: stub._id.toString(),
-              beneficiaryKey,
-            });
-            console.log(`[background] ${authTag(req)} | Form map ready ${label}`);
-          } catch (err) {
-            console.error(`[background] ${authTag(req)} | Form map failed ${label}:`, err);
-            logAppError({
-              err,
-              service: "POST /api/situation/build (background fillFormMap)",
-              request: backgroundRequestMeta,
-              formId,
-              situationalContextId: stub._id.toString(),
-              userId,
-            });
-            const reason =
-              err instanceof ClaudeContentError
-                ? err.message
-                : err instanceof ClaudeParseError
-                  ? "Form generation response could not be parsed."
-                  : "Form could not be generated at this time.";
-            const code = err instanceof ClaudeContentError ? err.code : undefined;
-            const failure: FormGenerationFailure = {
-              formId,
-              ...(beneficiaryKey ? { beneficiaryKey } : {}),
-              ...(code ? { code } : {}),
-              reason,
-              failedAt: new Date(),
-            };
-            try {
-              await SituationalContext.findByIdAndUpdate(stub._id, {
-                $push: { failedForms: failure },
-              }).exec();
-            } catch (writeErr) {
-              console.warn(
-                `[background] ${authTag(req)} | Failed to persist failedForms entry for ${label}:`,
-                writeErr
-              );
-            }
-            failureCount++;
-          }
-        }
-
-        // Mark the pipeline as complete regardless of partial failures. The
-        // UI uses this timestamp as a backstop signal — any required form
-        // without a FilledFormMap AND without an explicit failure entry is
-        // treated as "Not generated" once this is set.
-        try {
-          await SituationalContext.findByIdAndUpdate(stub._id, {
-            pipelineCompletedAt: new Date(),
-          }).exec();
-        } catch (writeErr) {
-          console.warn(
-            `[background] ${authTag(req)} | Failed to persist pipelineCompletedAt:`,
-            writeErr
-          );
-        }
-
-        console.log(
-          `[background] ${authTag(req)} | Pipeline complete id=${stub._id} ` +
-          `failures=${failureCount}/${requiredEntries.length}`
-        );
-      } catch (err) {
-        console.error(`[background] ${authTag(req)} | Pipeline failed id=${stub._id}:`, err);
-        logAppError({
-          err,
-          service: "POST /api/situation/build (background buildSituationContext)",
-          request: backgroundRequestMeta,
-          situationalContextId: stub._id.toString(),
-          userId,
-        });
-        await SituationalContext.findByIdAndUpdate(stub._id, { status: "error" }).catch(() => {});
-      }
-    })();
   } catch (err) {
     console.error(`[POST /api/situation/build] ${authTag(req)} | 500 — server error`);
     serverError(req, res, err, "POST /api/situation/build");

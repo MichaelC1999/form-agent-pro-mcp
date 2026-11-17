@@ -7,6 +7,8 @@ import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import * as z from "zod/v4";
 import { summarizeProcesses } from "../lib/processes";
 import { mcpOAuthProvider, publicBaseUrl } from "./oauthProvider";
+import { registerBuildSituationContext } from "./tools/buildSituationContext";
+import { registerGetSituationStatus } from "./tools/getSituationStatus";
 
 /**
  * Remote MCP endpoint (Streamable HTTP, stateless). Tools are thin wrappers
@@ -71,6 +73,9 @@ function buildServer(): McpServer {
       };
     }
   );
+
+  registerBuildSituationContext(server);
+  registerGetSituationStatus(server);
 
   return server;
 }

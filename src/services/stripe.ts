@@ -23,6 +23,26 @@ export function stripePriceId(): string {
   return id;
 }
 
+/**
+ * Creates a Stripe-hosted Checkout Session (a payment link the user opens in
+ * a browser). Used by MCP clients, which can't render the web app's embedded
+ * checkout. client_reference_id ties the payment to the user, the same as
+ * the web flow, so assertSessionPaid works unchanged.
+ */
+export async function createHostedCheckoutSession(
+  userId: string,
+  successUrl: string
+): Promise<{ sessionId: string; url: string }> {
+  const session = await stripe().checkout.sessions.create({
+    mode: "payment",
+    line_items: [{ price: stripePriceId(), quantity: 1 }],
+    client_reference_id: userId,
+    success_url: successUrl,
+  });
+  if (!session.url) throw new Error("Stripe did not return a checkout URL");
+  return { sessionId: session.id, url: session.url };
+}
+
 export interface AssertPaidResult {
   ok: boolean;
   status: number;
