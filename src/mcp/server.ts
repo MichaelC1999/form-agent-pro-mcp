@@ -20,7 +20,7 @@ import { registerGetFilledPdf } from "./tools/getFilledPdf";
  * tools read the caller's Google userId from extra.authInfo.extra.userId.
  */
 
-const SERVER_INFO = { name: "form-agent-pro", version: "0.1.0" };
+const SERVER_INFO = { name: "form-agent-pro", version: "1.0.0" };
 
 /** First non-heading, non-empty line of a process README, used as a short description. */
 function firstLine(readme: string | null): string | null {
