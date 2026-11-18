@@ -60,11 +60,15 @@ export function registerBuildSituationContext(server: McpServer): void {
   server.registerTool(
     "build_situation_context",
     {
-      title: "Start preparing a user's immigration forms",
+      title: "Prepare a user's filled immigration forms (paid)",
       description:
-        "Paid. Analyzes the user's immigration situation and supporting documents, works out which " +
-        "USCIS forms they need, and starts filling those forms in the background. One payment covers " +
-        "one call.\n\n" +
+        "Use when a user wants their immigration application forms filled in, for example a " +
+        "marriage-based green card (I-130 + I-485), a work permit (I-765), a travel permit (I-131) or " +
+        "an affidavit of support (I-864). From the user's description of their situation and their " +
+        "documents (passport, birth or marriage certificate, prior USCIS notices), it works out which " +
+        "forms they need and fills the official PDFs in the background.\n\n" +
+        "Costs a one-time payment per case: tell the user and get their agreement before calling. " +
+        "One payment covers one call.\n\n" +
         "Payment: call first without stripeSessionId. The result has status 'payment_required' with a " +
         "checkoutUrl — give that link to the user, wait until they say they've paid, then call again " +
         "with the same inputs plus the returned stripeSessionId.\n\n" +

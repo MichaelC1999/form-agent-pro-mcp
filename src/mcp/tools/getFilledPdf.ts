@@ -55,7 +55,8 @@ export function registerGetFilledPdf(server: McpServer): void {
     {
       title: "Get download links for the filled immigration forms",
       description:
-        "Free. Returns download links for the forms that are ready in a situation started with " +
+        "Use when the user wants to download or view their filled immigration forms. Free. " +
+        "Returns download links for the forms that are ready in a case started with " +
         "build_situation_context: one link per form plus one merged PDF of all of them. Links are " +
         "private to this user and expire after 15 minutes; call again for fresh links. Give the links " +
         "to the user to open in a browser. Use get_situation_status first to see which forms are ready.",

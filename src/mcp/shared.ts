@@ -1,3 +1,4 @@
+import * as path from "path";
 import { Router } from "express";
 import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 
@@ -14,6 +15,36 @@ export function mcpCaller(authInfo: AuthInfo | undefined): { userId: string; ema
 
 /** Public pages MCP users land on outside their AI app. */
 export const mcpPublicRouter = Router();
+
+// ─── Brand icons ─────────────────────────────────────────────────────────────
+// The formagent.pro logo (assets/brand, rendered from logo-profile.svg).
+// Advertised in the MCP serverInfo and server.json, and served as the
+// favicon so clients that look up the server's favicon find it too.
+const BRAND_DIR = path.resolve(__dirname, "../../assets/brand");
+
+/** Icon files served at the site root: URL path → file + type. */
+const BRAND_ICONS: Record<string, { file: string; type: string }> = {
+  "/favicon.ico": { file: "icon-48.png", type: "image/png" },
+  "/icon.png": { file: "icon-512.png", type: "image/png" },
+  "/icon-192.png": { file: "icon-192.png", type: "image/png" },
+  "/icon.svg": { file: "icon.svg", type: "image/svg+xml" },
+};
+
+for (const [urlPath, { file, type }] of Object.entries(BRAND_ICONS)) {
+  mcpPublicRouter.get(urlPath, (_req, res) => {
+    res.type(type).set("Cache-Control", "public, max-age=86400");
+    res.sendFile(path.join(BRAND_DIR, file));
+  });
+}
+
+/** Icons in MCP format, as absolute URLs on this server. */
+export function mcpIcons(baseUrl: URL): Array<{ src: string; mimeType: string; sizes: string[] }> {
+  return [
+    { src: new URL("/icon.png", baseUrl).toString(), mimeType: "image/png", sizes: ["512x512"] },
+    { src: new URL("/icon-192.png", baseUrl).toString(), mimeType: "image/png", sizes: ["192x192"] },
+    { src: new URL("/icon.svg", baseUrl).toString(), mimeType: "image/svg+xml", sizes: ["any"] },
+  ];
+}
 
 mcpPublicRouter.get(CHECKOUT_COMPLETE_PATH, (_req, res) => {
   res

@@ -5,6 +5,11 @@
   "description": "Prepares filled USCIS immigration forms from a user's situation and documents. Paid per case.",
   "version": "0.1.0",
   "websiteUrl": "https://formagent.pro",
+  "icons": [
+    { "src": "https://immi-server-i5sok.ondigitalocean.app/icon.png", "mimeType": "image/png", "sizes": ["512x512"] },
+    { "src": "https://immi-server-i5sok.ondigitalocean.app/icon-192.png", "mimeType": "image/png", "sizes": ["192x192"] },
+    { "src": "https://immi-server-i5sok.ondigitalocean.app/icon.svg", "mimeType": "image/svg+xml", "sizes": ["any"] }
+  ],
   "repository": {
     "url": "https://github.com/MichaelC1999/form-agent-pro-mcp",
     "source": "github"

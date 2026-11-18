@@ -7,6 +7,7 @@ import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import * as z from "zod/v4";
 import { summarizeProcesses } from "../lib/processes";
 import { mcpOAuthProvider, publicBaseUrl } from "./oauthProvider";
+import { mcpIcons } from "./shared";
 import { registerBuildSituationContext } from "./tools/buildSituationContext";
 import { registerGetSituationStatus } from "./tools/getSituationStatus";
 import { registerGetFilledPdf } from "./tools/getFilledPdf";
@@ -31,17 +32,45 @@ function firstLine(readme: string | null): string | null {
   return line ?? null;
 }
 
+/**
+ * Sent to the AI app in the MCP initialize response. Tells the model when this
+ * server is relevant, in the words users actually use. Keep it factual: no
+ * "always use this" steering, which directory reviewers treat as injection.
+ */
+const SERVER_INSTRUCTIONS =
+  "Form Agent Pro prepares official, filled-in immigration application forms (PDFs) from a " +
+  "person's description of their situation and their supporting documents.\n\n" +
+  "It is relevant when a user wants to apply for or file US immigration paperwork, for example: " +
+  "a green card / permanent residence through marriage to a US citizen or through a family member " +
+  "or employer (adjustment of status: I-485, I-130, I-130A, I-140, I-864 affidavit of support, " +
+  "I-693 medical exam), a work permit (I-765 / EAD), a travel permit or advance parole (I-131), " +
+  "extending or changing a visa status (I-539), replacing a green card (I-90), or an H-1B / " +
+  "nonimmigrant worker petition (I-129). It also covers some non-US processes, such as the Italian " +
+  "National (Type D) student visa.\n\n" +
+  "How to use it: call list_supported_forms first (free) to confirm the user's goal is supported. " +
+  "Preparing a case with build_situation_context costs a one-time payment, so explain that and get " +
+  "the user's agreement before starting; it returns a payment link the user opens. Then use " +
+  "get_situation_status (free) to follow progress and get_filled_pdf (free) for download links.\n\n" +
+  "It fills in forms for the user to review, sign and file themselves. It is not legal advice and " +
+  "does not submit anything to USCIS or any government.";
+
 function buildServer(): McpServer {
-  const server = new McpServer(SERVER_INFO);
+  const server = new McpServer(
+    { ...SERVER_INFO, title: "Form Agent Pro", websiteUrl: "https://formagent.pro", icons: mcpIcons(publicBaseUrl()) },
+    { instructions: SERVER_INSTRUCTIONS }
+  );
 
   server.registerTool(
     "list_supported_forms",
     {
-      title: "List supported immigration processes and forms",
+      title: "Check which immigration applications can be prepared",
       description:
-        "Lists the USCIS immigration processes this service can prepare, with the form IDs and " +
-        "affidavit templates in each. Call this first to find the processId and formIds to use " +
-        "with the other tools. Free; does not require payment.",
+        "Use when a user asks about applying for a green card, work permit, travel permit, visa " +
+        "extension or another immigration application, to check whether Form Agent Pro can prepare " +
+        "the forms for it. Returns each supported process (for example 'aos' = adjustment of status, " +
+        "the US green card application from inside the US) with its form IDs (such as i-485, i-130, " +
+        "i-765, i-131, i-864) and affidavit templates. Free and read-only; call it before " +
+        "build_situation_context.",
       inputSchema: {},
       outputSchema: {
         processes: z.array(

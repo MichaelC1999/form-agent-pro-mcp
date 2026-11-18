@@ -47,7 +47,8 @@ export function registerGetSituationStatus(server: McpServer): void {
     {
       title: "Check progress on a user's immigration forms",
       description:
-        "Free. Returns the progress of a situation started with build_situation_context: whether " +
+        "Use when the user asks whether their immigration forms are ready. Free and read-only. " +
+        "Returns the progress of a case started with build_situation_context: whether " +
         "analysis is done, which forms are required, and each form's state (ready, pending, failed, " +
         "not_generated). Preparation takes several minutes; poll no more than about once every 30 " +
         "seconds until pipelineComplete is true.",
