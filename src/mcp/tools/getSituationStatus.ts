@@ -30,6 +30,19 @@ const outputSchema = {
       failureReason: z.string().nullable(),
     })
   ),
+  missingInformation: z
+    .array(
+      z.object({
+        subject: z.string().describe("Person or subject the information is about, e.g. a party name or 'Job Offer'"),
+        item: z.string().describe("What is missing, e.g. \"Employer's FEIN\""),
+        neededFor: z.array(z.string()).describe("Form IDs that ask for it"),
+        howToProvide: z.string().describe("Where it is usually found or what to ask the user"),
+      })
+    )
+    .describe(
+      "Information the forms ask for that the user's answers and documents did not supply. Those " +
+        "fields are left blank. Available once analysis is done (status ready); empty when nothing is missing."
+    ),
   message: z.string().describe("Plain-language status for the user"),
 };
 
@@ -51,7 +64,9 @@ export function registerGetSituationStatus(server: McpServer): void {
         "Returns the progress of a case started with build_situation_context: whether " +
         "analysis is done, which forms are required, and each form's state (ready, pending, failed, " +
         "not_generated). Preparation takes several minutes; poll no more than about once every 30 " +
-        "seconds until pipelineComplete is true.",
+        "seconds until pipelineComplete is true. Once analysis is done it also lists missingInformation: " +
+        "what the forms ask for that the user's answers and documents did not supply. Those fields are " +
+        "left blank, so share the list with the user; they can fill those fields in on the PDFs themselves.",
       inputSchema: {
         situationalContextId: z.string().max(100).describe("The ID returned by build_situation_context"),
       },
@@ -68,6 +83,7 @@ export function registerGetSituationStatus(server: McpServer): void {
             processId: null,
             situationSummary: null,
             forms: [],
+            missingInformation: [],
             message: "No situation with that ID was found for this account.",
           },
           true
@@ -132,6 +148,18 @@ export function registerGetSituationStatus(server: McpServer): void {
         message = `Done: ${ready} of ${forms.length} forms ready.`;
       }
 
+      const missingInformation = (ctx.missingInformation ?? []).map((m) => ({
+        subject: m.subject ?? "",
+        item: m.item,
+        neededFor: m.neededFor ?? [],
+        howToProvide: m.howToProvide ?? "",
+      }));
+      if (ctx.status === "ready" && missingInformation.length > 0) {
+        message +=
+          ` ${missingInformation.length} item(s) of information were not in the user's answers or documents; ` +
+          "those fields are left blank for the user to complete (see missingInformation).";
+      }
+
       return result({
         situationalContextId,
         status: ctx.status,
@@ -139,6 +167,7 @@ export function registerGetSituationStatus(server: McpServer): void {
         processId: ctx.processId ?? null,
         situationSummary: ctx.situationSummary || null,
         forms,
+        missingInformation,
         message,
       });
     }

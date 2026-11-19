@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "pro.formagent/form-agent",
   "title": "Form Agent Pro",
-  "description": "Green card / permanent residency forms (I-485, I-130, I-864, I-765) filled out from your documents.",
-  "version": "1.0.0",
+  "description": "Immigration forms filled from your documents: green card (I-485, I-130, I-864) and O-1 (I-129).",
+  "version": "1.1.0",
   "websiteUrl": "https://formagent.pro",
   "icons": [
     { "src": "https://immi-server-i5sok.ondigitalocean.app/icon.png", "mimeType": "image/png", "sizes": ["512x512"] },

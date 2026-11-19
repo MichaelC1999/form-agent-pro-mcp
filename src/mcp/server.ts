@@ -20,7 +20,7 @@ import { registerGetFilledPdf } from "./tools/getFilledPdf";
  * tools read the caller's Google userId from extra.authInfo.extra.userId.
  */
 
-const SERVER_INFO = { name: "form-agent-pro", version: "1.0.0" };
+const SERVER_INFO = { name: "form-agent-pro", version: "1.1.0" };
 
 /** First non-heading, non-empty line of a process README, used as a short description. */
 function firstLine(readme: string | null): string | null {
@@ -43,9 +43,10 @@ const SERVER_INSTRUCTIONS =
   "It is relevant when a user wants to apply for or file US immigration paperwork, for example: " +
   "a green card / permanent residence through marriage to a US citizen or through a family member " +
   "or employer (adjustment of status: I-485, I-130, I-130A, I-140, I-864 affidavit of support, " +
-  "I-693 medical exam), a work permit (I-765 / EAD), a travel permit or advance parole (I-131), " +
-  "extending or changing a visa status (I-539), replacing a green card (I-90), or an H-1B / " +
-  "nonimmigrant worker petition (I-129). It also covers some non-US processes, such as the Italian " +
+  "I-693 medical exam), a work permit (I-765 / EAD), a travel permit or advance parole (I-131), or " +
+  "replacing a green card (I-90); or an O-1 extraordinary-ability worker petition filed from inside " +
+  "the US as a change of status (I-129 with the O and P supplement, I-539 / I-539A for O-3 family " +
+  "members, I-907 premium processing). It also covers some non-US processes, such as the Italian " +
   "National (Type D) student visa.\n\n" +
   "How to use it: call list_supported_forms first (free) to confirm the user's goal is supported. " +
   "Preparing a case with build_situation_context costs a one-time payment, so explain that and get " +
@@ -65,12 +66,13 @@ function buildServer(): McpServer {
     {
       title: "Check which immigration applications can be prepared",
       description:
-        "Use when a user asks about applying for a green card, work permit, travel permit, visa " +
-        "extension or another immigration application, to check whether Form Agent Pro can prepare " +
-        "the forms for it. Returns each supported process (for example 'aos' = adjustment of status, " +
-        "the US green card application from inside the US) with its form IDs (such as i-485, i-130, " +
-        "i-765, i-131, i-864) and affidavit templates. Free and read-only; call it before " +
-        "build_situation_context.",
+        "Use when a user asks about applying for a green card, work permit, travel permit, O-1 " +
+        "extraordinary-ability status or another immigration application, to check whether Form Agent " +
+        "Pro can prepare the forms for it. Returns each supported process (for example 'aos' = " +
+        "adjustment of status, the US green card application from inside the US; " +
+        "'o1-change-of-status' = switching to O-1 work status from inside the US) with its form IDs " +
+        "(such as i-485, i-130, i-765, i-864, i-129) and affidavit templates. Free and read-only; call " +
+        "it before build_situation_context.",
       inputSchema: {},
       outputSchema: {
         processes: z.array(

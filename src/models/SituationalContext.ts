@@ -4,6 +4,7 @@ import type {
   ParsedDocument,
   FormGenerationFailure,
   AdditionalContext,
+  MissingInformationItem,
 } from "../types";
 
 export interface SituationalContextDocument extends ISituationalContext, Document {}
@@ -41,6 +42,16 @@ const AdditionalContextSchema = new Schema<AdditionalContext>(
   { _id: false }
 );
 
+const MissingInformationSchema = new Schema<MissingInformationItem>(
+  {
+    subject: { type: String, default: "" },
+    item: { type: String, required: true },
+    neededFor: { type: [String], default: [] },
+    howToProvide: { type: String, default: "" },
+  },
+  { _id: false }
+);
+
 const SituationalContextSchema = new Schema<SituationalContextDocument>(
   {
     userId: { type: String, required: true, index: true },
@@ -62,6 +73,9 @@ const SituationalContextSchema = new Schema<SituationalContextDocument>(
     // `[{ formId: "i-485", beneficiaryKey: "Maria" }]` shape can be stored.
     // Always read through `normalizeRequiredForms` from types/index.ts.
     requiredForms: { type: Schema.Types.Mixed, default: [] },
+    // What the required forms ask for that the materials didn't supply
+    // (subject, item, neededFor, howToProvide). Set by buildSituationContext.
+    missingInformation: { type: [MissingInformationSchema], default: undefined },
     // Set by the background pipeline when it finishes processing every entry
     // in requiredForms. Frontend uses this to flip "Pending" → "Not generated"
     // for any form that didn't produce a FilledFormMap.

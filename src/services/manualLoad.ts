@@ -157,6 +157,7 @@ export async function loadSituationalContext(filePath: string): Promise<ISituati
       partyData: data.partyData,
       documents: data.documents ?? [],
       requiredForms: Array.isArray(data.requiredForms) ? data.requiredForms : [],
+      ...(Array.isArray(data.missingInformation) ? { missingInformation: data.missingInformation } : {}),
       ...(typeof data.processId === "string" && data.processId.trim() !== ""
         ? { processId: data.processId.trim() }
         : {}),

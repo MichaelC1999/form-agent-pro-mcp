@@ -154,6 +154,18 @@ export interface RequiredFormEntry {
 
 export type RequiredFormsStored = Array<RequiredFormEntry | string>;
 
+/** Information the required forms ask for that the user's materials didn't supply. */
+export interface MissingInformationItem {
+  /** Party name (as in partyData) or a subject such as "Petitioning Organization". */
+  subject: string;
+  /** The missing information as a human-readable category, e.g. "Employer's FEIN". */
+  item: string;
+  /** formIds from requiredForms that ask for it. */
+  neededFor: string[];
+  /** Where it is usually found or what to ask the user. */
+  howToProvide: string;
+}
+
 export interface ISituationalContext {
   userId: string;
   createdAt: Date;
@@ -182,6 +194,11 @@ export interface ISituationalContext {
    * Always read through `normalizeRequiredForms` to handle both shapes.
    */
   requiredForms: RequiredFormsStored;
+  /**
+   * What the required forms will ask for that the materials didn't supply,
+   * as categories the user can provide or fill in by hand. Absent on legacy docs.
+   */
+  missingInformation?: MissingInformationItem[];
   /**
    * Set by the background pipeline once it has finished iterating over every
    * required form (success OR fail). The frontend uses presence of this

@@ -12,7 +12,7 @@
  * which fillFormMap, fillAffidavit and the dashboard read unchanged.
  */
 
-import type { PartyDataMap, RequiredFormEntry } from "../types";
+import type { MissingInformationItem, PartyDataMap, RequiredFormEntry } from "../types";
 
 export const PARTY_ROLES = ["Beneficiary", "Petitioner", "Sponsor", "Joint Sponsor", "Derivative Beneficiary", "Other"] as const;
 
@@ -118,6 +118,7 @@ export const PERSON_LIST_KEYS: Record<string, readonly string[]> = {
   "Prior U.S. Entries": ["Date of Arrival", "Place of Arrival", "Class of Admission", "Date of Departure", "I-94 Number"],
   "Prior Immigration Filings": ["Form", "Receipt Number", "Date Filed", "Filed For", "Outcome"],
   "Background Statements": ["Statement"],
+  "Extraordinary Ability Evidence": ["Criterion", "Description", "Issuing Organization", "Date"],
 };
 
 /** Facts about the current marriage — stored under the "Marriage" subject. */
@@ -132,9 +133,72 @@ export const MARRIAGE_KEYS = [
 /** Facts about the sponsor's household — stored under the "Household" subject. */
 export const HOUSEHOLD_KEYS = ["Household Size", "Number of Dependents", "Total Household Income"] as const;
 
+/**
+ * Facts about a petitioning company or agent (e.g. the I-129 petitioner) —
+ * stored under the "Petitioning Organization" subject. An individual
+ * petitioner is a party instead.
+ */
+export const ORGANIZATION_KEYS = [
+  "Legal Business Name",
+  "Doing Business As (DBA) Name",
+  "Petitioner Type",
+  "Federal Employer Identification Number (FEIN)",
+  "Type of Business",
+  "NAICS Code",
+  "Year Established",
+  "Current Number of U.S. Employees",
+  "Gross Annual Income",
+  "Net Annual Income",
+  ...ADDRESS_KEYS,
+  "Daytime Telephone Number",
+  "Email Address",
+  "Authorized Signatory Family Name (Last Name)",
+  "Authorized Signatory Given Name (First Name)",
+  "Authorized Signatory Title",
+] as const;
+
+/** Facts about the offered job or engagement — stored under the "Job Offer" subject. */
+export const JOB_OFFER_KEYS = [
+  "Classification Sought",
+  "Basis for Classification",
+  "Requested Action",
+  "Job Title",
+  "Nontechnical Job Description",
+  "Nature of Event or Activity",
+  "Worksite Street Number and Name",
+  "Worksite Apt/Ste/Flr Number",
+  "Worksite City or Town",
+  "Worksite State",
+  "Worksite Zip Code",
+  "Additional Worksites (Itinerary)",
+  "Full-Time Position",
+  "Hours Per Week",
+  "Wages Amount",
+  "Wages Per",
+  "Other Compensation",
+  "Dates of Intended Employment From",
+  "Dates of Intended Employment To",
+  "Written Contract Exists",
+] as const;
+
+/** Facts about the peer-group / labor-organization consultation — stored under the "Consultation" subject. */
+export const CONSULTATION_KEYS = [
+  "Consultation Organization Name",
+  "Consultation Organization Street Number and Name",
+  "Consultation Organization City or Town",
+  "Consultation Organization State",
+  "Consultation Organization Zip Code",
+  "Consultation Organization Telephone Number",
+  "Date of Consultation Letter",
+  "Consultation Outcome",
+] as const;
+
 /** Subject names for the non-person entries in partyData. */
 export const MARRIAGE_SUBJECT = "Marriage";
 export const HOUSEHOLD_SUBJECT = "Household";
+export const ORGANIZATION_SUBJECT = "Petitioning Organization";
+export const JOB_OFFER_SUBJECT = "Job Offer";
+export const CONSULTATION_SUBJECT = "Consultation";
 export const CASE_SUBJECT = "Case Details";
 
 // ─── Prompt text ──────────────────────────────────────────────────────────────
@@ -165,6 +229,13 @@ ${lists}
 MARRIAGE / HOUSEHOLD / CASE:
 - "marriage": { "key", "value" } pairs from ${quote(MARRIAGE_KEYS)} for the current marriage between the parties.
 - "household": { "key", "value" } pairs from ${quote(HOUSEHOLD_KEYS)} for the sponsor's household.
+
+PETITIONING ORGANIZATION / JOB OFFER / CONSULTATION (employment-based petitions; leave empty when the case has none):
+- "petitioningOrganization": { "key", "value" } pairs from ${quote(ORGANIZATION_KEYS)} for the company or agent filing the petition. "Petitioner Type" is "U.S. Employer", "U.S. Agent", or "Foreign Employer through U.S. Agent". The address fields are the organization's address. An individual petitioner is a party instead.
+- "jobOffer": { "key", "value" } pairs from ${quote(JOB_OFFER_KEYS)} for the offered position or engagement. "Classification Sought" is the requested class as written on the form (e.g. "O-1A", "O-1B"). "Requested Action" says what the petition asks for (e.g. "Change status and extend stay"). "Wages Per" is "hour", "week", "month", or "year". "Full-Time Position" and "Written Contract Exists" are "Yes" or "No". Several venues or engagements go in "Additional Worksites (Itinerary)".
+- "consultation": { "key", "value" } pairs from ${quote(CONSULTATION_KEYS)} for the advisory opinion from a peer group, labor organization, or management organization. "Consultation Outcome" is "No objection", "Objection", "No appropriate peer group exists", or "Pending".
+- Evidence of the beneficiary's achievements (awards, memberships, press, judging, original contributions, publications, critical roles, high salary, commercial success) goes in the beneficiary's "Extraordinary Ability Evidence" list, one entry per item; "Criterion" names the regulatory criterion it supports in a few words (e.g. "Nationally recognized award").
+
 - "caseFacts": facts about the case or the evidence that belong to no single person (e.g. lease terms, joint accounts), as { "key", "value" } pairs.
 
 VALUE RULES:
@@ -176,7 +247,25 @@ VALUE RULES:
 - Names: given, middle and family names split as on the person's passport or birth certificate; compound family names (e.g. "Garcia Lopez") stay together in "Family Name (Last Name)".
 - "Background Statements": each statement the user makes about this person's immigration, criminal, or employment history (e.g. "Has never been arrested"), worded as the user stated it. Do not infer violations or eligibility problems that the materials do not state.
 
-PHYSICAL & BIOGRAPHIC ATTRIBUTES — "Height", "Weight", "Eye Color", "Hair Color", "Ethnicity", "Race", "Sex" are required on government forms; record them exactly as given (e.g. "5 ft 4 in", "130 lbs") whenever they appear in any document or answer.`;
+PHYSICAL & BIOGRAPHIC ATTRIBUTES — "Height", "Weight", "Eye Color", "Hair Color", "Ethnicity", "Race", "Sex" are required on government forms; record them exactly as given (e.g. "5 ft 4 in", "130 lbs") whenever they appear in any document or answer.
+
+${renderMissingInformationRules()}`;
+}
+
+/**
+ * Rules for the "missingInformation" part of the situational-context response:
+ * what the required forms will ask for that the materials don't supply. It is
+ * shown to the user (and their AI agent) so they can supply it or fill it in
+ * by hand.
+ */
+export function renderMissingInformationRules(): string {
+  return `PART E — Missing Information
+List what the required forms will ask for that the user's answers and documents do not supply, so the user can provide it or fill it in by hand. Each "missingInformation" entry:
+- "subject": the party name exactly as in "parties", or a subject such as "Petitioning Organization", "Job Offer", "Consultation", "Marriage", or "Household".
+- "item": the missing information as a category a person would recognize (e.g. "Employer's FEIN", "Address history before June 2019", "Mother's date and city of birth"), not individual form field names.
+- "neededFor": the formIds from requiredForms that ask for it.
+- "howToProvide": one short sentence on where it is usually found or what to ask (e.g. "Shown on the employer's IRS Form SS-4 or W-2").
+Only list information that applies to this situation and is genuinely absent from the materials. Leave out signatures and signing dates, sections completed by someone else (civil surgeon, interpreter, preparer, USCIS), and questions the user has already answered. Group related gaps into one entry, put the most important first, and list at most 20. Return an empty array when nothing is missing.`;
 }
 
 // ─── Response schema ──────────────────────────────────────────────────────────
@@ -249,9 +338,33 @@ export function buildSituationResponseSchema(): Record<string, unknown> {
           },
           marriage: pairs("key", MARRIAGE_KEYS),
           household: pairs("key", HOUSEHOLD_KEYS),
+          petitioningOrganization: pairs("key", ORGANIZATION_KEYS),
+          jobOffer: pairs("key", JOB_OFFER_KEYS),
+          consultation: pairs("key", CONSULTATION_KEYS),
           caseFacts: pairs("key"),
+          missingInformation: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { subject: str, item: str, neededFor: { type: "array", items: str }, howToProvide: str },
+              required: ["subject", "item", "neededFor", "howToProvide"],
+              additionalProperties: false,
+            },
+          },
         },
-        required: ["situationSummary", "processId", "requiredForms", "parties", "marriage", "household", "caseFacts"],
+        required: [
+          "situationSummary",
+          "processId",
+          "requiredForms",
+          "parties",
+          "marriage",
+          "household",
+          "petitioningOrganization",
+          "jobOffer",
+          "consultation",
+          "caseFacts",
+          "missingInformation",
+        ],
         additionalProperties: false,
       },
       {
@@ -289,7 +402,23 @@ export interface SituationResponse {
   }>;
   marriage: KeyValue[];
   household: KeyValue[];
+  petitioningOrganization?: KeyValue[];
+  jobOffer?: KeyValue[];
+  consultation?: KeyValue[];
   caseFacts: KeyValue[];
+  missingInformation?: MissingInformationItem[];
+}
+
+/** missingInformation with blank entries dropped and text trimmed; unknown formIds kept as given. */
+export function normalizeMissingInformation(response: SituationResponse): MissingInformationItem[] {
+  return (response.missingInformation ?? [])
+    .filter((m) => m && !isBlank(m.item))
+    .map((m) => ({
+      subject: (m.subject ?? "").trim(),
+      item: m.item.trim(),
+      neededFor: (Array.isArray(m.neededFor) ? m.neededFor : []).map((f) => String(f).trim()).filter(Boolean),
+      howToProvide: (m.howToProvide ?? "").trim(),
+    }));
 }
 
 const isBlank = (v: unknown) => typeof v !== "string" || v.trim() === "";
@@ -364,13 +493,16 @@ export function toPartyDataMap(response: SituationResponse): PartyDataMap {
     partyData[name] = facts;
   }
 
-  const subjects: Array<[string, KeyValue[]]> = [
+  const subjects: Array<[string, KeyValue[] | undefined]> = [
     [MARRIAGE_SUBJECT, response.marriage],
     [HOUSEHOLD_SUBJECT, response.household],
+    [ORGANIZATION_SUBJECT, response.petitioningOrganization],
+    [JOB_OFFER_SUBJECT, response.jobOffer],
+    [CONSULTATION_SUBJECT, response.consultation],
     [CASE_SUBJECT, response.caseFacts],
   ];
   for (const [subject, items] of subjects) {
-    const obj = fromPairs({}, items);
+    const obj = fromPairs({}, items ?? []);
     if (Object.keys(obj).length > 0) partyData[subject] = obj;
   }
 

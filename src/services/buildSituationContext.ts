@@ -8,6 +8,7 @@ import { logAnthropicResponse } from "../models/AnthropicLog";
 import { ClaudeContentError, ClaudeParseError } from "../models/AppError";
 import {
   buildSituationResponseSchema,
+  normalizeMissingInformation,
   normalizeResponseForms,
   renderPartyDataRules,
   toPartyDataMap,
@@ -19,6 +20,7 @@ import type {
   ISituationalContext,
   ParsedDocument,
   DocumentMimeCategory,
+  MissingInformationItem,
   PartyDataMap,
   RequiredFormsStored,
   UploadedFile,
@@ -122,7 +124,7 @@ You will receive:
 2. Raw text extracted from uploaded documents via OCR and PDF parsing.
 3. Attached images of those same documents for visual verification and supplementation of the extracted text.
 
-Your job is to do four things:
+Your job is to do five things:
 
 PART A — Situational Summary
 Write a 2-3 sentence summary in English describing: (a) who the parties are, (b) what process they are trying to complete, and (c) what our service needs to do to help them.
@@ -157,7 +159,7 @@ Include only forms genuinely required for this specific situation. Order entries
 
 ${renderPartyDataRules()}
 
-Respond with the JSON object defined by the response schema (situationSummary, processId, requiredForms, parties, marriage, household, caseFacts).
+Respond with the JSON object defined by the response schema (situationSummary, processId, requiredForms, parties, marriage, household, petitioningOrganization, jobOffer, consultation, caseFacts, missingInformation).
 
 ─────────────────────────────────────────────────────────────────────────────
 ERROR PATH — MANDATORY
@@ -544,7 +546,7 @@ Use your knowledge of how each specific form is filed to decide its scope — do
 
 ${renderPartyDataRules()}
 
-Respond with the JSON object defined by the response schema (situationSummary, processId, requiredForms, parties, marriage, household, caseFacts).
+Respond with the JSON object defined by the response schema (situationSummary, processId, requiredForms, parties, marriage, household, petitioningOrganization, jobOffer, consultation, caseFacts, missingInformation).
 
 ─────────────────────────────────────────────────────────────────────────────
 ERROR PATH — MANDATORY
@@ -602,6 +604,7 @@ interface SynthesisOutput {
   processId: string;
   requiredForms: RequiredFormsStored;
   partyData: PartyDataMap;
+  missingInformation: MissingInformationItem[];
 }
 
 /**
@@ -642,6 +645,7 @@ function parseSituationResponse(raw: string, service: string): SynthesisOutput {
     processId: response.processId.trim(),
     requiredForms: normalizeResponseForms(response),
     partyData: toPartyDataMap(response),
+    missingInformation: normalizeMissingInformation(response),
   };
 }
 
@@ -845,6 +849,7 @@ export async function buildSituationContext(
     situationSummary: synthesized.situationSummary,
     processId: synthesized.processId,
     requiredForms: synthesized.requiredForms,
+    missingInformation: synthesized.missingInformation,
     status: "ready" as const,
   };
 

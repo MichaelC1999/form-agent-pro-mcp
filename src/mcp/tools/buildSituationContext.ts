@@ -63,10 +63,17 @@ export function registerBuildSituationContext(server: McpServer): void {
       title: "Prepare a user's filled immigration forms (paid)",
       description:
         "Use when a user wants their immigration application forms filled in, for example a " +
-        "marriage-based green card (I-130 + I-485), a work permit (I-765), a travel permit (I-131) or " +
-        "an affidavit of support (I-864). From the user's description of their situation and their " +
-        "documents (passport, birth or marriage certificate, prior USCIS notices), it works out which " +
-        "forms they need and fills the official PDFs in the background.\n\n" +
+        "marriage-based green card (I-130 + I-485), a work permit (I-765), a travel permit (I-131), " +
+        "an affidavit of support (I-864), or an O-1 extraordinary-ability petition with change of " +
+        "status (I-129). From the user's description of their situation and their documents, it works " +
+        "out which process and forms they need and fills the official PDFs in the background.\n\n" +
+        "Which documents to send depends on the case. Family-based: passports, birth and marriage " +
+        "certificates, I-94, prior USCIS notices. O-1: the beneficiary's passport, current visa, I-94 " +
+        "and I-797 notices, CV, the employer's or agent's offer letter or contract (with company " +
+        "details such as FEIN and address), the consultation letter, and an itinerary if there are " +
+        "several engagements. For O-1 evidence of acclaim (awards, press, memberships, judging, " +
+        "publications, salary), send a written summary of each item in additionalNotes rather than " +
+        "the full exhibits, to stay within the upload limits.\n\n" +
         "Costs a one-time payment per case: tell the user and get their agreement before calling. " +
         "One payment covers one call.\n\n" +
         "Payment: call first without stripeSessionId. The result has status 'payment_required' with a " +
@@ -81,12 +88,18 @@ export function registerBuildSituationContext(server: McpServer): void {
           .string()
           .min(1)
           .max(20_000)
-          .describe("The user's immigration situation in their own words: who they are, status, family, history"),
+          .describe(
+            "The user's immigration situation in their own words: who they are, current status, family, " +
+              "history, and for work petitions their employer or agent, job and achievements"
+          ),
         processDescription: z
           .string()
           .min(1)
           .max(5_000)
-          .describe("What they want to apply for, e.g. 'green card through marriage to a US citizen'"),
+          .describe(
+            "What they want to apply for, e.g. 'green card through marriage to a US citizen' or " +
+              "'switch from F-1 to O-1A with my employer as petitioner'"
+          ),
         additionalNotes: z.string().max(10_000).optional().describe("Anything else the user wants considered"),
         processIdHint: z
           .string()
@@ -109,7 +122,10 @@ export function registerBuildSituationContext(server: McpServer): void {
           )
           .max(MAX_DOCUMENTS)
           .optional()
-          .describe("Supporting documents: passports, birth/marriage certificates, prior USCIS notices, etc."),
+          .describe(
+            "Supporting documents: passports, visas, I-94s, birth/marriage certificates, prior USCIS " +
+              "notices, and for work petitions the CV, offer letter or contract and consultation letter"
+          ),
         stripeSessionId: z
           .string()
           .max(200)
