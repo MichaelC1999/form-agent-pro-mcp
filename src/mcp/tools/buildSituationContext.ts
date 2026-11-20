@@ -13,7 +13,7 @@ import { assertSessionPaid, createHostedCheckoutSession } from "../../services/s
 import { startSituationBuild } from "../../services/startSituationBuild";
 import { logAppError } from "../../models/AppError";
 import { publicBaseUrl } from "../oauthProvider";
-import { CHECKOUT_COMPLETE_PATH, mcpCaller } from "../shared";
+import { CHECKOUT_COMPLETE_PATH, USER_REVIEW_NOTICE, mcpCaller } from "../shared";
 import { isPaymentExempt } from "../../lib/paymentExempt";
 
 const MAX_DOCUMENTS = 20;
@@ -136,7 +136,8 @@ export function registerBuildSituationContext(server: McpServer): void {
       outputSchema,
       annotations: {
         readOnlyHint: false,
-        destructiveHint: false,
+        // Starts a paid job: marked destructive so clients confirm with the user before calling.
+        destructiveHint: true,
         idempotentHint: false,
         openWorldHint: true,
       },
@@ -284,7 +285,8 @@ export function registerBuildSituationContext(server: McpServer): void {
           message:
             (exempt ? "Test mode: no payment taken. " : "Payment received and the forms are being prepared. ") +
             "This takes several minutes. Keep the " +
-            "situationalContextId to check progress and download the forms.",
+            "situationalContextId to check progress and download the forms. " +
+            USER_REVIEW_NOTICE,
           situationalContextId,
         });
       } catch (err) {

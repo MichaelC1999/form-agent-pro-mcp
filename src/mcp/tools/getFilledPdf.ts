@@ -11,7 +11,7 @@ import { logAppError } from "../../models/AppError";
 import { resolveProcessId } from "../../lib/processes";
 import { generatePdf, streamPdfAndCleanup, selectMapsForContext, buildMergedPdf } from "../../services/pdfDownloads";
 import { publicBaseUrl } from "../oauthProvider";
-import { mcpCaller } from "../shared";
+import { USER_REVIEW_NOTICE, mcpCaller } from "../shared";
 
 const LINK_TTL_MS = 15 * 60_000;
 export const DOWNLOAD_PATH_PREFIX = "/downloads";
@@ -105,7 +105,7 @@ export function registerGetFilledPdf(server: McpServer): void {
         expiresAt: expiresAt.toISOString(),
         mergedDownloadUrl,
         forms,
-        message: `${forms.length} form(s) ready to download. Links expire in 15 minutes.`,
+        message: `${forms.length} form(s) ready to download. Links expire in 15 minutes. ${USER_REVIEW_NOTICE}`,
       });
     }
   );

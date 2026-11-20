@@ -13,6 +13,11 @@ export function mcpCaller(authInfo: AuthInfo | undefined): { userId: string; ema
   return { userId, email };
 }
 
+/** Shown to the user with prepared forms (directory policy: direct disclosure for legal use cases). */
+export const USER_REVIEW_NOTICE =
+  "These forms are prepared for you to review, sign and file yourself. This is not legal advice, " +
+  "and nothing has been submitted to USCIS or any government.";
+
 /** Public pages MCP users land on outside their AI app. */
 export const mcpPublicRouter = Router();
 
