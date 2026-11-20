@@ -14,6 +14,7 @@ import { startSituationBuild } from "../../services/startSituationBuild";
 import { logAppError } from "../../models/AppError";
 import { publicBaseUrl } from "../oauthProvider";
 import { CHECKOUT_COMPLETE_PATH, mcpCaller } from "../shared";
+import { isPaymentExempt } from "../../lib/paymentExempt";
 
 const MAX_DOCUMENTS = 20;
 const MAX_DOCUMENT_BYTES = 5 * 1024 * 1024;
@@ -216,31 +217,37 @@ export function registerBuildSituationContext(server: McpServer): void {
         }
       };
 
-      if (!args.stripeSessionId) {
-        return newCheckout(
-          "Payment is required before preparing forms. Ask the user to pay at checkoutUrl, then call " +
-            "build_situation_context again with the same inputs plus this stripeSessionId."
-        );
-      }
-      const paid = await assertSessionPaid(args.stripeSessionId, userId);
-      if (!paid.ok) {
-        if (paid.status === 402) {
+      // Test mode: allow-listed, Google-verified accounts skip Stripe entirely.
+      const exempt = isPaymentExempt(email);
+      if (exempt) {
+        console.log(`[mcp] ${logTag} | Payment skipped: test-mode account`);
+      } else {
+        if (!args.stripeSessionId) {
+          return newCheckout(
+            "Payment is required before preparing forms. Ask the user to pay at checkoutUrl, then call " +
+              "build_situation_context again with the same inputs plus this stripeSessionId."
+          );
+        }
+        const paid = await assertSessionPaid(args.stripeSessionId, userId);
+        if (!paid.ok) {
+          if (paid.status === 402) {
+            return result({
+              status: "payment_required",
+              message:
+                "That payment hasn't completed yet. If the user has just paid, wait a moment and call again " +
+                "with the same stripeSessionId. Otherwise call again without stripeSessionId for a new payment link.",
+              stripeSessionId: args.stripeSessionId,
+            });
+          }
+          // 403: someone else's session. 409: already used for another submission.
           return result({
-            status: "payment_required",
+            status: "error",
             message:
-              "That payment hasn't completed yet. If the user has just paid, wait a moment and call again " +
-              "with the same stripeSessionId. Otherwise call again without stripeSessionId for a new payment link.",
-            stripeSessionId: args.stripeSessionId,
+              paid.status === 409
+                ? "That payment has already been used for another submission. Call again without stripeSessionId to get a new payment link."
+                : "That payment belongs to a different account.",
           });
         }
-        // 403: someone else's session. 409: already used for another submission.
-        return result({
-          status: "error",
-          message:
-            paid.status === 409
-              ? "That payment has already been used for another submission. Call again without stripeSessionId to get a new payment link."
-              : "That payment belongs to a different account.",
-        });
       }
 
       // ── Paid: write documents to temp files and start the shared pipeline ──
@@ -275,7 +282,8 @@ export function registerBuildSituationContext(server: McpServer): void {
         return result({
           status: "processing",
           message:
-            "Payment received and the forms are being prepared. This takes several minutes. Keep the " +
+            (exempt ? "Test mode: no payment taken. " : "Payment received and the forms are being prepared. ") +
+            "This takes several minutes. Keep the " +
             "situationalContextId to check progress and download the forms.",
           situationalContextId,
         });

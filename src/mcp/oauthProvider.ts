@@ -227,7 +227,8 @@ googleCallbackRouter.get(GOOGLE_CALLBACK_PATH, async (req: Request, res: Respons
       scopes: pending.scopes,
       resource: pending.resource,
       userId: payload.sub,
-      email: payload.email,
+      // Only keep emails Google has verified: they gate admin/test-mode checks.
+      email: payload.email_verified ? payload.email : undefined,
       expiresAt: new Date(Date.now() + CODE_TTL_MS),
     });
     console.log(`[mcp-oauth] Signed in user=${payload.sub} for client=${pending.clientId}`);
