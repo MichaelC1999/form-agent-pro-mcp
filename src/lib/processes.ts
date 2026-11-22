@@ -3,7 +3,9 @@ import * as path from "path";
 
 const ASSETS_FORMS_DIR = path.resolve(__dirname, "../../assets/forms");
 
-export const DEFAULT_PROCESS_ID = "aos";
+// Legacy documents created before processId existed were all marriage-based
+// adjustment of status (then called "aos").
+export const DEFAULT_PROCESS_ID = "marriage";
 
 function isDirectory(p: string): boolean {
   try {
@@ -155,6 +157,33 @@ export function getProcessLanguagesTesseractString(processId: string): string | 
   return codes.join("+");
 }
 
+// ─── Aliases ────────────────────────────────────────────────────────────────
+//
+// A renamed process MAY ship an `aliases.txt` listing its former IDs, one per
+// line (blank lines and `#` comments ignored). Records stored under a former
+// ID (SituationalContext.processId, FormContext.applicableProcesses, ...)
+// then resolve to the current folder. Lookups gate on the file's contents,
+// never on a hardcoded process name.
+
+export function listProcessAliases(processId: string): string[] {
+  const p = path.join(getProcessDir(processId), "aliases.txt");
+  if (!isFile(p)) return [];
+  try {
+    return fs
+      .readFileSync(p, "utf-8")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !line.startsWith("#"));
+  } catch {
+    return [];
+  }
+}
+
+/** The process ID plus its former IDs, for matching stored tags. */
+export function processIdAndAliases(processId: string): string[] {
+  return [processId, ...listProcessAliases(processId)];
+}
+
 export interface ProcessSummary {
   processId: string;
   readme: string | null;
@@ -174,7 +203,15 @@ export function summarizeProcesses(): ProcessSummary[] {
   }));
 }
 
+/**
+ * Turns a stored process ID into the current folder name. Missing IDs (legacy
+ * docs from before processId existed) fall back to DEFAULT_PROCESS_ID; a
+ * former ID listed in some process's aliases.txt maps to that process.
+ */
 export function resolveProcessId(stored: string | undefined | null): string {
-  if (typeof stored === "string" && stored.trim() !== "") return stored;
-  return DEFAULT_PROCESS_ID;
+  if (typeof stored !== "string" || stored.trim() === "") return DEFAULT_PROCESS_ID;
+  const id = stored.trim();
+  if (processExists(id)) return id;
+  const renamed = listProcesses().find((p) => listProcessAliases(p).includes(id));
+  return renamed ?? id;
 }

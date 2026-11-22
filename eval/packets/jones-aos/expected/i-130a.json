@@ -1,6 +1,6 @@
 {
   "formId": "i-130a",
-  "pdf": "assets/forms/aos/i-130a/blank.pdf",
+  "pdf": "assets/forms/marriage/i-130a/blank.pdf",
   "notes": "Filled by Maria. Parent order is not fixed by the form, so each parent slot accepts either parent. Note Pt1Line14_CountryofBirth is the parent's city of residence (per the PDF tooltip).",
   "fields": [
     {

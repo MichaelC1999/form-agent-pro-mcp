@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "pro.formagent/form-agent",
   "title": "Form Agent Pro",
-  "description": "Immigration forms filled from your documents: green card (I-485, I-130, I-864) and O-1 (I-129).",
+  "description": "Immigration forms filled from your documents: marriage and EB-1 green cards, O-1 visas.",
   "version": "1.1.1",
   "websiteUrl": "https://formagent.pro",
   "icons": [

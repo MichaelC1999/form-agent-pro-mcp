@@ -64,7 +64,7 @@ export interface IFormContext {
   formMetadata: FormMetadata;
   fields: FormFieldContext[];
   /**
-   * Processes this form belongs to (e.g. ["aos"]). A form can apply to more
+   * Processes this form belongs to (e.g. ["marriage"]). A form can apply to more
    * than one process. Absent on legacy FormContexts — readers fall back to
    * `[DEFAULT_PROCESS_ID]` when present is required.
    */
@@ -173,7 +173,7 @@ export interface ISituationalContext {
   status: SituationalContextStatus;
   /**
    * Identifier of the form-filling process this context belongs to (e.g.
-   * "aos", "k1-fiance"). Set by buildSituationContext. Read by every later
+   * "marriage", "o1"). Set by buildSituationContext. Read by every later
    * stage to scope asset lookup and prompts. Legacy docs may not have this
    * field — resolveProcessId() falls back to DEFAULT_PROCESS_ID.
    */

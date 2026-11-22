@@ -65,14 +65,14 @@ export function registerBuildSituationContext(server: McpServer): void {
       description:
         "Use when a user wants their immigration application forms filled in, for example a " +
         "marriage-based green card (I-130 + I-485), a work permit (I-765), a travel permit (I-131), " +
-        "an affidavit of support (I-864), or an O-1 extraordinary-ability petition with change of " +
-        "status (I-129). From the user's description of their situation and their documents, it works " +
+        "an affidavit of support (I-864), an EB-1 green card petition (I-140), or an O-1 " +
+        "extraordinary-ability petition (I-129). From the user's description of their situation and their documents, it works " +
         "out which process and forms they need and fills the official PDFs in the background.\n\n" +
-        "Which documents to send depends on the case. Family-based: passports, birth and marriage " +
-        "certificates, I-94, prior USCIS notices. O-1: the beneficiary's passport, current visa, I-94 " +
+        "Which documents to send depends on the case. Marriage: passports, birth and marriage " +
+        "certificates, I-94, prior USCIS notices. O-1 and EB-1: the beneficiary's passport, current visa, I-94 " +
         "and I-797 notices, CV, the employer's or agent's offer letter or contract (with company " +
         "details such as FEIN and address), the consultation letter, and an itinerary if there are " +
-        "several engagements. For O-1 evidence of acclaim (awards, press, memberships, judging, " +
+        "several engagements. For O-1 or EB-1 evidence of acclaim (awards, press, memberships, judging, " +
         "publications, salary), send a written summary of each item in additionalNotes rather than " +
         "the full exhibits, to stay within the upload limits.\n\n" +
         "Costs a one-time payment per case: tell the user and get their agreement before calling. " +

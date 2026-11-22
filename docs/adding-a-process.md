@@ -2,15 +2,15 @@
 
 This guide explains how the pipeline models a "process" and how to add a new one (or build a custom workflow on top of an existing one) without changing any source code that branches on process identity.
 
-A **process** is a form-filing workflow — e.g. US Adjustment of Status (`aos`), K-1 fiancé petition (`k1-fiance`), Italian Type-D visa (`italy-student-visa`). Each process has its own catalog of forms, its own description of when it applies, and (optionally) its own supplemental assets. The pipeline stages are universal; the process distinguishes itself entirely through assets on disk and metadata on MongoDB documents.
+A **process** is a form-filing workflow — e.g. marriage-based green card (`marriage`), EB-1 green card (`eb1`), O-1 visa (`o1`), K-1 fiancé petition (`k1-fiance`), Italian Type-D visa (`italy-student-visa`). Each process has its own catalog of forms, its own description of when it applies, and (optionally) its own supplemental assets. The pipeline stages are universal; the process distinguishes itself entirely through assets on disk and metadata on MongoDB documents.
 
-Two processes are live as reference implementations: [`aos`](../assets/forms/aos/) (the original, ~13 USCIS forms) and [`italy-student-visa`](../assets/forms/italy-student-visa/) (Italian Type D student visa, 1 form + 5 affidavit templates). Skim both before adding a third.
+Two processes are live as reference implementations: [`marriage`](../assets/forms/marriage/) (the original, formerly `aos`) and [`italy-student-visa`](../assets/forms/italy-student-visa/) (Italian Type D student visa, 1 form + 5 affidavit templates). Skim both before adding a third.
 
 ---
 
 ## The cardinal rule
 
-**No code path branches on the value of `processId`.** Conditions key off the *presence* of assets and metadata (`is there a form directory? does this FormContext have applicableProcesses including X? does the process have a README?`), never off the literal string `"aos"` or any other process name. Adding a new process should require zero TypeScript edits.
+**No code path branches on the value of `processId`.** Conditions key off the *presence* of assets and metadata (`is there a form directory? does this FormContext have applicableProcesses including X? does the process have a README?`), never off the literal string `"marriage"` or any other process name. Adding a new process should require zero TypeScript edits.
 
 If you find yourself writing `if (processId === "...")` to make something work, that's a signal the structure needs to be extended — push the variation into the asset layout or into a `FormContext` field rather than into a branch.
 
@@ -47,12 +47,12 @@ immi-server/assets/forms/
 ```
 
 Rules:
-- The directory name **is** the `processId`. Pick a short, general kebab-case identifier (`aos`, `k1-fiance`, `eu-blue-card`).
+- The directory name **is** the `processId`. Pick a short, general kebab-case identifier (`marriage`, `k1-fiance`, `eu-blue-card`). Name it for the way status is obtained (marriage, EB-1, O-1), not for where the person files: one process covers both filing inside the US and through a consulate.
 - Every form directory must contain a file literally named `blank.pdf`. Directories without one are skipped by `listFormsInProcess()`.
 - Process directories with zero valid form subdirectories are skipped by `listProcesses()`. This means you can stage assets without breaking discovery — until at least one `<formId>/blank.pdf` lands, the process is invisible.
 - Hidden entries (anything starting with `.`) are ignored. macOS `.DS_Store` is filtered automatically.
 
-The current `aos` process is the reference layout — see `assets/forms/aos/` for an example.
+The current `marriage` process is the reference layout — see `assets/forms/marriage/` for an example.
 
 ### Process-specific extras
 
@@ -235,13 +235,26 @@ If your process needs language-correct OCR and your frontend doesn't surface a p
 
 ---
 
+## Renaming a process (optional `aliases.txt`)
+
+Stored documents keep the process ID they were created with (`SituationalContext.processId`, `FilledFormMap.processId`, `FormContext.applicableProcesses`). To rename a process without migrating them, `git mv` the folder and add `assets/forms/<new-id>/aliases.txt` listing the former IDs, one per line (`#` comments allowed):
+
+```
+# Former process IDs. Stored records that use one of these resolve to this process.
+aos
+```
+
+`resolveProcessId()` maps a former ID to the folder that lists it, and the FormContext lookup in `fillFormMap` matches contexts tagged with either the current ID or a former one. `marriage` (formerly `aos`) and `o1` (formerly `o1-change-of-status`) use this.
+
+---
+
 ## Step-by-step: add a new process
 
 The example below adds `k1-fiance`. Substitute your own identifier and forms.
 
 ### 1. Pick a `processId`
 
-Use general kebab-case. Examples that work: `aos`, `k1-fiance`, `eu-blue-card`, `uk-skilled-worker`. Examples that don't: `K1Fiance` (case), `k1_fiance` (underscore), `michaels-special-thing` (not general).
+Use general kebab-case. Examples that work: `marriage`, `k1-fiance`, `eu-blue-card`, `uk-skilled-worker`. Examples that don't: `K1Fiance` (case), `k1_fiance` (underscore), `michaels-special-thing` (not general).
 
 ### 2. Create the process directory and README
 
@@ -255,7 +268,7 @@ The README should be 2–4 short paragraphs answering:
 - **When does this apply?** The user circumstances that match it — country, status, relationship, goal.
 - **What's the outcome?** What the user gets at the end.
 
-The Stage 1 prompt embeds this README (newlines collapsed) when asking the LLM to identify a process. The clearer and more situation-anchored the wording, the better the match. Read `assets/forms/aos/README.md` as a template.
+The Stage 1 prompt embeds this README (newlines collapsed) when asking the LLM to identify a process. The clearer and more situation-anchored the wording, the better the match. Read `assets/forms/marriage/README.md` as a template.
 
 ### 3. Add the blank PDFs
 
@@ -281,10 +294,10 @@ This:
 3. Calls Claude to annotate each field, identify `applicableProcesses`, and set `scope` (`buildFormContext`).
 4. Persists a `FormMap` and a `FormContext` to MongoDB.
 
-For forms shared across processes — say I-130 lives in both `aos` and `k1-followup` — you have two options:
+For forms shared across processes — say I-130 lives in both `marriage` and `k1-followup` — you have two options:
 
 - **Re-run `setup-form.ts` once per process.** Cleanest. Each FormContext is tagged with its single process and the loader picks the right one based on `(formId, processId)`.
-- **Manually broaden one FormContext.** Update `applicableProcesses` to `["aos", "k1-followup"]` on a single FormContext document. The `fillFormMap` lookup matches either process. Use when re-running setup would just produce semantically-identical annotations.
+- **Manually broaden one FormContext.** Update `applicableProcesses` to `["marriage", "k1-followup"]` on a single FormContext document. The `fillFormMap` lookup matches either process. Use when re-running setup would just produce semantically-identical annotations.
 
 The LLM is told which candidate processes to choose from (passed via `candidateProcessIds`); it will only include processes that genuinely apply. You don't need to pre-curate this.
 
@@ -356,9 +369,9 @@ The same conventions apply. You're not "adding a process," you're adding assets 
 ### Add a new form to an existing process
 
 ```bash
-mkdir -p immi-server/assets/forms/aos/i-944
-cp ~/Downloads/i-944-blank.pdf immi-server/assets/forms/aos/i-944/blank.pdf
-npx ts-node --transpile-only src/scripts/setup-form.ts aos i-944
+mkdir -p immi-server/assets/forms/marriage/i-944
+cp ~/Downloads/i-944-blank.pdf immi-server/assets/forms/marriage/i-944/blank.pdf
+npx ts-node --transpile-only src/scripts/setup-form.ts marriage i-944
 ```
 
 The Stage 1 prompt now sees `i-944` in the AoS form list and may select it. No further wiring needed.
@@ -368,7 +381,7 @@ The Stage 1 prompt now sees `i-944` in the AoS form list and may select it. No f
 Put it under the process directory:
 
 ```
-assets/forms/aos/affidavits/joint-sponsor-statement.md
+assets/forms/marriage/affidavits/joint-sponsor-statement.md
 ```
 
 If the pipeline needs to consume it, gate the logic on file existence, not on process name. Example:
@@ -398,7 +411,7 @@ Just edit it. The next request picks up the new wording — no restart, no cache
 {
   userId: string;
   processId: string;            // <-- set by buildSituationContext (Stage 1).
-                                //     Reads fall back to "aos" for legacy docs.
+                                //     Reads fall back to "marriage" for legacy docs.
   partyData: { [partyName]: { [key]: value } };
   requiredForms: Array<{ formId: string; beneficiaryKey?: string }>;
   situationSummary: string;
@@ -449,7 +462,7 @@ A form can apply to multiple processes — set `applicableProcesses` to all that
 
 ### Schema migrations
 
-All three fields above (`SituationalContext.processId`, `FormContext.applicableProcesses`, `FilledFormMap.processId`) are additive. Legacy documents without them continue to work — readers call `resolveProcessId()` which returns `DEFAULT_PROCESS_ID` (`"aos"`) when the field is missing.
+All three fields above (`SituationalContext.processId`, `FormContext.applicableProcesses`, `FilledFormMap.processId`) are additive. Legacy documents without them continue to work — readers call `resolveProcessId()` which returns `DEFAULT_PROCESS_ID` (`"marriage"`) when the field is missing.
 
 To stamp the fields onto legacy documents, run the idempotent backfill:
 
@@ -483,7 +496,7 @@ Everything is exported from [`src/lib/processes.ts`](../src/lib/processes.ts).
 | `hasProcessLanguages(p)` | `boolean` | True iff `assets/forms/<p>/languages.txt` exists. |
 | `listProcessLanguages(p)` | `string[] \| null` | Parsed Tesseract codes from `languages.txt`. `null` when the file is absent. |
 | `getProcessLanguagesTesseractString(p)` | `string \| null` | Tesseract-formatted (`"eng+ita+spa"`). `null` when absent. |
-| `DEFAULT_PROCESS_ID` | `"aos"` | Legacy fallback only. Don't use it as a primary identifier in new code. |
+| `DEFAULT_PROCESS_ID` | `"marriage"` | Legacy fallback only. Don't use it as a primary identifier in new code. |
 
 `listProcesses()` reads the filesystem on every call. That's fine — directory listings are fast and we want zero stale state when assets change.
 
@@ -567,7 +580,7 @@ Calibration data from adding the Italian student visa process end-to-end:
 
 ## Common pitfalls
 
-- **Process advertised but never picked.** Symptom: Stage 1 keeps emitting `processId: "aos"` even when the new process should match. Usually the README is too generic. Tighten the wording to name the user's situation directly ("for a US citizen petitioning a foreign fiancé before they enter the US…").
+- **Process advertised but never picked.** Symptom: Stage 1 keeps emitting `processId: "marriage"` even when the new process should match. Usually the README is too generic. Tighten the wording to name the user's situation directly ("for a US citizen petitioning a foreign fiancé before they enter the US…").
 
 - **`getBlankPdfPath` returns a path but the file isn't there.** Helper doesn't existence-check by design — callers do. Always wrap with `fs.existsSync()` before passing to `fillForm`.
 
@@ -575,4 +588,4 @@ Calibration data from adding the Italian student visa process end-to-end:
 
 - **LLM invents a `processId` that doesn't exist on disk.** This is by design — the Stage 1 prompt explicitly tells it to invent a kebab-case identifier when no supported process fits. Downstream, `getBlankPdfPath(invented, formId)` will point at a directory that doesn't exist and the run fails cleanly with a missing-PDF error. If this happens regularly for a real workflow, add the new process to the filesystem.
 
-- **Code branches on `processId === "aos"` start creeping in.** This is the only thing to actively police. Whenever a process needs different behavior, encode it in a `FormContext` field, a per-process asset on disk, or a `formMetadata.scope`-style property — never in a code branch.
+- **Code branches on `processId === "marriage"` start creeping in.** This is the only thing to actively police. Whenever a process needs different behavior, encode it in a `FormContext` field, a per-process asset on disk, or a `formMetadata.scope`-style property — never in a code branch.

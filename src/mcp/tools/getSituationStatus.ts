@@ -7,6 +7,7 @@ import { FilledFormMap } from "../../models/FilledFormMap";
 import { normalizeRequiredForms } from "../../types";
 import type { FormGenerationFailure } from "../../types";
 import { mcpCaller } from "../shared";
+import { resolveProcessId } from "../../lib/processes";
 
 const FORM_STATES = ["ready", "pending", "failed", "not_generated"] as const;
 type FormState = (typeof FORM_STATES)[number];
@@ -17,7 +18,7 @@ const outputSchema = {
     .enum(["processing", "ready", "error", "not_found"])
     .describe("processing = still analyzing the situation; ready = analysis done; error = analysis failed"),
   pipelineComplete: z.boolean().describe("True once every required form has been attempted"),
-  processId: z.string().nullable().describe("Immigration process identified, e.g. 'aos'"),
+  processId: z.string().nullable().describe("Immigration process identified, e.g. 'marriage', 'eb1' or 'o1'"),
   situationSummary: z.string().nullable().describe("Short summary of the user's situation"),
   forms: z.array(
     z.object({
@@ -164,7 +165,7 @@ export function registerGetSituationStatus(server: McpServer): void {
         situationalContextId,
         status: ctx.status,
         pipelineComplete,
-        processId: ctx.processId ?? null,
+        processId: ctx.processId ? resolveProcessId(ctx.processId) : null,
         situationSummary: ctx.situationSummary || null,
         forms,
         missingInformation,

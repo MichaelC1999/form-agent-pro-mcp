@@ -31,7 +31,7 @@ const FormContextSchema = new Schema<FormContextDocument>(
     createdAt: { type: Date, default: Date.now },
     formMetadata: { type: FormMetadataSchema, default: {} },
     fields: { type: [FormFieldContextSchema], default: [] },
-    // Processes this form applies to (e.g. ["aos"]). A form can belong to
+    // Processes this form applies to (e.g. ["marriage"]). A form can belong to
     // multiple processes. Absent on legacy docs.
     applicableProcesses: { type: [String], default: undefined, index: true },
   },

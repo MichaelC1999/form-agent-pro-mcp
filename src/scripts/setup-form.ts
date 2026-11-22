@@ -11,8 +11,8 @@
  * this layout is fixed by src/lib/processes.ts.
  *
  * Examples:
- *   npx ts-node src/scripts/setup-form.ts aos i-485
- *   npx ts-node src/scripts/setup-form.ts aos i-693 1.0 assets/context/i-693-instructions.md
+ *   npx ts-node src/scripts/setup-form.ts marriage i-485
+ *   npx ts-node src/scripts/setup-form.ts marriage i-693 1.0 assets/context/i-693-instructions.md
  *
  * Environment: MONGODB_URI and ANTHROPIC_API_KEY must be set in .env
  */

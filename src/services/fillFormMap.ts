@@ -7,7 +7,13 @@ import { SituationalContext } from "../models/SituationalContext";
 import { FilledFormMap } from "../models/FilledFormMap";
 import { logAnthropicResponse } from "../models/AnthropicLog";
 import { ClaudeContentError, ClaudeParseError } from "../models/AppError";
-import { resolveProcessId, getProcessReadme, listProcessLanguages, getBlankPdfPath } from "../lib/processes";
+import {
+  resolveProcessId,
+  getProcessReadme,
+  listProcessLanguages,
+  getBlankPdfPath,
+  processIdAndAliases,
+} from "../lib/processes";
 import type {
   FillFormMapInput,
   IFilledFormMap,
@@ -591,9 +597,10 @@ async function loadFormContext(formId: string, processId?: string): Promise<IFor
   // the most recent FormContext for the form when no process-tagged version
   // exists (covers legacy docs created before applicableProcesses was added).
   if (processId) {
+    // Contexts built before a process was renamed carry its former ID.
     const tagged = await FormContext.findOne({
       formId,
-      applicableProcesses: processId,
+      applicableProcesses: { $in: processIdAndAliases(processId) },
     })
       .sort({ createdAt: -1 })
       .lean();

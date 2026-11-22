@@ -1,6 +1,6 @@
 {
   "formId": "i-485",
-  "pdf": "assets/forms/aos/i-485/blank.pdf",
+  "pdf": "assets/forms/marriage/i-485/blank.pdf",
   "notes": "Edition 09/18/26. Applicant = Maria. Several tooltips on this PDF are wrong (Pt2Line11_CB[*] all say 'Cuban Adjustment Act'; Pt1Line3_YN[1] says 'Yes'); those fields were checked against the rendered pages. In this edition Pt1Line4_AlienNumber[0] is the page-1 header and [2] is the Item 4 answer. Part 9 sworn questions are expected unanswered unless the packet states the answer.",
   "fields": [
     {

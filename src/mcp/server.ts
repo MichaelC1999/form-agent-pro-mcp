@@ -41,13 +41,15 @@ const SERVER_INSTRUCTIONS =
   "Form Agent Pro prepares official, filled-in immigration application forms (PDFs) from a " +
   "person's description of their situation and their supporting documents.\n\n" +
   "It is relevant when a user wants to apply for or file US immigration paperwork, for example: " +
-  "a green card / permanent residence through marriage to a US citizen or through a family member " +
-  "or employer (adjustment of status: I-485, I-130, I-130A, I-140, I-864 affidavit of support, " +
-  "I-693 medical exam), a work permit (I-765 / EAD), a travel permit or advance parole (I-131), or " +
-  "replacing a green card (I-90); or an O-1 extraordinary-ability worker petition filed from inside " +
-  "the US as a change of status (I-129 with the O and P supplement, I-539 / I-539A for O-3 family " +
-  "members, I-907 premium processing). It also covers some non-US processes, such as the Italian " +
-  "National (Type D) student visa.\n\n" +
+  "a green card through marriage to a US citizen or permanent resident (I-130, I-130A, I-864 " +
+  "affidavit of support, and from inside the US I-485 with I-765 work permit, I-131 travel permit " +
+  "and I-693 medical exam); an EB-1 employment-based green card for extraordinary ability, " +
+  "outstanding researchers or multinational managers (I-140, I-907 premium processing, and I-485 " +
+  "with Supplement J when filing from inside the US); or an O-1 extraordinary-ability work visa " +
+  "(I-129 with the O and P supplement, and I-539 / I-539A for O-3 family members switching status " +
+  "inside the US). Forms are prepared whether the person is in the US or abroad; State Department " +
+  "online applications (DS-160, DS-260) are not filled. It also covers some non-US processes, such " +
+  "as the Italian National (Type D) student visa.\n\n" +
   "How to use it: call list_supported_forms first (free) to confirm the user's goal is supported. " +
   "Preparing a case with build_situation_context costs a one-time payment, so explain that and get " +
   "the user's agreement before starting; it returns a payment link the user opens. Then use " +
@@ -68,16 +70,16 @@ function buildServer(): McpServer {
       description:
         "Use when a user asks about applying for a green card, work permit, travel permit, O-1 " +
         "extraordinary-ability status or another immigration application, to check whether Form Agent " +
-        "Pro can prepare the forms for it. Returns each supported process (for example 'aos' = " +
-        "adjustment of status, the US green card application from inside the US; " +
-        "'o1-change-of-status' = switching to O-1 work status from inside the US) with its form IDs " +
-        "(such as i-485, i-130, i-765, i-864, i-129) and affidavit templates. Free and read-only; call " +
+        "Pro can prepare the forms for it. Returns each supported process, one per way of obtaining " +
+        "status (for example 'marriage' = green card through marriage, 'eb1' = EB-1 employment-based " +
+        "green card, 'o1' = O-1 extraordinary-ability work visa), with its form IDs (such as i-130, " +
+        "i-485, i-140, i-129) and affidavit templates. Free and read-only; call " +
         "it before build_situation_context.",
       inputSchema: {},
       outputSchema: {
         processes: z.array(
           z.object({
-            processId: z.string().describe("Process identifier, e.g. 'aos' (adjustment of status)"),
+            processId: z.string().describe("Process identifier, e.g. 'marriage' or 'o1'"),
             description: z.string().nullable().describe("One-line description of the process"),
             formIds: z.array(z.string()).describe("USCIS form IDs in this process, e.g. 'i-485'"),
             affidavitNames: z.array(z.string()).describe("Affidavit templates available for this process"),
