@@ -16,7 +16,7 @@ const SMTP_PASS = process.env.SMTP_PASS ?? "";
 const SMTP_FROM_EMAIL =
   process.env.SMTP_FROM_EMAIL ?? SMTP_USER ?? "hello@formagent.pro";
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME ?? "Michael Carroll";
-const SMTP_REPLY_TO = process.env.SMTP_REPLY_TO ?? SMTP_FROM_EMAIL;
+const SMTP_REPLY_TO = process.env.SMTP_REPLY_TO ?? "michael@formagent.pro";
 
 // Port 465 is implicit-TLS; everything else (587, 2525) is STARTTLS.
 const SMTP_SECURE = SMTP_PORT === 465;

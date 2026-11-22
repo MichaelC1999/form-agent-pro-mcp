@@ -304,7 +304,7 @@ export function registerBuildSituationContext(server: McpServer): void {
           status: "error",
           message:
             "Your payment went through, but the job couldn't start. It has been logged for follow-up; " +
-            "please contact support with this payment reference: " + args.stripeSessionId,
+            "please email michael@formagent.pro with this payment reference: " + args.stripeSessionId,
         });
       }
     }
