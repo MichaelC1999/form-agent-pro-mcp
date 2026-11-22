@@ -31,7 +31,7 @@ export const GOOGLE_CALLBACK_PATH = "/oauth/google/callback";
 const newSecret = () => randomBytes(32).toString("base64url");
 const sha256 = (v: string) => createHash("sha256").update(v).digest("hex");
 
-/** Public origin of this server, e.g. https://immi-server-i5sok.ondigitalocean.app */
+/** Public origin of this server, e.g. https://mcp.formagent.pro */
 export function publicBaseUrl(): URL {
   return new URL(process.env.PUBLIC_BASE_URL ?? `http://localhost:${process.env.PORT ?? "3001"}`);
 }

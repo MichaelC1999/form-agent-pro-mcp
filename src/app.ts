@@ -10,6 +10,7 @@ import { mcpAuthRouter } from "@modelcontextprotocol/sdk/server/auth/router.js";
 import { mcpRouter, mcpResourceUrl, requireMcpToken } from "./mcp/server";
 import { mcpOAuthProvider, googleCallbackRouter, publicBaseUrl, MCP_SCOPE } from "./mcp/oauthProvider";
 import { mcpPublicRouter } from "./mcp/shared";
+import { publicPagesRouter, DOCS_PATH } from "./mcp/pages";
 import { mcpDownloadRouter, DOWNLOAD_PATH_PREFIX } from "./mcp/tools/getFilledPdf";
 
 // Route modules
@@ -60,10 +61,12 @@ app.use(
     resourceServerUrl: mcpResourceUrl(),
     scopesSupported: [MCP_SCOPE],
     resourceName: "Form Agent Pro",
+    serviceDocumentationUrl: new URL(DOCS_PATH, publicBaseUrl()),
   })
 );
 app.use(googleCallbackRouter);
 app.use(mcpPublicRouter); // e.g. the "payment received" page after Stripe checkout
+app.use(publicPagesRouter); // /privacy and /docs for AI app directories
 app.use(DOWNLOAD_PATH_PREFIX, generalLimiter, mcpDownloadRouter); // short-lived PDF links from get_filled_pdf
 // Remote MCP endpoint for AI agents: signed-in callers only, rate-limited.
 app.use("/mcp", generalLimiter, requireMcpToken, mcpUserLimiter, mcpRouter);

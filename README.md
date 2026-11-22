@@ -9,7 +9,7 @@ Node.js / TypeScript server that automates filling USCIS immigration forms. Anth
 Form Agent Pro is a remote [Model Context Protocol](https://modelcontextprotocol.io) server. Any MCP client that supports remote servers with OAuth (Claude, ChatGPT, Cursor, VS Code, …) can connect to:
 
 ```
-https://immi-server-i5sok.ondigitalocean.app/mcp
+https://mcp.formagent.pro/mcp
 ```
 
 Registry name: `pro.formagent/form-agent` (see [`server.json`](server.json)).
