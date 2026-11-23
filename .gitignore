@@ -15,3 +15,6 @@ assets/test-situational/
 
 # Filled forms from CLI runs and evals contain real personal data — never commit.
 output/
+
+# Compiled output from npm run build.
+dist/

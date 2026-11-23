@@ -207,8 +207,10 @@ export function buildFormContextUserMessage(params: {
   pdfAttached: boolean;
   /** Tooltip + checked value per field ID, read from the blank PDF. */
   fieldLabels?: Map<string, PdfFieldLabel>;
+  /** Set when a large form is annotated in several calls. */
+  batch?: { index: number; count: number; totalFields: number };
 }): string {
-  const { formId, formPdfText, fieldIds, contextFileContents, pdfAttached, fieldLabels } = params;
+  const { formId, formPdfText, fieldIds, contextFileContents, pdfAttached, fieldLabels, batch } = params;
   const parts: string[] = [];
   const hr = "─".repeat(72);
 
@@ -250,6 +252,13 @@ export function buildFormContextUserMessage(params: {
   // ── Field ID list ──────────────────────────────────────────────────────────
   parts.push(`\n${hr}`);
   parts.push(`FIELD IDs  (${fieldIds.length} total — annotate every one)`);
+  if (batch) {
+    parts.push(
+      `This request is batch ${batch.index} of ${batch.count}. The form has ${batch.totalFields} fields in total;\n` +
+      `annotate only the field IDs listed below. Still return formMetadata and applicableProcesses\n` +
+      `describing the whole form.`
+    );
+  }
   if (fieldLabels && fieldLabels.size > 0) {
     parts.push(`Each field ID is followed by its PDF tooltip and, for checkboxes, the value the box writes when checked.`);
   }
@@ -329,6 +338,15 @@ export async function getFormContextPromptText(input: BuildFormContextInput): Pr
 
 // ─── Service ──────────────────────────────────────────────────────────────────
 
+/** Fields annotated per Anthropic call; larger forms are split into batches. */
+const FIELDS_PER_BATCH = 250;
+
+interface ParsedFormContext {
+  formMetadata: FormMetadata;
+  fields: FormFieldContext[];
+  applicableProcesses?: string[];
+}
+
 export async function buildFormContext(input: BuildFormContextInput): Promise<IFormContext> {
   const { formId, formPdfPath, contextFilePaths = [], candidateProcessIds } = input;
   const resolvedCandidates =
@@ -383,80 +401,112 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
   const labeledCount = fieldIds.filter((id) => fieldLabels.get(id)?.tooltip).length;
   console.log(`[buildFormContext] PDF tooltips: ${labeledCount}/${fieldIds.length} fields`);
 
-  // 7. Build prompts
+  // 7. Split large forms into batches. Annotations run ~260 output tokens per
+  //    field, so one call tops out around 450 fields under the 128k cap; a
+  //    form above FIELDS_PER_BATCH is annotated in several calls and merged.
   const systemPrompt = buildFormContextSystemPrompt(resolvedCandidates);
-  const userTextBlock = buildFormContextUserMessage({
-    formId,
-    formPdfText,
-    fieldIds,
-    contextFileContents,
-    pdfAttached: true,
-    fieldLabels,
-  });
-
-  // 8. Encode PDF as base64 for the document block
   const pdfBase64 = fs.readFileSync(formPdfPath).toString("base64");
+  const batches: string[][] = [];
+  for (let i = 0; i < fieldIds.length; i += FIELDS_PER_BATCH) {
+    batches.push(fieldIds.slice(i, i + FIELDS_PER_BATCH));
+  }
 
-  // 9. Anthropic call — high token budget, runs once per form
   const client = getAnthropicClient();
   console.log(
     `[buildFormContext] Calling ${CLAUDE_MODEL} for "${formId}" — ` +
-    `${fieldIds.length} fields, ${formPdfText.length} chars extracted text, ` +
+    `${fieldIds.length} fields${batches.length > 1 ? ` in ${batches.length} batches` : ""}, ` +
+    `${formPdfText.length} chars extracted text, ` +
     `PDF attached (${(pdfBase64.length * 0.75 / 1024).toFixed(0)} KB), ` +
     `${contextFileContents.length} supplemental file(s). May take several minutes...`
   );
 
-  // Streaming is required here — max_tokens (128000) exceeds the SDK's
-  // non-streaming timeout threshold (~21333 tokens), and a non-streaming
-  // call above that throws AnthropicError before any request is sent.
-  const stream = client.beta.messages.stream({
-    model: CLAUDE_MODEL,
-    max_tokens: 128000,
-    output_config: { effort: "high" },
-    ...REFUSAL_FALLBACK,
-    system: systemPrompt,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "document",
-            source: {
-              type: "base64",
-              media_type: "application/pdf",
-              data: pdfBase64,
+  const annotateBatch = async (batchFieldIds: string[], index: number): Promise<ParsedFormContext> => {
+    const userTextBlock = buildFormContextUserMessage({
+      formId,
+      formPdfText,
+      fieldIds: batchFieldIds,
+      contextFileContents,
+      pdfAttached: true,
+      fieldLabels,
+      ...(batches.length > 1
+        ? { batch: { index: index + 1, count: batches.length, totalFields: fieldIds.length } }
+        : {}),
+    });
+
+    // Streaming is required here — max_tokens (128000) exceeds the SDK's
+    // non-streaming timeout threshold (~21333 tokens), and a non-streaming
+    // call above that throws AnthropicError before any request is sent.
+    const stream = client.beta.messages.stream({
+      model: CLAUDE_MODEL,
+      max_tokens: 128000,
+      output_config: { effort: "high" },
+      ...REFUSAL_FALLBACK,
+      system: systemPrompt,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "document",
+              source: {
+                type: "base64",
+                media_type: "application/pdf",
+                data: pdfBase64,
+              },
+              title: `Form ${formId}`,
+              // The PDF is identical across batches; later batches read it from cache.
+              ...(batches.length > 1 ? { cache_control: { type: "ephemeral" as const } } : {}),
             },
-            title: `Form ${formId}`,
-          },
-          {
-            type: "text",
-            text: userTextBlock,
-          },
-        ],
-      },
-    ],
-  });
-  const response = await stream.finalMessage();
+            {
+              type: "text",
+              text: userTextBlock,
+            },
+          ],
+        },
+      ],
+    });
+    const response = await stream.finalMessage();
 
-  // 10. Log full response payload to MongoDB (non-blocking)
-  logAnthropicResponse(response, { service: "buildFormContext", formId });
-  throwIfRefused(response, "buildFormContext");
+    // Log full response payload to MongoDB (non-blocking)
+    logAnthropicResponse(response, { service: "buildFormContext", formId });
+    throwIfRefused(response, "buildFormContext");
 
-  // 11. Parse response
-  const rawBlock = response.content.find((b) => b.type === "text");
-  const rawJson = rawBlock?.type === "text" ? rawBlock.text.trim() : "";
-  const cleaned = rawJson.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+    const label = batches.length > 1 ? ` (batch ${index + 1}/${batches.length})` : "";
+    if (response.stop_reason === "max_tokens") {
+      throw new Error(
+        `Form context response for "${formId}"${label} hit the output limit. Lower FIELDS_PER_BATCH.`
+      );
+    }
 
-  let parsed: {
-    formMetadata: FormMetadata;
-    fields: FormFieldContext[];
-    applicableProcesses?: string[];
+    const rawBlock = response.content.find((b) => b.type === "text");
+    const rawJson = rawBlock?.type === "text" ? rawBlock.text.trim() : "";
+    const cleaned = rawJson.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+    try {
+      return JSON.parse(cleaned) as ParsedFormContext;
+    } catch {
+      throw new Error(`Failed to parse form context response for "${formId}"${label}.`);
+    }
   };
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    throw new Error(`Failed to parse form context response for "${formId}".`);
+
+  // The first batch runs alone so it writes the PDF to the prompt cache; the
+  // rest then run in parallel and read it.
+  const results: ParsedFormContext[] = [await annotateBatch(batches[0], 0)];
+  if (batches.length > 1) {
+    results.push(...(await Promise.all(batches.slice(1).map((b, i) => annotateBatch(b, i + 1)))));
   }
+
+  // 8. Merge: form-level fields come from the first batch; processes are unioned.
+  const parsed: ParsedFormContext = {
+    formMetadata: results[0].formMetadata,
+    // Keep only the fields each batch was given, so a batch that strays can't duplicate another's.
+    fields: results.flatMap((r, i) => {
+      const own = new Set(batches[i]);
+      return (Array.isArray(r.fields) ? r.fields : []).filter((f) => own.has(f.field));
+    }),
+    applicableProcesses: results.flatMap((r) =>
+      Array.isArray(r.applicableProcesses) ? r.applicableProcesses : []
+    ),
+  };
 
   // Normalize applicableProcesses: trim, drop empties, dedupe
   const applicableProcesses = Array.isArray(parsed.applicableProcesses)
@@ -479,7 +529,7 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
     (parsed.formMetadata as Record<string, unknown>).scope = scope;
   }
 
-  // 12. Warn about any skipped field IDs
+  // 9. Warn about any skipped field IDs
   const expectedIds = new Set(fieldIds);
   const returnedIds = new Set(parsed.fields.map((f) => f.field));
   const missing = [...expectedIds].filter((id) => !returnedIds.has(id));
@@ -493,7 +543,7 @@ export async function buildFormContext(input: BuildFormContextInput): Promise<IF
     console.log(`[buildFormContext] ✅ All ${fieldIds.length} fields annotated.`);
   }
 
-  // 13. Persist
+  // 10. Persist
   const doc = await FormContext.create({
     formId,
     createdAt: new Date(),

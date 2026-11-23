@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { randomUUID } from "crypto";
 import { execSync, spawnSync } from "child_process";
 import {
   PDFDocument, PDFName, PDFArray, PDFRef, PDFDict, PDFString, PDFHexString,
@@ -229,7 +230,7 @@ async function extractWithQpdf(pdfPath: string): Promise<FieldMap | null> {
 
   const tmpPath = path.join(
     os.tmpdir(),
-    `immi-qpdf-${Date.now()}.pdf`
+    `immi-qpdf-${randomUUID()}.pdf`
   );
 
   try {
@@ -321,11 +322,13 @@ async function extractFields(
   // back as binary garbage. We use pdftk `output` to write a plaintext copy
   // first (pdftk handles the empty user password automatically), then run all
   // extraction strategies on that decrypted copy.
+  // Temp names must be unique: parallel setup-form runs share os.tmpdir(), and
+  // a timestamp name let one run read or delete another's decrypted copy.
   let workingPath = pdfPath;
   let tmpDecryptedPath: string | null = null;
 
   if (isPdftkAvailable()) {
-    const tmpPath = path.join(os.tmpdir(), `immi-decrypt-${Date.now()}.pdf`);
+    const tmpPath = path.join(os.tmpdir(), `immi-decrypt-${randomUUID()}.pdf`);
     const decryptResult = spawnSync(
       "pdftk",
       [pdfPath, "output", tmpPath],
@@ -336,7 +339,7 @@ async function extractFields(
       tmpDecryptedPath = tmpPath;
     }
   } else if (isQpdfAvailable()) {
-    const tmpPath = path.join(os.tmpdir(), `immi-decrypt-${Date.now()}.pdf`);
+    const tmpPath = path.join(os.tmpdir(), `immi-decrypt-${randomUUID()}.pdf`);
     const decryptResult = spawnSync(
       "qpdf",
       ["--decrypt", pdfPath, tmpPath],
